@@ -1,0 +1,17 @@
+{
+  "name": "Finanças AppSheet",
+  "short_name": "FinançasApp",
+  "description": "Aplicativo financeiro moderno e inteligente com controle rígido de saldo por categoria, funcionamento offline e sincronização automatizada.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1d",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
