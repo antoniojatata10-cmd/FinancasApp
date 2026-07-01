@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, Receipt, Tags, FileBarChart, Settings,
   Moon, Sun, Wifi, WifiOff, Sparkles, LogOut, Crown, Shield,
-  Menu, X, CreditCard, AlertTriangle, Lock, Star, Banknote
+  Menu, X, CreditCard, AlertTriangle, Lock, Star, Banknote,
+  TrendingUp, Building2, GraduationCap, BookOpen, Cloud, RefreshCw
 } from 'lucide-react';
 
 // Views
@@ -14,53 +15,13 @@ import CoachView from './components/CoachView';
 import ConfiguracoesView from './components/ConfiguracoesView';
 import AuthView from './components/AuthView';
 import SuperAdminView from './components/SuperAdminView';
+import AcademiaView from './components/AcademiaView';
+import SubscriptionsView from './components/SubscriptionsView';
+import InvestimentosView from './components/InvestimentosView';
+import EmpresaView from './components/EmpresaView';
 
-// ─────────────────────────── SEED DATA ──────────────────────────────────────
-const INITIAL_CATEGORIES = [
-  { CategoriaID: 'C2', Nome: 'Salário', Tipo: 'Receita', CategoriaMaeID: '', Subtipo: 'Nenhum', Alvo: 0, Descricao: 'Rendimentos mensais principais', Ativa: true },
-  { CategoriaID: 'C1', Nome: 'Alimentação', Tipo: 'Despesa', CategoriaMaeID: 'C2', Subtipo: 'Nenhum', Alvo: 0, Descricao: 'Supermercado e refeições (depende do Salário)', Ativa: true },
-  { CategoriaID: 'C3', Nome: 'Transporte', Tipo: 'Despesa', CategoriaMaeID: 'C2', Subtipo: 'Nenhum', Alvo: 0, Descricao: 'Combustível e táxi (depende do Salário)', Ativa: true },
-  { CategoriaID: 'C4', Nome: 'Lazer', Tipo: 'Despesa', CategoriaMaeID: 'C2', Subtipo: 'Nenhum', Alvo: 0, Descricao: 'Cinema e saídas (depende do Salário)', Ativa: true },
-  { CategoriaID: 'C5', Nome: 'Fundo Telefone', Tipo: 'Receita', CategoriaMaeID: '', Subtipo: 'Investimento', Alvo: 150000, Descricao: 'Compra de celular planejado', Ativa: true },
-  { CategoriaID: 'C6', Nome: 'Reserva Poupança', Tipo: 'Despesa', CategoriaMaeID: '', Subtipo: 'Poupanca', Alvo: 200000, Descricao: 'Reserva para emergências', Ativa: true },
-  { CategoriaID: 'C7', Nome: 'Dívida com João', Tipo: 'Despesa', CategoriaMaeID: '', Subtipo: 'Divida', Alvo: 0, Descricao: 'Dinheiro que devo para o João', Ativa: true },
-  { CategoriaID: 'C8', Nome: 'Empréstimo ao Pedro', Tipo: 'Receita', CategoriaMaeID: '', Subtipo: 'Emprestimo', Alvo: 0, Descricao: 'Dinheiro que emprestei para o Pedro', Ativa: true }
-];
-
-const INITIAL_LAUNCHES = [
-  { LancID: 'L1', Data: '2026-05-01', CategoriaID: 'C2', Tipo: 'Entrada', Valor: 500000, Descricao: 'Salário de Maio', Conta: 'Banco', Referencia: 'MAIO-01', CriadoPor: 'superadmin@financasapp.com', EditadoEm: '2026-05-01 09:00:00', Status: 'confirmado' },
-  { LancID: 'L2', Data: '2026-05-01', CategoriaID: 'C1', Tipo: 'Entrada', Valor: 40000, Descricao: 'Alocação Salário -> Alimentação', Conta: 'Banco', Referencia: 'ALOC-01', CriadoPor: 'superadmin@financasapp.com', EditadoEm: '2026-05-01 09:10:00', Status: 'confirmado' },
-  { LancID: 'L3', Data: '2026-05-01', CategoriaID: 'C3', Tipo: 'Entrada', Valor: 15000, Descricao: 'Alocação Salário -> Transporte', Conta: 'Banco', Referencia: 'ALOC-02', CriadoPor: 'superadmin@financasapp.com', EditadoEm: '2026-05-01 09:15:00', Status: 'confirmado' },
-  { LancID: 'L4', Data: '2026-05-01', CategoriaID: 'C4', Tipo: 'Entrada', Valor: 20000, Descricao: 'Alocação Salário -> Lazer', Conta: 'Banco', Referencia: 'ALOC-03', CriadoPor: 'superadmin@financasapp.com', EditadoEm: '2026-05-01 09:20:00', Status: 'confirmado' },
-  { LancID: 'L5', Data: '2026-05-02', CategoriaID: 'C1', Tipo: 'Saida', Valor: 25000, Descricao: 'Compras Supermercado', Conta: 'Cartão de Crédito', Referencia: 'SUP-01', CriadoPor: 'superadmin@financasapp.com', EditadoEm: '2026-05-02 10:00:00', Status: 'confirmado' },
-];
-
-const INITIAL_USERS = [
-  {
-    Email: 'superadmin@financasapp.com',
-    Nome: 'SuperAdmin',
-    Senha: 'admin123',
-    Telefone: '',
-    Pais: 'Angola',
-    Role: 'SuperAdmin',
-    Ativo: true,
-    Plano: 'Enterprise',
-    DataCadastro: '2026-01-01',
-    UltimoAcesso: new Date().toISOString().split('T')[0],
-    LancamentosUsados: 0
-  }
-];
-
-const INITIAL_BANK = {
-  banco: '',
-  titular: '',
-  iban: '',
-  conta: '',
-  telefone: '',
-  referencia: '',
-  precoMensal: '2000',
-  precoAnual: '20000'
-};
+// Supabase client
+import { supabase } from './supabaseClient';
 
 // ─────────────────────────── UPGRADE WALL ────────────────────────────────────
 function UpgradeWall({ bankInfo, onClose }) {
@@ -89,26 +50,15 @@ function UpgradeWall({ bankInfo, onClose }) {
 
         {/* Pricing */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div style={{
-            padding: '16px', borderRadius: '12px',
-            background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)'
-          }}>
+          <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Mensal</div>
             <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--color-accent)' }}>
               {Number(bankInfo?.precoMensal || 2000).toLocaleString('pt-AO')}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Kz/mês</div>
           </div>
-          <div style={{
-            padding: '16px', borderRadius: '12px',
-            background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
-            position: 'relative'
-          }}>
-            <div style={{
-              position: 'absolute', top: '-8px', right: '12px',
-              background: '#f59e0b', color: '#1a1a1a', fontSize: '0.65rem',
-              fontWeight: 800, padding: '2px 8px', borderRadius: '10px'
-            }}>POUPA 17%</div>
+          <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: '-8px', right: '12px', background: '#f59e0b', color: '#1a1a1a', fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '10px' }}>POUPA 17%</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Anual</div>
             <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#f59e0b' }}>
               {Number(bankInfo?.precoAnual || 20000).toLocaleString('pt-AO')}
@@ -117,12 +67,8 @@ function UpgradeWall({ bankInfo, onClose }) {
           </div>
         </div>
 
-        {/* Bank info for payment */}
         {bankInfo?.banco && (
-          <div style={{
-            background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)',
-            borderRadius: '12px', padding: '16px', textAlign: 'left'
-          }}>
+          <div style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '12px', padding: '16px', textAlign: 'left' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', color: 'var(--color-success)' }}>
               <Banknote size={16} />
               <span style={{ fontWeight: 700, fontSize: '0.88rem' }}>Dados para Pagamento</span>
@@ -142,9 +88,97 @@ function UpgradeWall({ bankInfo, onClose }) {
           Após o pagamento, envie o comprovativo para o administrador para activação imediata do plano Pro.
         </p>
 
-        <button onClick={onClose} className="btn btn-secondary" style={{ width: '100%' }}>
-          Voltar (Plano Gratuito)
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={onClose} className="btn btn-secondary" style={{ flex: 1 }}>Voltar</button>
+          <button onClick={onClose} className="btn btn-primary" style={{ flex: 1 }}>Ir para Subscrições</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────── PREMIUM LOCK SCREEN ─────────────────────────────
+function PremiumLockScreen({ tabName, bankInfo, onGoToSubscriptions }) {
+  const featureInfo = {
+    coach:        { icon: '🤖', nome: 'Coach IA', desc: 'Consultor financeiro em tempo real com análise dos seus dados.' },
+    academia:     { icon: '🎓', nome: 'Academia Financeira', desc: '8 níveis de formação financeira com quizzes e certificado.' },
+    investimentos:{ icon: '📈', nome: 'Área de Investimentos', desc: 'Taxas de câmbio reais, perfil de investidor e simulações.' },
+    empresa:      { icon: '🏢', nome: 'Módulo Empresa', desc: 'Gestão financeira empresarial, DRE, fluxo de caixa e tesouraria.' }
+  };
+  const info = featureInfo[tabName] || { icon: '⭐', nome: tabName, desc: 'Funcionalidade exclusiva do plano Pro.' };
+
+  return (
+    <div className="animate-fade-in" style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: '60vh', padding: '16px'
+    }}>
+      <div className="glass-panel" style={{
+        maxWidth: '480px', width: '100%', padding: '36px 28px',
+        display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'center',
+        border: '1px solid rgba(245,158,11,0.2)',
+        background: 'linear-gradient(135deg, rgba(245,158,11,0.04), rgba(99,102,241,0.04))'
+      }}>
+        <div style={{ fontSize: '3rem' }}>{info.icon}</div>
+
+        <div>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)',
+            borderRadius: '20px', padding: '4px 12px', marginBottom: '12px',
+            color: '#f59e0b', fontSize: '0.75rem', fontWeight: 700
+          }}>
+            <Star size={12} /> Exclusivo Pro
+          </div>
+          <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '8px' }}>{info.nome}</h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+            {info.desc}
+          </p>
+        </div>
+
+        <div style={{
+          background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)',
+          borderRadius: '12px', padding: '16px'
+        }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: 600 }}>PLANO GRATUITO vs PRO</div>
+          {[
+            ['Lançamentos', '50/mês', 'Ilimitados'],
+            ['Categorias', 'Básicas', 'Ilimitadas'],
+            ['Coach IA', '❌', '✅ Chat em tempo real'],
+            ['Academia', '❌', '✅ 8 níveis + certificado'],
+            ['Investimentos', '❌', '✅ Dados reais'],
+            ['Empresa', '❌', '✅ Módulo completo'],
+          ].map(([feat, free, pro], i) => (
+            <div key={i} style={{
+              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+              gap: '6px', fontSize: '0.78rem', padding: '6px 0',
+              borderBottom: i < 5 ? '1px solid var(--border-color)' : 'none'
+            }}>
+              <span style={{ color: 'var(--text-secondary)', textAlign: 'left' }}>{feat}</span>
+              <span style={{ color: 'var(--text-muted)', textAlign: 'center' }}>{free}</span>
+              <span style={{ color: 'var(--color-success)', textAlign: 'right', fontWeight: 600 }}>{pro}</span>
+            </div>
+          ))}
+        </div>
+
+        {bankInfo?.precoMensal && (
+          <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-accent)' }}>
+            Apenas {Number(bankInfo.precoMensal).toLocaleString('pt-AO')} Kz/mês
+          </div>
+        )}
+
+        <button onClick={onGoToSubscriptions} className="btn btn-primary" style={{
+          padding: '14px', fontSize: '1rem', fontWeight: 700,
+          background: 'linear-gradient(135deg, #f59e0b, #f97316)'
+        }}>
+          <Star size={16} style={{ marginRight: '8px' }} />
+          Aderir ao Plano Pro
         </button>
+
+        {bankInfo?.banco && (
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            Pague via Multicaixa Express (<strong>{bankInfo.telefone}</strong>) ou transferência bancária e envie o comprovativo ao administrador.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -152,80 +186,152 @@ function UpgradeWall({ bankInfo, onClose }) {
 
 // ─────────────────────────── MAIN APP ───────────────────────────────────────
 export default function App() {
-  // Auth
-  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('financas_is_auth') === 'true');
-  const [users, setUsers] = useState(() => {
-    const saved = localStorage.getItem('financas_users_v4');
-    return saved ? JSON.parse(saved) : INITIAL_USERS;
-  });
-  const [currentUserEmail, setCurrentUserEmail] = useState(() => localStorage.getItem('financas_user_email_v4') || '');
-  const [currentRole, setCurrentRole] = useState(() => localStorage.getItem('financas_user_role_v4') || '');
-
-  // Navigation
+  const [session, setSession] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  // Data State
+  const [launches, setLaunches] = useState([]);
+  const [categories, setCategories] = useState([]);
+  
+  // Global App State
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // Data
-  const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem('financas_categories_v4');
-    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
-  });
-  const [launches, setLaunches] = useState(() => {
-    const saved = localStorage.getItem('financas_launches_v4');
-    return saved ? JSON.parse(saved) : INITIAL_LAUNCHES;
-  });
-
-  // Bank info (SuperAdmin configures)
-  const [bankInfo, setBankInfo] = useState(() => {
-    const saved = localStorage.getItem('financas_bank_v4');
-    return saved ? JSON.parse(saved) : INITIAL_BANK;
-  });
-
-  // UI
-  const [isOffline, setIsOffline] = useState(false);
-  const [lowBalanceLimit, setLowBalanceLimit] = useState(5000);
-  const [theme, setTheme] = useState('dark');
   const [toastMessage, setToastMessage] = useState(null);
-  const [offlineQueue, setOfflineQueue] = useState([]);
-  const [installPrompt, setInstallPrompt] = useState(null);
+  const [theme, setTheme] = useState('dark');
   const [showUpgradeWall, setShowUpgradeWall] = useState(false);
 
-  const currentUser = users.find(u => u.Email === currentUserEmail);
-  const isSuperAdmin = currentRole === 'SuperAdmin';
-  const isProUser = currentUser?.Plano && currentUser.Plano !== 'Gratuito';
+  // Fallbacks for missing admin features
+  const [users, setUsers] = useState([]); 
+  const [bankInfo, setBankInfo] = useState({});
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [inviteCodes, setInviteCodes] = useState(['AFA2026', 'FINPRO2026']);
+  const [auditLogs, setAuditLogs] = useState([]);
 
-  // Persist
-  useEffect(() => { localStorage.setItem('financas_users_v4', JSON.stringify(users)); }, [users]);
-  useEffect(() => { localStorage.setItem('financas_categories_v4', JSON.stringify(categories)); }, [categories]);
-  useEffect(() => { localStorage.setItem('financas_launches_v4', JSON.stringify(launches)); }, [launches]);
-  useEffect(() => { localStorage.setItem('financas_bank_v4', JSON.stringify(bankInfo)); }, [bankInfo]);
+  // Supabase Auth Listener
   useEffect(() => {
-    localStorage.setItem('financas_is_auth', isAuthenticated ? 'true' : 'false');
-    localStorage.setItem('financas_user_email_v4', currentUserEmail);
-    localStorage.setItem('financas_user_role_v4', currentRole);
-  }, [isAuthenticated, currentUserEmail, currentRole]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if(session) fetchUserData(session.user.id);
+      else setLoading(false);
+    });
 
-  useEffect(() => {
-    const handler = (e) => { e.preventDefault(); setInstallPrompt(e); };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if(session) fetchUserData(session.user.id);
+      else {
+        setCurrentUser(null);
+        setLaunches([]);
+        setCategories([]);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
+  const fetchUserData = async (userId) => {
+    setLoading(true);
+    try {
+      // Fetch Profile
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      
+      const mappedUser = profile ? {
+        id: profile.id,
+        Email: session?.user?.email,
+        Nome: profile.full_name,
+        Role: profile.role,
+        Plano: profile.plan,
+        Ativo: profile.is_active,
+        Pais: profile.country,
+        Telefone: profile.phone
+      } : { Role: 'user', Plano: 'Gratuito' };
+      
+      setCurrentUser(mappedUser);
+
+      // Fetch categories & transactions concurrently
+      await loadDataFromSupabase(userId, mappedUser.Role);
+
+    } catch (err) {
+      console.error('Error fetching user data', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDataFromSupabase = async (userId, role) => {
+    try {
+      // Categories
+      const categoriesQuery = role === 'admin' ? supabase.from('categories').select('*') : supabase.from('categories').select('*').eq('user_id', userId);
+      const { data: catData } = await categoriesQuery;
+      
+      if (catData) {
+        setCategories(catData.map(c => ({
+          CategoriaID: c.id,
+          Nome: c.name,
+          Tipo: c.type === 'income' ? 'Receita' : 'Despesa',
+          CategoriaMaeID: c.parent_id || '',
+          Subtipo: c.subtype,
+          Alvo: c.target_amount,
+          Ativa: true
+        })));
+      }
+
+      // Transactions
+      const transQuery = role === 'admin' ? supabase.from('transactions').select('*') : supabase.from('transactions').select('*').eq('user_id', userId);
+      const { data: txData } = await transQuery;
+      
+      if (txData) {
+        setLaunches(txData.map(t => ({
+          LancID: t.id,
+          Data: t.created_at.split('T')[0],
+          CategoriaID: t.category_id,
+          Tipo: t.type === 'income' ? 'Entrada' : 'Saida',
+          Valor: t.amount,
+          Descricao: t.description,
+          Conta: t.account,
+          Status: t.status,
+          CriadoPor: t.user_id // using user_id instead of email to avoid complex joins
+        })));
+      }
+    } catch(err) {
+      console.error('Error loading data', err);
+    }
+  };
+
+  // Realtime listeners
   useEffect(() => {
-    if (toastMessage) { const t = setTimeout(() => setToastMessage(null), 4500); return () => clearTimeout(t); }
-  }, [toastMessage]);
+    if (!session?.user?.id) return;
+    
+    const channel = supabase.channel('public:transactions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, payload => {
+        loadDataFromSupabase(session.user.id, currentUser?.Role);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, payload => {
+        loadDataFromSupabase(session.user.id, currentUser?.Role);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session, currentUser]);
 
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
-
-  // Close menu when tab changes
+  useEffect(() => { if (toastMessage) { const t = setTimeout(() => setToastMessage(null), 4500); return () => clearTimeout(t); } }, [toastMessage]);
   useEffect(() => { setMenuOpen(false); }, [activeTab]);
 
-  // Category Balance
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setToastMessage({ type: 'success', text: 'Sessão encerrada com segurança.' });
+  };
+
+  // Category Balance logic
   const getCategoryBalance = (catId, excludeLaunchId = null) => {
     const cat = categories.find(c => c.CategoriaID === catId);
     if (!cat) return 0;
     const userLaunches = launches.filter(l =>
-      (isSuperAdmin || currentRole === 'Admin' || l.CriadoPor === currentUserEmail) &&
+      (currentUser?.Role === 'admin' || l.CriadoPor === session?.user?.id) &&
       l.LancID !== excludeLaunchId
     );
     const totalEntradas = userLaunches.filter(l => l.CategoriaID === catId && l.Tipo === 'Entrada').reduce((sum, l) => sum + Number(l.Valor), 0);
@@ -240,147 +346,155 @@ export default function App() {
     return totalEntradas - totalSaidas;
   };
 
-  // Auth
-  const handleLogin = (user) => {
-    setUsers(prev => prev.map(u => u.Email === user.Email ? { ...u, UltimoAcesso: new Date().toISOString().split('T')[0] } : u));
-    setCurrentUserEmail(user.Email);
-    setCurrentRole(user.Role);
-    setIsAuthenticated(true);
-    setActiveTab('dashboard');
-    setToastMessage({ type: 'success', text: `Bem-vindo(a), ${user.Nome || user.Email.split('@')[0]}!` });
-  };
-  const handleRegister = (newUser) => { setUsers(prev => [...prev, newUser]); };
-  const handleLogout = () => {
-    setIsAuthenticated(false); setCurrentUserEmail(''); setCurrentRole('');
-    setActiveTab('dashboard'); setMenuOpen(false);
-    setToastMessage({ type: 'success', text: 'Sessão encerrada com segurança.' });
-  };
-
-  // Launches
-  const handleAddLaunch = (newLaunch) => {
-    // Check free plan limit (50 per month)
-    if (!isSuperAdmin && !isProUser) {
+  // Data Handlers mapping to Supabase
+  const handleAddLaunch = async (newLaunch) => {
+    if (!session?.user?.id) return;
+    const isPro = currentUser?.Plano !== 'Gratuito';
+    const isAdmin = currentUser?.Role === 'admin';
+    
+    if (!isAdmin && !isPro) {
       const thisMonth = new Date().toISOString().slice(0, 7);
-      const monthLaunches = launches.filter(l => l.CriadoPor === currentUserEmail && l.Data?.startsWith(thisMonth)).length;
+      const monthLaunches = launches.filter(l => l.CriadoPor === session.user.id && l.Data?.startsWith(thisMonth)).length;
       if (monthLaunches >= 50) {
         setShowUpgradeWall(true);
         return;
       }
     }
-    if (isOffline) {
-      setLaunches(prev => [newLaunch, ...prev]);
-      setOfflineQueue(prev => [...prev, newLaunch]);
-      setToastMessage({ type: 'warning', text: 'Salvo localmente (offline).' });
-    } else {
-      setLaunches(prev => [newLaunch, ...prev]);
-      setToastMessage({ type: 'success', text: 'Lançamento registrado com sucesso!' });
-    }
-  };
-  const handleEditLaunch = (updated) => {
-    setLaunches(prev => prev.map(l => l.LancID === updated.LancID ? updated : l));
-    setToastMessage({ type: 'success', text: 'Lançamento atualizado!' });
-  };
-  const handleDeleteLaunch = (id) => {
-    setLaunches(prev => prev.filter(l => l.LancID !== id));
-    setToastMessage({ type: 'success', text: 'Lançamento removido!' });
+
+    const { error } = await supabase.from('transactions').insert([{
+      user_id: session.user.id,
+      type: newLaunch.Tipo === 'Entrada' ? 'income' : 'expense',
+      amount: newLaunch.Valor,
+      description: newLaunch.Descricao,
+      category_id: newLaunch.CategoriaID,
+      account: newLaunch.Conta,
+      status: newLaunch.Status
+    }]);
+
+    if (error) setToastMessage({ type: 'warning', text: 'Erro ao salvar: ' + error.message });
+    else setToastMessage({ type: 'success', text: 'Lançamento registrado!' });
   };
 
-  // Categories
-  const handleAddCategory = (newCat) => {
-    if (categories.some(c => c.CategoriaID === newCat.CategoriaID || c.Nome.toLowerCase() === newCat.Nome.toLowerCase())) {
-      alert('Já existe uma categoria com este ID ou Nome.');
+  const handleEditLaunch = async (updated) => {
+    const { error } = await supabase.from('transactions').update({
+      type: updated.Tipo === 'Entrada' ? 'income' : 'expense',
+      amount: updated.Valor,
+      description: updated.Descricao,
+      category_id: updated.CategoriaID,
+      account: updated.Conta,
+      status: updated.Status
+    }).eq('id', updated.LancID);
+
+    if (error) setToastMessage({ type: 'warning', text: 'Erro ao atualizar: ' + error.message });
+    else setToastMessage({ type: 'success', text: 'Lançamento atualizado!' });
+  };
+
+  const handleDeleteLaunch = async (id) => {
+    const { error } = await supabase.from('transactions').delete().eq('id', id);
+    if (error) setToastMessage({ type: 'warning', text: 'Erro ao remover: ' + error.message });
+    else setToastMessage({ type: 'success', text: 'Lançamento removido!' });
+  };
+
+  const handleAddCategory = async (newCat) => {
+    const { error } = await supabase.from('categories').insert([{
+      user_id: session.user.id,
+      name: newCat.Nome,
+      type: newCat.Tipo === 'Receita' ? 'income' : 'expense',
+      subtype: newCat.Subtipo,
+      parent_id: newCat.CategoriaMaeID ? newCat.CategoriaMaeID : null,
+      target_amount: newCat.Alvo || 0
+    }]);
+
+    if (error) {
+      alert('Erro ao criar categoria.');
       return false;
     }
-    setCategories(prev => [...prev, newCat]);
-    setToastMessage({ type: 'success', text: `Categoria "${newCat.Nome}" criada!` });
+    setToastMessage({ type: 'success', text: 'Categoria criada!' });
     return true;
   };
 
-  // Offline
-  const handleOfflineToggle = () => {
-    setIsOffline(prev => {
-      const next = !prev;
-      if (!next && offlineQueue.length > 0) {
-        setToastMessage({ type: 'success', text: `Reconectado! ${offlineQueue.length} item(s) sincronizado(s).` });
-        setOfflineQueue([]);
-      }
-      return next;
-    });
+  const handleAutoBudget = async (salaryAmount) => {
+    alert("Funcionalidade de orçamento automático migrada para a cloud. Em construção.");
   };
 
-  // Reset
-  const handleResetData = () => {
-    ['financas_categories_v4', 'financas_launches_v4', 'financas_users_v4', 'financas_bank_v4'].forEach(k => localStorage.removeItem(k));
-    setCategories(INITIAL_CATEGORIES); setLaunches(INITIAL_LAUNCHES);
-    setUsers(INITIAL_USERS); setBankInfo(INITIAL_BANK); setOfflineQueue([]);
-    handleLogout();
-  };
-
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-
-  const handleInstallApp = () => {
-    if (!installPrompt) { alert('Siga as instruções de instalação em Ajustes!'); return; }
-    installPrompt.prompt();
-    installPrompt.userChoice.then(r => { if (r.outcome === 'accepted') setInstallPrompt(null); });
-  };
-
-  // Guard
-  if (!isAuthenticated) {
-    return <AuthView users={users} onLogin={handleLogin} onRegister={handleRegister} />;
+  // UI Setup
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1d', color: '#fff' }}>
+        <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--color-accent)' }} />
+      </div>
+    );
   }
 
-  // Tab content
+  if (!session) {
+    return <AuthView />;
+  }
+
+  const isSuperAdmin = currentUser?.Role === 'admin';
+  const isProUser = currentUser?.Plano && currentUser.Plano !== 'Gratuito';
+
+  const PREMIUM_TABS = ['coach', 'academia', 'investimentos', 'empresa'];
+  const isPremiumLocked = (tab) => PREMIUM_TABS.includes(tab) && !isProUser && !isSuperAdmin;
+
   const renderTabContent = () => {
+    if (isPremiumLocked(activeTab)) {
+      return <PremiumLockScreen tabName={activeTab} bankInfo={bankInfo} onGoToSubscriptions={() => setActiveTab('subscricoes')} />;
+    }
+
     switch (activeTab) {
-      case 'superadmin':
-        return isSuperAdmin
-          ? <SuperAdminView users={users} setUsers={setUsers} currentUserEmail={currentUserEmail}
-              onToast={setToastMessage} launches={launches} bankInfo={bankInfo} setBankInfo={setBankInfo} />
-          : <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-error)' }}>⛔ Acesso negado.</div>;
       case 'dashboard':
-        return <DashboardView launches={launches} categories={categories} role={currentRole}
-          userEmail={currentUserEmail} onAddLaunchClick={() => setActiveTab('lancamentos')} />;
+        return <DashboardView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} onAddLaunchClick={() => setActiveTab('lancamentos')} />;
       case 'lancamentos':
-        return <LancamentosView launches={launches} categories={categories} role={currentRole}
-          userEmail={currentUserEmail} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch}
-          onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
+        return <LancamentosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch} onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
       case 'categorias':
-        return <CategoriasView categories={categories} launches={launches} role={currentRole}
-          userEmail={currentUserEmail} onAddCategory={handleAddCategory} />;
+        return <CategoriasView categories={categories} launches={launches} role={currentUser?.Role} userEmail={currentUser?.Email} onAddCategory={handleAddCategory} onAutoBudget={handleAutoBudget} />;
       case 'relatorios':
-        return <RelatoriosView launches={launches} categories={categories} role={currentRole} userEmail={currentUserEmail} />;
+        return <RelatoriosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} />;
       case 'coach':
-        return <CoachView launches={launches} categories={categories} role={currentRole} userEmail={currentUserEmail} />;
+        return <CoachView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} getCategoryBalance={getCategoryBalance} />;
+      case 'academia':
+        return <AcademiaView currentUser={currentUser} />;
+      case 'investimentos':
+        return <InvestimentosView currentUser={currentUser} launches={launches} categories={categories} />;
+      case 'empresa':
+        return <EmpresaView currentUser={currentUser} onToast={setToastMessage} />;
+      case 'subscricoes':
+        return <SubscriptionsView currentUser={currentUser} bankInfo={bankInfo} onToast={setToastMessage} subscriptions={subscriptions} setSubscriptions={setSubscriptions} />;
       case 'configuracoes':
-        return <ConfiguracoesView role={currentRole} userEmail={currentUserEmail} currentUser={currentUser}
-          users={users} setUsers={setUsers} isOffline={isOffline} lowBalanceLimit={lowBalanceLimit}
-          installPrompt={installPrompt} onRoleChange={setCurrentRole} onUserEmailChange={setCurrentUserEmail}
-          onOfflineToggle={handleOfflineToggle} onLowBalanceLimitChange={setLowBalanceLimit}
-          onResetData={handleResetData} onInstallApp={handleInstallApp} onToast={setToastMessage}
-          bankInfo={bankInfo} onShowUpgrade={() => setShowUpgradeWall(true)} />;
+        return <ConfiguracoesView role={currentUser?.Role} userEmail={currentUser?.Email} currentUser={currentUser}
+          users={users} setUsers={setUsers} isOffline={false} lowBalanceLimit={5000} onResetData={() => {}} 
+          onInstallApp={() => {}} onToast={setToastMessage} bankInfo={bankInfo} onShowUpgrade={() => setShowUpgradeWall(true)} />;
+      case 'superadmin':
+          return isSuperAdmin
+            ? <SuperAdminView users={users} setUsers={setUsers} currentUserEmail={currentUser?.Email} onToast={setToastMessage} launches={launches} bankInfo={bankInfo} setBankInfo={setBankInfo} subscriptions={subscriptions} setSubscriptions={setSubscriptions} inviteCodes={inviteCodes} setInviteCodes={setInviteCodes} auditLogs={auditLogs} onAddAuditLog={() => {}} />
+            : <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-error)' }}>⛔ Acesso negado.</div>;
       default: return null;
     }
   };
 
-  const navItems = [
+  const mainNavItems = [
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
     { id: 'lancamentos', icon: <Receipt size={18} />, label: 'Lançamentos' },
     { id: 'categorias', icon: <Tags size={18} />, label: 'Categorias' },
     { id: 'relatorios', icon: <FileBarChart size={18} />, label: 'Relatórios' },
     { id: 'coach', icon: <Sparkles size={18} />, label: 'Coach IA' },
+  ];
+
+  const extraNavItems = [
+    { id: 'academia', icon: <GraduationCap size={18} />, label: 'Academia' },
+    { id: 'investimentos', icon: <TrendingUp size={18} />, label: 'Investimentos' },
+    { id: 'empresa', icon: <Building2 size={18} />, label: 'Empresa' },
+    { id: 'subscricoes', icon: <CreditCard size={18} />, label: 'Subscrições' },
     ...(isSuperAdmin ? [{ id: 'superadmin', icon: <Crown size={18} />, label: 'Painel Admin', gold: true }] : []),
     { id: 'configuracoes', icon: <Settings size={18} />, label: 'Ajustes' },
   ];
 
-  const roleBadgeColor = currentRole === 'SuperAdmin' ? '#f59e0b' : currentRole === 'Admin' ? '#a78bfa' : 'var(--color-accent)';
+  const roleBadgeColor = currentUser?.Role === 'admin' ? '#f59e0b' : 'var(--color-accent)';
 
   return (
     <div className="app-container">
-
-      {/* Upgrade Wall Modal */}
       {showUpgradeWall && <UpgradeWall bankInfo={bankInfo} onClose={() => setShowUpgradeWall(false)} />}
 
-      {/* Toast */}
       {toastMessage && (
         <div style={{
           position: 'fixed', top: '24px', right: '24px', zIndex: 300,
@@ -395,151 +509,63 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER */}
-      <header className="glass-panel" style={{
-        padding: '10px 16px', display: 'flex',
-        justifyContent: 'space-between', alignItems: 'center', gap: '8px',
-        position: 'sticky', top: 0, zIndex: 100
-      }}>
-        {/* Left: Logo + Name */}
+      <header className="glass-panel" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            background: 'linear-gradient(135deg, var(--color-accent) 0%, #a5b4fc 100%)',
-            width: '30px', height: '30px', borderRadius: '8px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, color: '#fff', fontSize: '1rem'
-          }}>F</div>
-          <h1 style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>
-            Finança ao Ponto
-          </h1>
+          <div style={{ background: 'linear-gradient(135deg, var(--color-accent) 0%, #a5b4fc 100%)', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1rem' }}>F</div>
+          <h1 style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>Finança ao Ponto</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '10px', padding: '2px 7px', fontSize: '0.6rem', color: 'var(--color-success)', fontWeight: 700 }}>
+            <Cloud size={9} /> Supabase
+          </div>
         </div>
 
-        {/* Right: Badges + Hamburger */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {/* Offline badge */}
-          <div onClick={handleOfflineToggle} style={{
-            display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
-            padding: '4px 8px', borderRadius: '16px', fontSize: '0.68rem', fontWeight: 700,
-            backgroundColor: isOffline ? 'var(--color-error-bg)' : 'var(--color-success-bg)',
-            color: isOffline ? 'var(--color-error)' : 'var(--color-success)',
-            border: `1px solid ${isOffline ? 'var(--color-error)' : 'var(--color-success)'}`
-          }}>
-            {isOffline ? <WifiOff size={11} /> : <Wifi size={11} />}
-            {isOffline ? 'OFF' : 'ON'}
-          </div>
-
-          {/* Plan badge (non-admin) */}
           {!isSuperAdmin && (
-            <div onClick={() => setShowUpgradeWall(true)} style={{
-              padding: '4px 8px', borderRadius: '16px', fontSize: '0.68rem', fontWeight: 700,
-              cursor: 'pointer',
-              backgroundColor: isProUser ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
-              color: isProUser ? 'var(--color-accent)' : 'var(--text-muted)',
-              border: `1px solid ${isProUser ? 'rgba(99,102,241,0.3)' : 'var(--border-color)'}`,
-              display: 'flex', alignItems: 'center', gap: '3px'
-            }}>
+            <div onClick={() => setActiveTab('subscricoes')} style={{ padding: '4px 8px', borderRadius: '16px', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer', backgroundColor: isProUser ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: isProUser ? 'var(--color-accent)' : 'var(--text-muted)', border: `1px solid ${isProUser ? 'rgba(99,102,241,0.3)' : 'var(--border-color)'}`, display: 'flex', alignItems: 'center', gap: '3px' }}>
               {isProUser ? <Star size={10} /> : <Lock size={10} />}
               {currentUser?.Plano || 'Gratuito'}
             </div>
           )}
-
-          {/* User name (compact) */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '4px',
-            fontSize: '0.72rem', fontWeight: 700, color: roleBadgeColor
-          }}>
-            {currentRole === 'SuperAdmin' && <Crown size={12} style={{ color: '#f59e0b' }} />}
-            {currentUser?.Nome?.split(' ')[0] || currentUserEmail.split('@')[0]}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: 700, color: roleBadgeColor }}>
+            {currentUser?.Role === 'admin' && <Crown size={12} style={{ color: '#f59e0b' }} />}
+            {currentUser?.Nome?.split(' ')[0] || currentUser?.Email?.split('@')[0]}
           </div>
-
-          {/* Theme */}
-          <button onClick={toggleTheme} style={{
-            background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)',
-            color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
+          <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
           </button>
-
-          {/* Hamburger Menu Button */}
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{
-            background: menuOpen ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${menuOpen ? 'rgba(99,102,241,0.3)' : 'var(--border-color)'}`,
-            color: menuOpen ? 'var(--color-accent)' : 'var(--text-primary)',
-            padding: '6px', borderRadius: '8px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.2s'
-          }}>
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: menuOpen ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${menuOpen ? 'rgba(99,102,241,0.3)' : 'var(--border-color)'}`, color: menuOpen ? 'var(--color-accent)' : 'var(--text-primary)', padding: '6px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
             {menuOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
         </div>
       </header>
 
-      {/* DROPDOWN MENU (replaces bottom nav) */}
       {menuOpen && (
         <>
-          {/* Backdrop */}
-          <div onClick={() => setMenuOpen(false)} style={{
-            position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(0,0,0,0.4)'
-          }} />
-          {/* Menu Panel */}
-          <div className="glass-panel animate-fade-in" style={{
-            position: 'fixed', top: '56px', right: '12px', zIndex: 95,
-            padding: '8px', borderRadius: '14px', minWidth: '200px',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
-            display: 'flex', flexDirection: 'column', gap: '2px'
-          }}>
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => { setActiveTab(item.id); setMenuOpen(false); }}
-                style={{
-                  background: activeTab === item.id
-                    ? (item.gold ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)')
-                    : 'transparent',
-                  border: 'none', cursor: 'pointer', padding: '10px 14px',
-                  borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px',
-                  color: activeTab === item.id
-                    ? (item.gold ? '#f59e0b' : 'var(--color-accent)')
-                    : 'var(--text-secondary)',
-                  fontWeight: activeTab === item.id ? 700 : 500,
-                  fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left'
-                }}
-              >
-                <span style={{
-                  color: activeTab === item.id
-                    ? (item.gold ? '#f59e0b' : 'var(--color-accent)')
-                    : 'var(--text-muted)'
-                }}>{item.icon}</span>
-                {item.label}
-                {item.gold && (
-                  <span style={{
-                    marginLeft: 'auto', width: '7px', height: '7px', borderRadius: '50%',
-                    background: '#f59e0b'
-                  }} />
-                )}
+          <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(0,0,0,0.4)' }} />
+          <div className="glass-panel animate-fade-in" style={{ position: 'fixed', top: '56px', right: '12px', zIndex: 95, padding: '8px', borderRadius: '14px', minWidth: '210px', boxShadow: '0 12px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, padding: '4px 12px 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Principal</div>
+            {mainNavItems.map(item => (
+              <button key={item.id} onClick={() => { setActiveTab(item.id); setMenuOpen(false); }} style={{ background: activeTab === item.id ? 'rgba(99,102,241,0.12)' : 'transparent', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: activeTab === item.id ? 'var(--color-accent)' : 'var(--text-secondary)', fontWeight: activeTab === item.id ? 700 : 500, fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left' }}>
+                <span style={{ color: activeTab === item.id ? 'var(--color-accent)' : 'var(--text-muted)' }}>{item.icon}</span>{item.label}
               </button>
             ))}
-
-            {/* Logout inside menu */}
             <div style={{ borderTop: '1px solid var(--border-color)', margin: '4px 0' }} />
-            <button onClick={handleLogout} style={{
-              background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer',
-              padding: '10px 14px', borderRadius: '10px',
-              display: 'flex', alignItems: 'center', gap: '10px',
-              color: 'var(--color-error)', fontWeight: 600, fontSize: '0.88rem', width: '100%'
-            }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, padding: '4px 12px 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avançado</div>
+            {extraNavItems.map(item => (
+              <button key={item.id} onClick={() => { setActiveTab(item.id); setMenuOpen(false); }} style={{ background: activeTab === item.id ? (item.gold ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)') : 'transparent', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: activeTab === item.id ? (item.gold ? '#f59e0b' : 'var(--color-accent)') : 'var(--text-secondary)', fontWeight: activeTab === item.id ? 700 : 500, fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left' }}>
+                <span style={{ color: activeTab === item.id ? (item.gold ? '#f59e0b' : 'var(--color-accent)') : 'var(--text-muted)' }}>{item.icon}</span>{item.label}
+              </button>
+            ))}
+            <div style={{ borderTop: '1px solid var(--border-color)', margin: '4px 0' }} />
+            <button onClick={handleLogout} style={{ background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-error)', fontWeight: 600, fontSize: '0.88rem', width: '100%' }}>
               <LogOut size={18} /> Sair da Conta
             </button>
           </div>
         </>
       )}
 
-      {/* MAIN CONTENT — no padding bottom needed since no bottom nav */}
       <main className="content-area" style={{ paddingBottom: '24px' }}>
         {renderTabContent()}
       </main>
-
     </div>
   );
 }

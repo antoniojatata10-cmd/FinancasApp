@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Settings, Shield, Wifi, WifiOff, RefreshCcw, Trash2, Bell, Download,
+  Settings, Wifi, WifiOff, RefreshCcw, Trash2, Bell, Download,
   Monitor, Smartphone, Apple, User, Mail, Phone, Lock, Eye, EyeOff,
-  Save, Globe, Star, CheckCircle
+  Save, Globe, CheckCircle, Cloud, CloudOff, Database, ExternalLink,
+  AlertTriangle, ShieldCheck, TestTube, BookOpen
 } from 'lucide-react';
+import { isSupabaseConfigured, getSupabaseClient } from '../supabaseClient';
+import GuiaAppView from './GuiaAppView';
 
 export default function ConfiguracoesView({
   role, userEmail, currentUser, users, setUsers,
   isOffline, lowBalanceLimit, installPrompt,
   onRoleChange, onUserEmailChange, onOfflineToggle,
-  onLowBalanceLimitChange, onResetData, onInstallApp, onToast
+  onLowBalanceLimitChange, onResetData, onInstallApp, onToast,
+  bankInfo, onShowUpgrade
 }) {
   const [editNome, setEditNome] = useState(currentUser?.Nome || '');
   const [editTelefone, setEditTelefone] = useState(currentUser?.Telefone || '');
@@ -19,6 +23,15 @@ export default function ConfiguracoesView({
   const [editSenhaConfirm, setEditSenhaConfirm] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [showGuia, setShowGuia] = useState(false);
+
+  // Cloud Sync state
+  const [sbUrl, setSbUrl] = useState(() => localStorage.getItem('financas_supabase_url') || '');
+  const [sbKey, setSbKey] = useState(() => localStorage.getItem('financas_supabase_key') || '');
+  const [showKey, setShowKey] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle | testing | ok | error
+  const [syncMsg, setSyncMsg] = useState('');
+  const [isConfigured, setIsConfigured] = useState(isSupabaseConfigured());
 
   const isSuperAdmin = role === 'SuperAdmin';
 
@@ -36,8 +49,6 @@ export default function ConfiguracoesView({
       onToast({ type: 'error', text: 'O nome não pode estar vazio.' });
       return;
     }
-
-    // Password change if fields filled
     if (editSenhaNova || editSenhaAtual) {
       if (editSenhaAtual !== currentUser?.Senha) {
         onToast({ type: 'error', text: 'Senha atual incorreta.' });
@@ -52,7 +63,6 @@ export default function ConfiguracoesView({
         return;
       }
     }
-
     setUsers(prev => prev.map(u => {
       if (u.Email !== userEmail) return u;
       return {
@@ -63,7 +73,6 @@ export default function ConfiguracoesView({
         ...(editSenhaNova ? { Senha: editSenhaNova } : {})
       };
     }));
-
     setEditSenhaAtual('');
     setEditSenhaNova('');
     setEditSenhaConfirm('');
@@ -72,6 +81,78 @@ export default function ConfiguracoesView({
     onToast({ type: 'success', text: 'Perfil atualizado com sucesso!' });
   };
 
+  // ── Cloud Sync: Save keys ──────────────────────────────────────────────────
+  const handleSaveSyncKeys = () => {
+    const urlClean = sbUrl.trim();
+    const keyClean = sbKey.trim();
+
+    if (!urlClean || !keyClean) {
+      onToast({ type: 'error', text: 'Preencha o URL e a chave Anon do Supabase.' });
+      return;
+    }
+
+    // Basic URL validation
+    if (!urlClean.startsWith('https://') || !urlClean.includes('supabase.co')) {
+      onToast({ type: 'error', text: 'URL inválido. Deve ser: https://xxx.supabase.co' });
+      return;
+    }
+
+    localStorage.setItem('financas_supabase_url', urlClean);
+    localStorage.setItem('financas_supabase_key', keyClean);
+    setIsConfigured(true);
+    onToast({ type: 'success', text: '✅ Chaves guardadas! Recarregue a página para activar a sincronização.' });
+  };
+
+  // ── Cloud Sync: Test connection ────────────────────────────────────────────
+  const handleTestConnection = async () => {
+    setSyncStatus('testing');
+    setSyncMsg('A testar ligação...');
+
+    const urlClean = sbUrl.trim();
+    const keyClean = sbKey.trim();
+
+    if (!urlClean || !keyClean) {
+      setSyncStatus('error');
+      setSyncMsg('Preencha o URL e a chave antes de testar.');
+      return;
+    }
+
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const testClient = createClient(urlClean, keyClean);
+      const { error } = await testClient.from('usuarios').select('count', { count: 'exact', head: true });
+
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 = no rows, but connection OK
+        throw new Error(error.message);
+      }
+      setSyncStatus('ok');
+      setSyncMsg('✅ Ligação bem sucedida! O Supabase está configurado e acessível.');
+    } catch (err) {
+      setSyncStatus('error');
+      setSyncMsg(`❌ Falha na ligação: ${err.message}`);
+    }
+  };
+
+  const handleClearSyncKeys = () => {
+    if (!window.confirm('Remover as configurações de cloud? O app voltará a usar dados locais.')) return;
+    localStorage.removeItem('financas_supabase_url');
+    localStorage.removeItem('financas_supabase_key');
+    setSbUrl('');
+    setSbKey('');
+    setIsConfigured(false);
+    setSyncStatus('idle');
+    setSyncMsg('');
+    onToast({ type: 'success', text: 'Configuração cloud removida. Recarregue a página.' });
+  };
+
+  const syncStatusColor = {
+    idle: 'var(--text-muted)',
+    testing: '#f59e0b',
+    ok: 'var(--color-success)',
+    error: 'var(--color-error)'
+  }[syncStatus];
+
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
@@ -79,7 +160,7 @@ export default function ConfiguracoesView({
       <div>
         <h2 style={{ fontSize: '1.75rem', fontWeight: 700 }}>Ajustes e Perfil</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Gerencie o seu perfil, senha e preferências do aplicativo.
+          Gerencie o seu perfil, sincronização cloud e preferências.
         </p>
       </div>
 
@@ -182,10 +263,7 @@ export default function ConfiguracoesView({
           </div>
 
           {/* Change Password */}
-          <div style={{
-            borderTop: '1px solid var(--border-color)', paddingTop: '14px',
-            display: 'flex', flexDirection: 'column', gap: '10px'
-          }}>
+          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <Lock size={15} style={{ color: 'var(--color-accent)' }} />
               <span style={{ fontSize: '0.88rem', fontWeight: 700 }}>Alterar Senha (opcional)</span>
@@ -194,7 +272,6 @@ export default function ConfiguracoesView({
                 {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
-
             {['Senha Atual', 'Nova Senha', 'Confirmar Nova'].map((lbl, i) => {
               const vals = [editSenhaAtual, editSenhaNova, editSenhaConfirm];
               const setters = [setEditSenhaAtual, setEditSenhaNova, setEditSenhaConfirm];
@@ -229,13 +306,135 @@ export default function ConfiguracoesView({
         {/* ── RIGHT COLUMN ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          {/* Download / Install Card */}
+          {/* ── CLOUD SYNC CARD ── */}
+          <div className="glass-panel" style={{
+            padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px',
+            border: `1px solid ${isConfigured ? 'rgba(52,211,153,0.25)' : 'rgba(99,102,241,0.2)'}`
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {isConfigured
+                ? <Cloud size={20} style={{ color: 'var(--color-success)' }} />
+                : <CloudOff size={20} style={{ color: 'var(--text-muted)' }} />
+              }
+              <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Sincronização Cloud</h4>
+              <span style={{
+                marginLeft: 'auto', padding: '3px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700,
+                backgroundColor: isConfigured ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.04)',
+                color: isConfigured ? 'var(--color-success)' : 'var(--text-muted)',
+                border: `1px solid ${isConfigured ? 'rgba(52,211,153,0.3)' : 'var(--border-color)'}`
+              }}>
+                {isConfigured ? '● Configurado' : '○ Local'}
+              </span>
+            </div>
+
+            {/* Info box */}
+            <div style={{
+              background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)',
+              borderRadius: '10px', padding: '12px', fontSize: '0.8rem', lineHeight: 1.6,
+              color: 'var(--text-secondary)'
+            }}>
+              <strong style={{ color: 'var(--text-primary)' }}>🔑 Para sincronizar entre PC e telemóvel:</strong><br />
+              1. Crie um projeto gratuito em{' '}
+              <a href="https://supabase.com" target="_blank" rel="noreferrer"
+                style={{ color: 'var(--color-accent)', textDecoration: 'none' }}>
+                supabase.com <ExternalLink size={11} style={{ verticalAlign: 'middle' }} />
+              </a><br />
+              2. Vá a Project Settings → API.<br />
+              3. Cole o <strong>Project URL</strong> e a chave <strong>anon public</strong> abaixo.<br />
+              4. Configure as tabelas com o ficheiro SQL incluído no projeto.
+            </div>
+
+            {/* URL input */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">URL do Projeto Supabase</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Database size={14} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
+                <input
+                  type="url"
+                  placeholder="https://xxxxxxxxxxx.supabase.co"
+                  value={sbUrl}
+                  onChange={e => setSbUrl(e.target.value)}
+                  className="form-input"
+                  style={{ paddingLeft: '34px', fontFamily: 'monospace', fontSize: '0.8rem' }}
+                />
+              </div>
+            </div>
+
+            {/* Anon Key input */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Chave Anon (anon public)</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Lock size={14} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
+                <input
+                  type={showKey ? 'text' : 'password'}
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+                  value={sbKey}
+                  onChange={e => setSbKey(e.target.value)}
+                  className="form-input"
+                  style={{ paddingLeft: '34px', paddingRight: '40px', fontFamily: 'monospace', fontSize: '0.8rem' }}
+                />
+                <button type="button" onClick={() => setShowKey(p => !p)}
+                  style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Status message */}
+            {syncMsg && (
+              <div style={{
+                fontSize: '0.8rem', padding: '10px 12px', borderRadius: '8px', lineHeight: 1.5,
+                background: syncStatus === 'ok' ? 'var(--color-success-bg)' : syncStatus === 'error' ? 'var(--color-error-bg)' : 'rgba(245,158,11,0.08)',
+                border: `1px solid ${syncStatusColor}`,
+                color: syncStatusColor
+              }}>
+                {syncMsg}
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button onClick={handleTestConnection} className="btn btn-secondary"
+                style={{ flex: 1, minWidth: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.82rem' }}
+                disabled={syncStatus === 'testing'}
+              >
+                <TestTube size={14} />
+                {syncStatus === 'testing' ? 'A testar...' : 'Testar Ligação'}
+              </button>
+              <button onClick={handleSaveSyncKeys} className="btn btn-primary"
+                style={{ flex: 1, minWidth: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.82rem' }}>
+                <Save size={14} /> Guardar Chaves
+              </button>
+            </div>
+
+            {isConfigured && (
+              <button onClick={handleClearSyncKeys} className="btn btn-danger"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.8rem', padding: '8px' }}>
+                <CloudOff size={14} /> Desactivar Cloud Sync
+              </button>
+            )}
+          </div>
+
+          {/* Guia App Card */}
+          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-accent)' }}>
+              <BookOpen size={20} />
+              <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Guia de Utilização</h4>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Descubra como usar todas as funcionalidades do Finança ao Ponto.
+            </p>
+            <button onClick={() => setShowGuia(true)} className="btn btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <BookOpen size={16} /> Abrir Guia do App
+            </button>
+          </div>
+
+          {/* Install App Card */}
           <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-accent)' }}>
               <Download size={20} />
               <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Instalar o App</h4>
             </div>
-
             {installPrompt ? (
               <button onClick={onInstallApp} className="btn btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <Download size={16} /> Instalar Agora
@@ -249,10 +448,8 @@ export default function ConfiguracoesView({
                 Siga o guia abaixo para instalar o app no seu dispositivo.
               </div>
             )}
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
               <h5 style={{ fontSize: '0.82rem', fontWeight: 700 }}>Guia de Instalação:</h5>
-
               {[
                 { icon: <Monitor size={14} />, label: 'Windows / Mac', desc: 'No Chrome ou Edge, clique no ícone de instalação (💻) na barra de endereços.' },
                 { icon: <Smartphone size={14} />, label: 'Android', desc: 'Menu (⋮) → "Adicionar à Tela de início" ou "Instalar aplicativo".' },
@@ -268,7 +465,7 @@ export default function ConfiguracoesView({
             </div>
           </div>
 
-          {/* Network Simulator Card */}
+          {/* Network Status */}
           <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-accent)' }}>
               {isOffline ? <WifiOff size={18} style={{ color: 'var(--color-error)' }} /> : <Wifi size={18} style={{ color: 'var(--color-success)' }} />}
@@ -336,6 +533,7 @@ export default function ConfiguracoesView({
         </div>
       </div>
 
+      {showGuia && <GuiaAppView onClose={() => setShowGuia(false)} />}
     </div>
   );
 }

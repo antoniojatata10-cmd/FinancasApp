@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Tag, Check, ArrowUpRight, ArrowDownLeft, Info, Plus, AlertCircle, Target } from 'lucide-react';
+import { Tag, Check, ArrowUpRight, ArrowDownLeft, Info, Plus, AlertCircle, Target, Sparkles } from 'lucide-react';
 
-export default function CategoriasView({ categories, launches, role, userEmail, onAddCategory }) {
+export default function CategoriasView({ categories, launches, role, userEmail, onAddCategory, onAutoBudget }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   
   // Form State
   const [nome, setNome] = useState('');
@@ -12,6 +13,10 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
   const [alvo, setAlvo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [formError, setFormError] = useState('');
+
+  // Auto Budget State
+  const [salaryInput, setSalaryInput] = useState('');
+  const [budgetError, setBudgetError] = useState('');
 
   // Apply security filter to matches what the user can see
   const filteredLaunches = launches.filter(l => 
@@ -65,6 +70,19 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
     }
   };
 
+  const handleBudgetSubmit = (e) => {
+    e.preventDefault();
+    setBudgetError('');
+    const val = Number(salaryInput);
+    if (isNaN(val) || val <= 0) {
+      setBudgetError('Por favor, introduza um valor de salário válido.');
+      return;
+    }
+    onAutoBudget(val);
+    setIsBudgetModalOpen(false);
+    setSalaryInput('');
+  };
+
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
@@ -77,9 +95,18 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
           </p>
         </div>
         {role !== 'ReadOnly' && (
-          <button onClick={handleOpenAdd} className="btn btn-primary" style={{ padding: '10px 18px' }}>
-            <Plus size={18} /> Nova Categoria
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => { setSalaryInput(''); setBudgetError(''); setIsBudgetModalOpen(true); }}
+              className="btn btn-secondary"
+              style={{ padding: '10px 18px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}
+            >
+              <Sparkles size={18} /> Orçamento Automático
+            </button>
+            <button onClick={handleOpenAdd} className="btn btn-primary" style={{ padding: '10px 18px' }}>
+              <Plus size={18} /> Nova Categoria
+            </button>
+          </div>
         )}
       </div>
 
@@ -97,7 +124,7 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
           <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '2px' }}>Regra de Saldo Positivo & Alocação Ativa</h4>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             • <strong>Categorias Mãe</strong> (ex: Salário) recebem depósitos diretos. Suas filhas dependem dela.<br />
-            • <strong>Categorias Filhas</strong> (ex: Alimentação, Táxi) recebem parcelas (Entradas) que reduzem o saldo da Mãe correspondente.<br />
+            • <strong>Categorias Filhas</strong> (ex: Alimentação, Táxi) recebem alocações (Entradas) que reduzem o saldo da Mãe correspondente.<br />
             • <strong>Dívidas e Empréstimos</strong> controlam parcelamentos e amortizações até zerarem.
           </p>
         </div>
@@ -402,6 +429,87 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
                 </button>
               </div>
 
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* AUTO BUDGET MODAL */}
+      {isBudgetModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          padding: '16px'
+        }} className="animate-fade-in">
+          
+          <div className="glass-panel animate-scale-in" style={{
+            background: 'var(--bg-secondary)',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={20} style={{ color: 'var(--color-accent)' }} /> Orçamento Automático (50/20/20/10)
+            </h3>
+
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Introduza o seu rendimento/salário líquido mensal. O sistema irá criar automaticamente a estrutura de categorias baseada na regra de ouro financeira e fazer as distribuições iniciais:
+              <br /><br />
+              • <strong>50%</strong> Necessidades (Alimentação, Habitação)<br />
+              • <strong>20%</strong> Metas e Poupança (Reserva Financeira)<br />
+              • <strong>20%</strong> Investimentos<br />
+              • <strong>10%</strong> Gastos Livres / Lazer (Extras)
+            </p>
+
+            {budgetError && (
+              <div style={{
+                background: 'var(--color-error-bg)',
+                color: 'var(--color-error)',
+                border: '1px solid var(--color-error)',
+                padding: '12px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.85rem'
+              }}>
+                <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                <span>{budgetError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleBudgetSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Rendimento Geral Mensal (Kz)</label>
+                <input
+                  type="number"
+                  placeholder="Ex: 500000"
+                  value={salaryInput}
+                  onChange={(e) => setSalaryInput(e.target.value)}
+                  className="form-input"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '12px' }}>
+                <button type="button" onClick={() => setIsBudgetModalOpen(false)} className="btn btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Gerar Estrutura
+                </button>
+              </div>
             </form>
 
           </div>

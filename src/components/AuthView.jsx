@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Mail, User, Shield, AlertCircle, LogIn, UserPlus, Lock, Eye, EyeOff, Phone, Globe, CheckCircle } from 'lucide-react';
+import { Mail, User, Shield, AlertCircle, LogIn, UserPlus, Lock, Eye, EyeOff, CheckCircle, Globe, Phone } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 
-export default function AuthView({ users, onLogin, onRegister }) {
+export default function AuthView() {
   const [activeTab, setActiveTab] = useState('login');
+  const [loading, setLoading] = useState(false);
 
   // Login State
   const [loginEmail, setLoginEmail] = useState('');
@@ -26,84 +28,77 @@ export default function AuthView({ users, onLogin, onRegister }) {
     paddingLeft: '36px'
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError('');
+    setLoading(true);
 
     if (!loginEmail.trim() || !loginPassword.trim()) {
       setLoginError('Por favor, preencha o e-mail e a senha.');
+      setLoading(false);
       return;
     }
 
-    const emailClean = loginEmail.trim().toLowerCase();
-    const user = users.find(u => u.Email.toLowerCase() === emailClean);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: loginEmail.trim().toLowerCase(),
+      password: loginPassword,
+    });
 
-    if (!user) {
-      setLoginError('E-mail não encontrado. Verifique ou crie uma conta.');
-      return;
+    if (error) {
+      setLoginError(error.message === 'Invalid login credentials' 
+        ? 'Credenciais inválidas. Verifique o e-mail e a senha.' 
+        : error.message);
     }
-
-    if (!user.Ativo) {
-      setLoginError('Esta conta está bloqueada pelo administrador. Contacte o suporte.');
-      return;
-    }
-
-    if (user.Senha !== loginPassword) {
-      setLoginError('Senha incorreta. Tente novamente.');
-      return;
-    }
-
-    onLogin(user);
+    setLoading(false);
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setRegError('');
+    setLoading(true);
 
     if (!regNome.trim() || !regEmail.trim() || !regPassword.trim()) {
       setRegError('Preencha todos os campos obrigatórios (*).');
+      setLoading(false);
       return;
     }
 
     if (regPassword.length < 6) {
       setRegError('A senha deve ter pelo menos 6 caracteres.');
+      setLoading(false);
       return;
     }
 
     if (regPassword !== regConfirmPassword) {
       setRegError('As senhas não correspondem. Verifique e tente novamente.');
+      setLoading(false);
       return;
     }
 
-    const emailClean = regEmail.trim().toLowerCase();
+    const { error } = await supabase.auth.signUp({
+      email: regEmail.trim().toLowerCase(),
+      password: regPassword,
+      options: {
+        data: {
+          full_name: regNome.trim(),
+          phone: regTelefone.trim(),
+          country: regPais,
+          role: 'user'
+        }
+      }
+    });
 
-    if (users.some(u => u.Email.toLowerCase() === emailClean)) {
-      setRegError('Este e-mail já está cadastrado. Tente fazer login.');
-      return;
+    if (error) {
+      setRegError(error.message);
+    } else {
+      setRegSuccess(true);
+      setTimeout(() => {
+        setLoginEmail(regEmail.trim().toLowerCase());
+        setActiveTab('login');
+        setRegSuccess(false);
+      }, 2000);
     }
-
-    const newUser = {
-      Email: emailClean,
-      Nome: regNome.trim(),
-      Senha: regPassword,
-      Telefone: regTelefone.trim(),
-      Pais: regPais,
-      Role: 'User',
-      Ativo: true,
-      Plano: 'Gratuito',
-      DataCadastro: new Date().toISOString().split('T')[0],
-      UltimoAcesso: new Date().toISOString().split('T')[0],
-      LancamentosUsados: 0
-    };
-
-    onRegister(newUser);
-    setRegSuccess(true);
-
-    setTimeout(() => {
-      setLoginEmail(emailClean);
-      setActiveTab('login');
-      setRegSuccess(false);
-    }, 2000);
+    setLoading(false);
   };
 
   if (regSuccess) {
@@ -126,7 +121,7 @@ export default function AuthView({ users, onLogin, onRegister }) {
           <h3 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Conta Criada!</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Bem-vindo(a) ao Finança ao Ponto, <strong style={{ color: 'var(--text-primary)' }}>{regNome}</strong>!<br />
-            Redirecionando para o login…
+            Por favor, faça login para continuar…
           </p>
         </div>
       </div>
@@ -160,7 +155,7 @@ export default function AuthView({ users, onLogin, onRegister }) {
             Finança ao Ponto
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-            Controle financeiro profissional — acesse ou crie a sua conta
+            Acesso seguro à sua área financeira
           </p>
         </div>
 
@@ -254,9 +249,9 @@ export default function AuthView({ users, onLogin, onRegister }) {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '13px', marginTop: '4px', fontSize: '0.95rem' }}>
+            <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', padding: '13px', marginTop: '4px', fontSize: '0.95rem' }}>
               <LogIn size={16} style={{ marginRight: '6px' }} />
-              Acessar Conta
+              {loading ? 'A processar...' : 'Acessar Conta'}
             </button>
           </form>
         )}
@@ -335,7 +330,7 @@ export default function AuthView({ users, onLogin, onRegister }) {
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <Phone size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
                   <input
-                    type="tel" placeholder="+244 9xx xxx xxx"
+                    type="tel" placeholder="+244..."
                     value={regTelefone} onChange={(e) => setRegTelefone(e.target.value)}
                     className="form-input" style={inputStyle}
                   />
@@ -348,39 +343,25 @@ export default function AuthView({ users, onLogin, onRegister }) {
                   <Globe size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)', zIndex: 1 }} />
                   <select
                     value={regPais} onChange={(e) => setRegPais(e.target.value)}
-                    className="form-input" style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
+                    className="form-input" style={{ ...inputStyle, appearance: 'none' }}
                   >
                     <option>Angola</option>
                     <option>Portugal</option>
                     <option>Brasil</option>
                     <option>Moçambique</option>
                     <option>Cabo Verde</option>
-                    <option>São Tomé e Príncipe</option>
-                    <option>Guiné-Bissau</option>
                     <option>Outro</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            <div style={{
-              display: 'flex', gap: '8px', fontSize: '0.75rem',
-              color: 'var(--text-secondary)', backgroundColor: 'rgba(255, 255, 255, 0.01)',
-              padding: '10px', borderRadius: '6px', border: '1px dashed var(--border-color)'
-            }}>
-              <Shield size={15} style={{ flexShrink: 0, color: 'var(--color-accent)', marginTop: '1px' }} />
-              <span>
-                A conta será criada como <strong>Utilizador</strong> com plano <strong>Gratuito</strong>. Faça upgrade para Pro para desbloquear todas as funcionalidades.
-              </span>
-            </div>
-
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '13px', fontSize: '0.95rem', marginTop: '4px' }}>
+            <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', padding: '13px', marginTop: '4px', fontSize: '0.95rem' }}>
               <UserPlus size={16} style={{ marginRight: '6px' }} />
-              Criar Conta Gratuitamente
+              {loading ? 'A processar...' : 'Criar Conta'}
             </button>
           </form>
         )}
-
       </div>
     </div>
   );

@@ -4,7 +4,8 @@ import {
   UserCheck, UserX, Search, Settings2,
   ChevronDown, ChevronUp,
   Edit3, Save, X, RefreshCw, Megaphone, CreditCard,
-  Banknote, DollarSign
+  Banknote, DollarSign, CheckCircle, Clock, AlertTriangle,
+  FileText, Eye, Plus, ShieldAlert, Key
 } from 'lucide-react';
 
 const PLANOS = ['Gratuito', 'Básico', 'Pro', 'Enterprise'];
@@ -37,7 +38,21 @@ function StatCard({ icon, label, value, color }) {
   );
 }
 
-export default function SuperAdminView({ users, setUsers, currentUserEmail, onToast, launches, bankInfo, setBankInfo }) {
+export default function SuperAdminView({
+  users,
+  setUsers,
+  currentUserEmail,
+  onToast,
+  launches,
+  bankInfo,
+  setBankInfo,
+  subscriptions,
+  setSubscriptions,
+  inviteCodes,
+  setInviteCodes,
+  auditLogs,
+  onAddAuditLog
+}) {
   const [search, setSearch] = useState('');
   const [filterPlano, setFilterPlano] = useState('Todos');
   const [filterStatus, setFilterStatus] = useState('Todos');
@@ -58,6 +73,20 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
     precoAnual: bankInfo?.precoAnual || '20000'
   });
 
+  // User CRUD states
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+  const [createNome, setCreateNome] = useState('');
+  const [createEmail, setCreateEmail] = useState('');
+  const [createSenha, setCreateSenha] = useState('');
+  const [createRole, setCreateRole] = useState('User');
+  const [createPlano, setCreatePlano] = useState('Gratuito');
+
+  // Invite codes states
+  const [newInviteCode, setNewInviteCode] = useState('');
+
+  // Logs search state
+  const [logSearch, setLogSearch] = useState('');
+
   const autoManageAccounts = () => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -72,6 +101,7 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
       return u;
     }));
     onToast({ type: 'success', text: `Gestão automática concluída! ${locked} conta(s) bloqueada(s) por inatividade.` });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Executou gestão automática: Bloqueou ${locked} contas inativas`);
   };
 
   const stats = useMemo(() => ({
@@ -95,25 +125,43 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
     });
   }, [users, search, filterPlano, filterStatus]);
 
+  const filteredLogs = useMemo(() => {
+    const logs = auditLogs || [];
+    if (!logSearch.trim()) return logs;
+    const clean = logSearch.toLowerCase();
+    return logs.filter(l =>
+      l.email.toLowerCase().includes(clean) ||
+      l.acao.toLowerCase().includes(clean) ||
+      l.ip.toLowerCase().includes(clean)
+    );
+  }, [auditLogs, logSearch]);
+
   const handleBlockToggle = (email) => {
     if (email === currentUserEmail) {
       onToast({ type: 'error', text: 'Não pode bloquear sua própria conta!' });
       return;
     }
-    setUsers(prev => prev.map(u =>
-      u.Email === email ? {
-        ...u,
-        Ativo: !u.Ativo,
-        BloqueioMotivo: u.Ativo ? 'Bloqueado manualmente pelo SuperAdmin' : ''
-      } : u
-    ));
+    let stateAction = '';
+    setUsers(prev => prev.map(u => {
+      if (u.Email === email) {
+        stateAction = u.Ativo ? 'bloqueou' : 'desbloqueou';
+        return {
+          ...u,
+          Ativo: !u.Ativo,
+          BloqueioMotivo: u.Ativo ? 'Bloqueado manualmente pelo SuperAdmin' : ''
+        };
+      }
+      return u;
+    }));
     const user = users.find(u => u.Email === email);
     onToast({ type: 'success', text: `Conta "${user?.Nome}" ${user?.Ativo ? 'bloqueada' : 'desbloqueada'} com sucesso!` });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `${stateAction.toUpperCase()} utilizador: ${email}`);
   };
 
   const handlePlanoChange = (email, novoPlano) => {
     setUsers(prev => prev.map(u => u.Email === email ? { ...u, Plano: novoPlano } : u));
     onToast({ type: 'success', text: `Plano alterado para "${novoPlano}" com sucesso!` });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Alterou plano de ${email} para ${novoPlano}`);
   };
 
   const handleRoleChange = (email, novoRole) => {
@@ -123,6 +171,7 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
     }
     setUsers(prev => prev.map(u => u.Email === email ? { ...u, Role: novoRole } : u));
     onToast({ type: 'success', text: `Papel alterado para "${novoRole}" com sucesso!` });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Alterou papel de ${email} para ${novoRole}`);
   };
 
   const handleDeleteUser = (email) => {
@@ -134,6 +183,7 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
     if (window.confirm(`⚠️ Confirmar eliminação permanente da conta de "${user?.Nome}"?\n\nEsta ação não pode ser desfeita.`)) {
       setUsers(prev => prev.filter(u => u.Email !== email));
       onToast({ type: 'success', text: `Conta de "${user?.Nome}" eliminada permanentemente.` });
+      if (onAddAuditLog) onAddAuditLog(currentUserEmail, `ELIMINOU permanentemente o utilizador: ${email}`);
     }
   };
 
@@ -146,6 +196,70 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
     setUsers(prev => prev.map(u => u.Email === email ? { ...u, ...editForm } : u));
     setEditingUser(null);
     onToast({ type: 'success', text: 'Perfil do utilizador atualizado com sucesso!' });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Editou perfil do utilizador: ${email}`);
+  };
+
+  const handleCreateUserSubmit = (e) => {
+    e.preventDefault();
+    if (!createNome.trim() || !createEmail.trim() || !createSenha.trim()) {
+      alert('Por favor, preencha os campos obrigatórios (*).');
+      return;
+    }
+
+    const emailClean = createEmail.trim().toLowerCase();
+    if (users.some(u => u.Email.toLowerCase() === emailClean)) {
+      alert('Este e-mail já está cadastrado no sistema.');
+      return;
+    }
+
+    const newUser = {
+      Email: emailClean,
+      Nome: createNome.trim(),
+      Senha: createSenha,
+      Telefone: '',
+      Pais: 'Angola',
+      Role: createRole,
+      Ativo: true,
+      Plano: createPlano,
+      DataCadastro: new Date().toISOString().split('T')[0],
+      UltimoAcesso: new Date().toISOString().split('T')[0],
+      LancamentosUsados: 0
+    };
+
+    setUsers(prev => [...prev, newUser]);
+    setIsCreateUserOpen(false);
+    onToast({ type: 'success', text: `Utilizador "${newUser.Nome}" criado com sucesso!` });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `CRIOU utilizador diretamente: ${emailClean} (Role: ${createRole}, Plano: ${createPlano})`);
+
+    // Reset fields
+    setCreateNome('');
+    setCreateEmail('');
+    setCreateSenha('');
+    setCreateRole('User');
+    setCreatePlano('Gratuito');
+  };
+
+  const handleAddInviteCodeSubmit = (e) => {
+    e.preventDefault();
+    const code = newInviteCode.trim().toUpperCase();
+    if (!code) return;
+
+    const currentCodes = inviteCodes || [];
+    if (currentCodes.includes(code)) {
+      onToast({ type: 'warning', text: 'Este código de convite já existe!' });
+      return;
+    }
+
+    setInviteCodes(prev => [...(prev || []), code]);
+    setNewInviteCode('');
+    onToast({ type: 'success', text: `Código de convite "${code}" criado com sucesso.` });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Criou código de convite: ${code}`);
+  };
+
+  const handleRevokeInviteCode = (code) => {
+    setInviteCodes(prev => (prev || []).filter(c => c !== code));
+    onToast({ type: 'success', text: `Código de convite "${code}" revogado.` });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Revogou código de convite: ${code}`);
   };
 
   const handlePostAnnouncement = () => {
@@ -159,12 +273,14 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
     setAnnouncements(prev => [newAnn, ...prev]);
     setAnnouncement('');
     onToast({ type: 'success', text: 'Anúncio publicado para todos os utilizadores!' });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Publicou anúncio global: "${newAnn.text}"`);
   };
 
   const handleSaveBank = () => {
     setBankInfo(bankForm);
     setEditingBank(false);
     onToast({ type: 'success', text: 'Coordenadas bancárias atualizadas com sucesso!' });
+    if (onAddAuditLog) onAddAuditLog(currentUserEmail, 'Atualizou coordenadas bancárias do plano Pro');
   };
 
   const getUserLaunches = (email) => launches.filter(l => l.CriadoPor === email).length;
@@ -195,7 +311,7 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
             <h2 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Painel SuperAdmin</h2>
           </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
-            Controlo total sobre contas, planos, pagamentos e funcionalidades.
+            Controlo total sobre contas, planos, pagamentos, convites e auditoria de segurança.
           </p>
         </div>
         <button
@@ -356,9 +472,14 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
 
       {/* User Management */}
       <div style={cardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
-          <Users size={20} style={{ color: 'var(--color-accent)' }} />
-          <h4 style={{ fontWeight: 700, fontSize: '1.05rem' }}>Gestão de Utilizadores ({filtered.length})</h4>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Users size={20} style={{ color: 'var(--color-accent)' }} />
+            <h4 style={{ fontWeight: 700, fontSize: '1.05rem' }}>Gestão de Utilizadores ({filtered.length})</h4>
+          </div>
+          <button onClick={() => setIsCreateUserOpen(true)} className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Plus size={14} /> Novo Utilizador
+          </button>
         </div>
 
         {/* Filters */}
@@ -531,6 +652,240 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
         </div>
       </div>
 
+      {/* ─── SUBSCRIPTION APPROVAL PANEL ─── */}
+      <div style={{ ...cardStyle, borderColor: 'rgba(99,102,241,0.25)', background: 'rgba(99,102,241,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-accent)' }}>
+            <CreditCard size={20} />
+            <h4 style={{ fontWeight: 700, fontSize: '1rem' }}>Aprovação de Subscrições</h4>
+          </div>
+          {(subscriptions || []).filter(s => s.status === 'Pendente').length > 0 && (
+            <span style={{ ...badgeStyle('#f59e0b'), fontSize: '0.75rem' }}>
+              {(subscriptions || []).filter(s => s.status === 'Pendente').length} pendente(s)
+            </span>
+          )}
+        </div>
+
+        {(!subscriptions || subscriptions.length === 0) ? (
+          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            <Clock size={28} style={{ margin: '0 auto 10px', opacity: 0.3 }} />
+            <p>Nenhum pedido de subscrição recebido.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {(subscriptions || []).map(sub => {
+              const statusColors = {
+                Pendente: { cor: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+                Ativa: { cor: '#34d399', bg: 'rgba(52,211,153,0.1)' },
+                Rejeitada: { cor: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+                Cancelada: { cor: '#6b7280', bg: 'rgba(107,114,128,0.1)' }
+              };
+              const sc = statusColors[sub.status] || statusColors.Pendente;
+
+              const aprovar = () => {
+                const expiryDate = new Date();
+                expiryDate.setMonth(expiryDate.getMonth() + (sub.periodo === 'anual' ? 12 : 1));
+                setSubscriptions(prev => prev.map(s =>
+                  s.id === sub.id ? { ...s, status: 'Ativa', dataExpiracao: expiryDate.toISOString() } : s
+                ));
+                // Update user plan
+                setUsers(prev => prev.map(u =>
+                  u.Email === sub.userEmail ? { ...u, Plano: sub.plano } : u
+                ));
+                onToast({ type: 'success', text: `Subscrição de "${sub.userName}" aprovada! Plano ${sub.plano} activado.` });
+                if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Aprovou subscrição do plano ${sub.plano} para: ${sub.userEmail}`);
+              };
+
+              const rejeitar = () => {
+                setSubscriptions(prev => prev.map(s =>
+                  s.id === sub.id ? { ...s, status: 'Rejeitada', observacao: 'Comprovativo não válido ou pagamento não confirmado.' } : s
+                ));
+                onToast({ type: 'warning', text: `Subscrição de "${sub.userName}" rejeitada.` });
+                if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Rejeitou subscrição de: ${sub.userEmail}`);
+              };
+
+              return (
+                <div key={sub.id} style={{
+                  background: 'rgba(255,255,255,0.02)', border: `1px solid ${sc.cor}33`,
+                  borderRadius: '12px', padding: '14px 16px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                        {sub.userName || sub.userEmail}
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: '8px' }}>{sub.userEmail}</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        Plano {sub.plano} ({sub.periodo}) · {new Date(sub.dataPedido).toLocaleDateString('pt-PT')}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', marginTop: '4px' }}>
+                        Valor: <strong style={{ color: 'var(--color-accent)' }}>{Number(sub.valor || 0).toLocaleString('pt-AO')} Kz</strong>
+                        {sub.comprovativoNome && (
+                          <span style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
+                            <FileText size={11} /> {sub.comprovativoNome}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{
+                        background: sc.bg, color: sc.cor, border: `1px solid ${sc.cor}44`,
+                        padding: '4px 12px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 700
+                      }}>{sub.status}</span>
+
+                      {sub.comprovativoUrl && (
+                        <a href={sub.comprovativoUrl} target="_blank" rel="noopener noreferrer" style={{
+                          background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)',
+                          color: 'var(--color-accent)', borderRadius: '6px', padding: '5px 10px',
+                          cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
+                          display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none'
+                        }}>
+                          <Eye size={12} /> Ver
+                        </a>
+                      )}
+
+                      {sub.status === 'Pendente' && (
+                        <>
+                          <button onClick={aprovar} style={{
+                            background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)',
+                            color: '#34d399', borderRadius: '6px', padding: '5px 12px',
+                            cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem',
+                            display: 'flex', alignItems: 'center', gap: '4px'
+                          }}>
+                            <CheckCircle size={13} /> Aprovar
+                          </button>
+                          <button onClick={rejeitar} style={{
+                            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                            color: '#ef4444', borderRadius: '6px', padding: '5px 12px',
+                            cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem',
+                            display: 'flex', alignItems: 'center', gap: '4px'
+                          }}>
+                            <X size={13} /> Rejeitar
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {sub.observacao && (
+                    <div style={{
+                      marginTop: '8px', padding: '6px 10px', background: 'rgba(239,68,68,0.05)',
+                      borderRadius: '6px', fontSize: '0.75rem', color: 'var(--color-error)',
+                      borderLeft: '3px solid var(--color-error)'
+                    }}>
+                      {sub.observacao}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Grid for Invite Codes and Audit Logs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+        
+        {/* INVITE CODES PANEL */}
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--color-accent)' }}>
+            <Key size={20} />
+            <h4 style={{ fontWeight: 700, fontSize: '1rem' }}>Códigos de Convite (Registo)</h4>
+          </div>
+
+          <form onSubmit={handleAddInviteCodeSubmit} style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+            <input
+              type="text"
+              placeholder="Ex: PROMO2026"
+              value={newInviteCode}
+              onChange={e => setNewInviteCode(e.target.value)}
+              className="form-input"
+              style={{ flex: 1, textTransform: 'uppercase' }}
+              required
+            />
+            <button type="submit" className="btn btn-primary" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Plus size={15} /> Adicionar
+            </button>
+          </form>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
+            {(!inviteCodes || inviteCodes.length === 0) ? (
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', width: '100%', textAlign: 'center', padding: '12px' }}>
+                Nenhum código de convite ativo.
+              </div>
+            ) : (
+              inviteCodes.map(code => (
+                <div key={code} style={{
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)',
+                  padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem'
+                }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>{code}</strong>
+                  <button
+                    onClick={() => handleRevokeInviteCode(code)}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                    title="Revogar Código"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* AUDIT LOGS PANEL */}
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyStyle: 'space-between', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-error)' }}>
+              <ShieldAlert size={20} />
+              <h4 style={{ fontWeight: 700, fontSize: '1rem' }}>Auditoria de Logs de Acesso</h4>
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              {filteredLogs.length} registos
+            </span>
+          </div>
+
+          <div style={{ position: 'relative', marginBottom: '12px' }}>
+            <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Buscar nos logs (IP, Email, Ação)..."
+              value={logSearch}
+              onChange={e => setLogSearch(e.target.value)}
+              className="form-input"
+              style={{ paddingLeft: '30px', fontSize: '0.8rem', paddingY: '6px' }}
+            />
+          </div>
+
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: '6px',
+            maxHeight: '180px', overflowY: 'auto', paddingRight: '4px'
+          }}>
+            {filteredLogs.length === 0 ? (
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>
+                Nenhum log de auditoria encontrado.
+              </div>
+            ) : (
+              filteredLogs.map(log => (
+                <div key={log.id} style={{
+                  padding: '8px 10px', borderRadius: '6px',
+                  background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.04)',
+                  fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: '2px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>{log.email.split('@')[0]}</strong>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{log.data}</span>
+                  </div>
+                  <div style={{ color: 'var(--text-secondary)' }}>{log.acao}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.68rem', textAlign: 'right' }}>IP: {log.ip}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+      </div>
+
       {/* System Settings */}
       <div style={{ ...cardStyle, borderColor: 'rgba(99,102,241,0.2)', background: 'rgba(99,102,241,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--color-accent)' }}>
@@ -555,6 +910,71 @@ export default function SuperAdminView({ users, setUsers, currentUserEmail, onTo
           </div>
         </div>
       </div>
+
+      {/* CREATE USER MODAL */}
+      {isCreateUserOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 200, padding: '16px'
+        }} className="animate-fade-in">
+          
+          <div className="glass-panel animate-scale-in" style={{
+            background: 'var(--bg-secondary)', width: '100%', maxWidth: '440px',
+            padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px'
+          }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+              Criar Novo Utilizador
+            </h3>
+
+            <form onSubmit={handleCreateUserSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nome Completo *</label>
+                <input type="text" value={createNome} onChange={e => setCreateNome(e.target.value)}
+                  placeholder="Nome do utilizador" className="form-input" required />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">E-mail *</label>
+                <input type="email" value={createEmail} onChange={e => setCreateEmail(e.target.value)}
+                  placeholder="utilizador@financasapp.com" className="form-input" required />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Senha Inicial *</label>
+                <input type="password" value={createSenha} onChange={e => setCreateSenha(e.target.value)}
+                  placeholder="Min. 6 caracteres" className="form-input" required />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Role</label>
+                  <select value={createRole} onChange={e => setCreateRole(e.target.value)} className="form-select">
+                    <option value="User">User (Utilizador)</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Plano</label>
+                  <select value={createPlano} onChange={e => setCreatePlano(e.target.value)} className="form-select">
+                    {PLANOS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px' }}>
+                <button type="button" onClick={() => setIsCreateUserOpen(false)} className="btn btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Criar Conta
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
