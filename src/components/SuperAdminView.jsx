@@ -7,6 +7,7 @@ import {
   Banknote, DollarSign, CheckCircle, Clock, AlertTriangle,
   FileText, Eye, Plus, ShieldAlert, Key
 } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 
 const PLANOS = ['Gratuito', 'Básico', 'Pro', 'Enterprise'];
 const ROLES = ['User', 'Admin', 'SuperAdmin'];
@@ -136,42 +137,59 @@ export default function SuperAdminView({
     );
   }, [auditLogs, logSearch]);
 
-  const handleBlockToggle = (email) => {
+  const handleBlockToggle = async (userId, email, currentlyActive) => {
     if (email === currentUserEmail) {
-      onToast({ type: 'error', text: 'Não pode bloquear sua própria conta!' });
+      onToast({ type: 'error', text: 'Não pode bloquear a sua própria conta!' });
       return;
     }
-    let stateAction = '';
-    setUsers(prev => prev.map(u => {
-      if (u.Email === email) {
-        stateAction = u.Ativo ? 'bloqueou' : 'desbloqueou';
-        return {
-          ...u,
-          Ativo: !u.Ativo,
-          BloqueioMotivo: u.Ativo ? 'Bloqueado manualmente pelo SuperAdmin' : ''
-        };
-      }
-      return u;
-    }));
-    const user = users.find(u => u.Email === email);
-    onToast({ type: 'success', text: `Conta "${user?.Nome}" ${user?.Ativo ? 'bloqueada' : 'desbloqueada'} com sucesso!` });
-    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `${stateAction.toUpperCase()} utilizador: ${email}`);
+    const newState = !currentlyActive;
+    // Update Supabase
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_active: newState })
+      .eq('id', userId);
+
+    if (error) {
+      onToast({ type: 'warning', text: 'Erro ao actualizar estado: ' + error.message });
+      return;
+    }
+    // Update local state
+    setUsers(prev => prev.map(u =>
+      u.id === userId ? { ...u, Ativo: newState } : u
+    ));
+    onToast({ type: 'success', text: `Conta ${newState ? 'desbloqueada' : 'bloqueada'} com sucesso!` });
   };
 
-  const handlePlanoChange = (email, novoPlano) => {
-    setUsers(prev => prev.map(u => u.Email === email ? { ...u, Plano: novoPlano } : u));
+  const handlePlanoChange = async (userId, email, novoPlano) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ plan: novoPlano })
+      .eq('id', userId);
+
+    if (error) {
+      onToast({ type: 'warning', text: 'Erro ao alterar plano: ' + error.message });
+      return;
+    }
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, Plano: novoPlano } : u));
     onToast({ type: 'success', text: `Plano alterado para "${novoPlano}" com sucesso!` });
-    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Alterou plano de ${email} para ${novoPlano}`);
   };
 
-  const handleRoleChange = (email, novoRole) => {
+  const handleRoleChange = async (userId, email, novoRole) => {
     if (email === currentUserEmail) {
       onToast({ type: 'error', text: 'Não pode alterar o seu próprio papel!' });
       return;
     }
-    setUsers(prev => prev.map(u => u.Email === email ? { ...u, Role: novoRole } : u));
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role: novoRole.toLowerCase() })
+      .eq('id', userId);
+
+    if (error) {
+      onToast({ type: 'warning', text: 'Erro ao alterar papel: ' + error.message });
+      return;
+    }
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, Role: novoRole } : u));
     onToast({ type: 'success', text: `Papel alterado para "${novoRole}" com sucesso!` });
-    if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Alterou papel de ${email} para ${novoRole}`);
   };
 
   const handleDeleteUser = (email) => {
@@ -276,11 +294,59 @@ export default function SuperAdminView({
     if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Publicou anúncio global: "${newAnn.text}"`);
   };
 
-  const handleSaveBank = () => {
-    setBankInfo(bankForm);
-    setEditingBank(false);
-    onToast({ type: 'success', text: 'Coordenadas bancárias atualizadas com sucesso!' });
-    if (onAddAuditLog) onAddAuditLog(currentUserEmail, 'Atualizou coordenadas bancárias do plano Pro');
+  const handleSaveBank = async () => {
+    try {
+      // Save each key-value pair to admin_settings
+      const updates = Object.entries(bankForm).map(([key, value]) =>
+        supabase.from('admin_settings').upsert({ key, value }, { onConflict: 'key' })
+      );
+      await Promise.all(updates);
+      setBankInfo(bankForm);
+      setEditingBank(false);
+      onToast({ type: 'success', text: 'Coordenadas bancárias guardadas no Supabase com sucesso!' });
+    } catch (err) {
+      onToast({ type: 'warning', text: 'Erro ao guardar: ' + (err.message || 'Tente novamente.') });
+    }
+  };
+
+  // Approve payment via SQL function
+  const handleApprovePayment = async (paymentId, adminId) => {
+    try {
+      const { error } = await supabase.rpc('approve_payment', {
+        payment_id: paymentId,
+        admin_id:   adminId
+      });
+      if (error) throw error;
+      // Refresh local payments list
+      if (setSubscriptions) {
+        setSubscriptions(prev => prev.map(s =>
+          s.id === paymentId ? { ...s, status: 'Ativa' } : s
+        ));
+      }
+      onToast({ type: 'success', text: 'Pagamento aprovado! Plano activado para o utilizador.' });
+    } catch (err) {
+      onToast({ type: 'warning', text: 'Erro ao aprovar: ' + (err.message || 'Tente novamente.') });
+    }
+  };
+
+  // Reject payment via SQL function
+  const handleRejectPayment = async (paymentId, adminId, motivo = '') => {
+    try {
+      const { error } = await supabase.rpc('reject_payment', {
+        payment_id: paymentId,
+        admin_id:   adminId,
+        motivo
+      });
+      if (error) throw error;
+      if (setSubscriptions) {
+        setSubscriptions(prev => prev.map(s =>
+          s.id === paymentId ? { ...s, status: 'Cancelada' } : s
+        ));
+      }
+      onToast({ type: 'success', text: 'Pagamento rejeitado. Utilizador notificado.' });
+    } catch (err) {
+      onToast({ type: 'warning', text: 'Erro ao rejeitar: ' + (err.message || 'Tente novamente.') });
+    }
   };
 
   const getUserLaunches = (email) => launches.filter(l => l.CriadoPor === email).length;
@@ -561,7 +627,7 @@ export default function SuperAdminView({
                   </span>
 
                   <select value={user.Plano || 'Gratuito'}
-                    onChange={e => handlePlanoChange(user.Email, e.target.value)}
+                    onChange={e => handlePlanoChange(user.id, user.Email, e.target.value)}
                     disabled={user.Role === 'SuperAdmin'}
                     style={{
                       background: `${planoColor(user.Plano)}22`,
@@ -576,7 +642,7 @@ export default function SuperAdminView({
                   </select>
 
                   <select value={user.Role}
-                    onChange={e => handleRoleChange(user.Email, e.target.value)}
+                    onChange={e => handleRoleChange(user.id, user.Email, e.target.value)}
                     disabled={user.Role === 'SuperAdmin' || user.Email === currentUserEmail}
                     className="form-input"
                     style={{ width: 'auto', padding: '4px 8px', fontSize: '0.78rem', height: 'auto' }}>
@@ -604,7 +670,7 @@ export default function SuperAdminView({
 
                     {user.Role !== 'SuperAdmin' && (
                       <>
-                        <button onClick={() => handleBlockToggle(user.Email)}
+                        <button onClick={() => handleBlockToggle(user.id, user.Email, user.Ativo)}
                           title={user.Ativo ? 'Bloquear' : 'Desbloquear'}
                           style={{
                             background: user.Ativo ? 'rgba(239,68,68,0.1)' : 'rgba(52,211,153,0.1)',
@@ -682,27 +748,7 @@ export default function SuperAdminView({
               };
               const sc = statusColors[sub.status] || statusColors.Pendente;
 
-              const aprovar = () => {
-                const expiryDate = new Date();
-                expiryDate.setMonth(expiryDate.getMonth() + (sub.periodo === 'anual' ? 12 : 1));
-                setSubscriptions(prev => prev.map(s =>
-                  s.id === sub.id ? { ...s, status: 'Ativa', dataExpiracao: expiryDate.toISOString() } : s
-                ));
-                // Update user plan
-                setUsers(prev => prev.map(u =>
-                  u.Email === sub.userEmail ? { ...u, Plano: sub.plano } : u
-                ));
-                onToast({ type: 'success', text: `Subscrição de "${sub.userName}" aprovada! Plano ${sub.plano} activado.` });
-                if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Aprovou subscrição do plano ${sub.plano} para: ${sub.userEmail}`);
-              };
-
-              const rejeitar = () => {
-                setSubscriptions(prev => prev.map(s =>
-                  s.id === sub.id ? { ...s, status: 'Rejeitada', observacao: 'Comprovativo não válido ou pagamento não confirmado.' } : s
-                ));
-                onToast({ type: 'warning', text: `Subscrição de "${sub.userName}" rejeitada.` });
-                if (onAddAuditLog) onAddAuditLog(currentUserEmail, `Rejeitou subscrição de: ${sub.userEmail}`);
-              };
+              // Aprovação/rejeição via Supabase RPC (ver handleApprovePayment / handleRejectPayment)
 
               return (
                 <div key={sub.id} style={{
@@ -716,13 +762,13 @@ export default function SuperAdminView({
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: '8px' }}>{sub.userEmail}</span>
                       </div>
                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        Plano {sub.plano} ({sub.periodo}) · {new Date(sub.dataPedido).toLocaleDateString('pt-PT')}
+                        Plano {sub.plano} ({sub.periodo}) · {new Date(sub.data_pedido || sub.dataPedido).toLocaleDateString('pt-PT')}
                       </div>
                       <div style={{ fontSize: '0.78rem', marginTop: '4px' }}>
                         Valor: <strong style={{ color: 'var(--color-accent)' }}>{Number(sub.valor || 0).toLocaleString('pt-AO')} Kz</strong>
-                        {sub.comprovativoNome && (
+                        {(sub.comprovativo_nome || sub.comprovativoNome) && (
                           <span style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-                            <FileText size={11} /> {sub.comprovativoNome}
+                            <FileText size={11} /> {sub.comprovativo_nome || sub.comprovativoNome}
                           </span>
                         )}
                       </div>
@@ -733,8 +779,8 @@ export default function SuperAdminView({
                         padding: '4px 12px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 700
                       }}>{sub.status}</span>
 
-                      {sub.comprovativoUrl && (
-                        <a href={sub.comprovativoUrl} target="_blank" rel="noopener noreferrer" style={{
+                      {(sub.comprovativo_url || sub.comprovativoUrl) && (
+                        <a href={sub.comprovativo_url || sub.comprovativoUrl} target="_blank" rel="noopener noreferrer" style={{
                           background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)',
                           color: 'var(--color-accent)', borderRadius: '6px', padding: '5px 10px',
                           cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
@@ -746,7 +792,7 @@ export default function SuperAdminView({
 
                       {sub.status === 'Pendente' && (
                         <>
-                          <button onClick={aprovar} style={{
+                          <button onClick={() => handleApprovePayment(sub.id, null)} style={{
                             background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)',
                             color: '#34d399', borderRadius: '6px', padding: '5px 12px',
                             cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem',
@@ -754,7 +800,7 @@ export default function SuperAdminView({
                           }}>
                             <CheckCircle size={13} /> Aprovar
                           </button>
-                          <button onClick={rejeitar} style={{
+                          <button onClick={() => handleRejectPayment(sub.id, null, 'Comprovativo não válido.')} style={{
                             background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
                             color: '#ef4444', borderRadius: '6px', padding: '5px 12px',
                             cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem',

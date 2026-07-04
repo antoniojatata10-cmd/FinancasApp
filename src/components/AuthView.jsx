@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
-import { Mail, User, Shield, AlertCircle, LogIn, UserPlus, Lock, Eye, EyeOff, CheckCircle, Globe, Phone } from 'lucide-react';
+import {
+  Mail, User, AlertCircle, LogIn, UserPlus,
+  Lock, Eye, EyeOff, CheckCircle, Globe, Phone
+} from 'lucide-react';
+
 import { supabase } from '../supabaseClient';
 
 export default function AuthView() {
   const [activeTab, setActiveTab] = useState('login');
   const [loading, setLoading] = useState(false);
 
-  // Login State
+  // LOGIN
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [showLoginPass, setShowLoginPass] = useState(false);
 
-  // Register State
+  // REGISTER
   const [regNome, setRegNome] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -28,6 +32,7 @@ export default function AuthView() {
     paddingLeft: '36px'
   };
 
+  // ================= LOGIN =================
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -45,13 +50,16 @@ export default function AuthView() {
     });
 
     if (error) {
-      setLoginError(error.message === 'Invalid login credentials' 
-        ? 'Credenciais inválidas. Verifique o e-mail e a senha.' 
-        : error.message);
+      setLoginError(
+        error.message === 'Invalid login credentials'
+          ? 'Credenciais inválidas. Verifique o e-mail e a senha.'
+          : error.message
+      );
     }
     setLoading(false);
   };
 
+  // ================= REGISTER =================
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setRegError('');
@@ -70,7 +78,7 @@ export default function AuthView() {
     }
 
     if (regPassword !== regConfirmPassword) {
-      setRegError('As senhas não correspondem. Verifique e tente novamente.');
+      setRegError('As senhas não correspondem.');
       setLoading(false);
       return;
     }
@@ -101,15 +109,18 @@ export default function AuthView() {
     setLoading(false);
   };
 
+  // ================= SUCCESS SCREEN =================
   if (regSuccess) {
     return (
       <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'radial-gradient(circle at center, #131a30 0%, #0a0f1d 100%)', padding: '16px'
+        minHeight: '100vh', display: 'flex', alignItems: 'center',
+        justifyContent: 'center',
+        background: 'radial-gradient(circle at center, #131a30 0%, #0a0f1d 100%)',
+        padding: '16px'
       }}>
         <div className="glass-panel animate-fade-in" style={{
-          padding: '48px 32px', textAlign: 'center', maxWidth: '380px', width: '100%', gap: '16px',
-          display: 'flex', flexDirection: 'column', alignItems: 'center'
+          padding: '48px 32px', textAlign: 'center', maxWidth: '380px', width: '100%',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
         }}>
           <div style={{
             background: 'var(--color-success-bg)', border: '2px solid var(--color-success)',
@@ -121,7 +132,7 @@ export default function AuthView() {
           <h3 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Conta Criada!</h3>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Bem-vindo(a) ao Finança ao Ponto, <strong style={{ color: 'var(--text-primary)' }}>{regNome}</strong>!<br />
-            Por favor, faça login para continuar…
+            Redirecionando para o login…
           </p>
         </div>
       </div>
@@ -159,7 +170,7 @@ export default function AuthView() {
           </p>
         </div>
 
-        {/* Tab Switchers */}
+        {/* Tab Switcher */}
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr',
           border: '1px solid var(--border-color)', borderRadius: '8px',
@@ -193,7 +204,7 @@ export default function AuthView() {
           </button>
         </div>
 
-        {/* --- LOGIN VIEW --- */}
+        {/* ─── LOGIN ─── */}
         {activeTab === 'login' && (
           <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }} className="animate-fade-in">
             {loginError && (
@@ -256,7 +267,7 @@ export default function AuthView() {
           </form>
         )}
 
-        {/* --- REGISTER VIEW --- */}
+        {/* ─── REGISTER ─── */}
         {activeTab === 'register' && (
           <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
             {regError && (

@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   CreditCard, CheckCircle, Clock, AlertTriangle, XCircle, Star,
   Upload, FileText, Download, Bell, Shield, Zap, Crown,
   ChevronRight, RefreshCw, Calendar, DollarSign, Banknote,
   Phone, Globe, Lock, Info
 } from 'lucide-react';
+import { supabase, uploadComprovativo } from '../supabaseClient';
 
 const PLANOS = {
   Gratuito: {
@@ -86,10 +87,12 @@ export default function SubscriptionsView({ currentUser, bankInfo, onToast, subs
   const fileRef = useRef();
 
   const planAtual = currentUser?.Plano || 'Gratuito';
-  const subscricaoAtual = subscriptions?.find(s => s.userEmail === currentUser?.Email && s.status === 'Ativa');
+  const subscricaoAtual = (subscriptions || []).find(s =>
+    (s.user_id === currentUser?.id || s.userEmail === currentUser?.Email) && s.status === 'Ativa'
+  );
 
   const precoMensal = Number(bankInfo?.precoMensal || 2000);
-  const precoAnual = Number(bankInfo?.precoAnual || 20000);
+  const precoAnual  = Number(bankInfo?.precoAnual  || 20000);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -102,7 +105,7 @@ export default function SubscriptionsView({ currentUser, bankInfo, onToast, subs
     setComprovativoNome(file.name);
   };
 
-  const handleEnviarPedido = () => {
+  const handleEnviarPedido = async () => {
     if (!selectedPlan || !selectedMetodo) {
       onToast({ type: 'warning', text: 'Selecione o plano e o método de pagamento.' });
       return;
@@ -113,31 +116,62 @@ export default function SubscriptionsView({ currentUser, bankInfo, onToast, subs
     }
 
     setEnviando(true);
-    setTimeout(() => {
-      const newSub = {
-        id: `SUB-${Date.now()}`,
-        userEmail: currentUser.Email,
-        userName: currentUser.Nome,
-        plano: selectedPlan,
-        periodo: selectedPeriodo,
-        metodo: selectedMetodo,
-        valor: selectedPeriodo === 'mensal' ? precoMensal : precoAnual,
-        comprovativoNome: comprovativoNome,
-        comprovativoUrl: URL.createObjectURL(comprovativo),
-        status: 'Pendente',
-        dataPedido: new Date().toISOString(),
-        dataExpiracao: null,
-        observacao: ''
-      };
+    try {
+      // Upload comprovativo to Supabase Storage
+      let comprovUrl = null;
+      try {
+        const fileExt = comprovativo.name.split('.').pop();
+        const fileName = `${currentUser?.id || 'user'}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('comprovativos')
+          .upload(fileName, comprovativo, { cacheControl: '3600', upsert: false });
 
-      setSubscriptions(prev => [newSub, ...(prev || [])]);
-      setEnviando(false);
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from('comprovativos')
+            .getPublicUrl(fileName);
+          comprovUrl = urlData?.publicUrl || null;
+        }
+      } catch (uploadErr) {
+        console.warn('Upload falhou, prosseguindo sem comprovativo:', uploadErr);
+      }
+
+      // Insert into payments table
+      const { data: newPayment, error: insertError } = await supabase
+        .from('payments')
+        .insert([{
+          user_id:           currentUser?.id,
+          plano:             selectedPlan,
+          periodo:           selectedPeriodo,
+          metodo:            selectedMetodo,
+          valor:             selectedPeriodo === 'mensal' ? precoMensal : precoAnual,
+          comprovativo_url:  comprovUrl,
+          comprovativo_nome: comprovativoNome,
+          status:            'Pendente'
+        }])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Update local subscriptions list
+      if (setSubscriptions && newPayment) {
+        setSubscriptions(prev => [newPayment, ...(prev || [])]);
+      }
+
       setEnviado(true);
       onToast({ type: 'success', text: 'Pedido de subscrição enviado! Aguarde aprovação do administrador.' });
-    }, 1500);
+    } catch (err) {
+      console.error('Erro ao enviar pedido:', err);
+      onToast({ type: 'warning', text: 'Erro ao enviar pedido: ' + (err.message || 'Tente novamente.') });
+    } finally {
+      setEnviando(false);
+    }
   };
 
-  const historicoUser = (subscriptions || []).filter(s => s.userEmail === currentUser?.Email);
+  const historicoUser = (subscriptions || []).filter(s =>
+    s.user_id === currentUser?.id || s.userEmail === currentUser?.Email
+  );
 
   const cardStyle = {
     background: 'rgba(255,255,255,0.03)',

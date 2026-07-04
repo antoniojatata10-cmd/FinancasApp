@@ -6,7 +6,7 @@ import {
   TrendingUp, Building2, GraduationCap, BookOpen, Cloud, RefreshCw
 } from 'lucide-react';
 
-// Views
+// views
 import DashboardView from './components/DashboardView';
 import LancamentosView from './components/LancamentosView';
 import CategoriasView from './components/CategoriasView';
@@ -24,7 +24,7 @@ import EmpresaView from './components/EmpresaView';
 import { supabase } from './supabaseClient';
 
 // ─────────────────────────── UPGRADE WALL ────────────────────────────────────
-function UpgradeWall({ bankInfo, onClose }) {
+function UpgradeWall({ bankInfo, onClose, onGoToSubscriptions }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 200,
@@ -90,7 +90,7 @@ function UpgradeWall({ bankInfo, onClose }) {
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={onClose} className="btn btn-secondary" style={{ flex: 1 }}>Voltar</button>
-          <button onClick={onClose} className="btn btn-primary" style={{ flex: 1 }}>Ir para Subscrições</button>
+          <button onClick={() => { onClose(); if(onGoToSubscriptions) onGoToSubscriptions(); }} className="btn btn-primary" style={{ flex: 1 }}>Ir para Subscrições</button>
         </div>
       </div>
     </div>
@@ -233,24 +233,81 @@ export default function App() {
   const fetchUserData = async (userId) => {
     setLoading(true);
     try {
-      // Fetch Profile
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
-      
+      // Fetch Profile + auth email in parallel
+      const [{ data: profile }, { data: { user: authUser } }] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        supabase.auth.getUser()
+      ]);
+
       const mappedUser = profile ? {
         id: profile.id,
-        Email: session?.user?.email,
+        Email: authUser?.email || '',
         Nome: profile.full_name,
         Role: profile.role,
         Plano: profile.plan,
+        PlanExpiresAt: profile.plan_expires_at,
         Ativo: profile.is_active,
         Pais: profile.country,
-        Telefone: profile.phone
-      } : { Role: 'user', Plano: 'Gratuito' };
-      
+        Telefone: profile.phone,
+        AvatarUrl: profile.avatar_url
+      } : { Role: 'user', Plano: 'Gratuito', Email: authUser?.email || '' };
+
       setCurrentUser(mappedUser);
 
+      // Load admin_settings (bank info) — readable by all authenticated users
+      const { data: adminSettingsRows } = await supabase
+        .from('admin_settings')
+        .select('key, value');
+
+      if (adminSettingsRows) {
+        const cfg = {};
+        adminSettingsRows.forEach(row => { cfg[row.key] = row.value; });
+        setBankInfo(cfg);
+      }
+
+      // If admin: also load all users
+      if (profile?.role === 'admin') {
+        const { data: allProfiles } = await supabase
+          .from('admin_users_view')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (allProfiles) {
+          setUsers(allProfiles.map(u => ({
+            id: u.id,
+            Email: u.email || '',
+            Nome: u.full_name || '',
+            Role: u.role,
+            Plano: u.plan,
+            PlanExpiresAt: u.plan_expires_at,
+            Ativo: u.is_active,
+            Pais: u.country,
+            Telefone: u.phone,
+            totalTransactions: u.total_transactions,
+            lastSignIn: u.last_sign_in_at
+          })));
+        }
+
+        // Also load all subscriptions/payments for admin
+        const { data: allPayments } = await supabase
+          .from('payments')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (allPayments) setSubscriptions(allPayments);
+      } else {
+        // Normal user: load own payments
+        const { data: ownPayments } = await supabase
+          .from('payments')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (ownPayments) setSubscriptions(ownPayments);
+      }
+
       // Fetch categories & transactions concurrently
-      await loadDataFromSupabase(userId, mappedUser.Role);
+      await loadDataFromSupabase(userId, profile?.role || 'user');
 
     } catch (err) {
       console.error('Error fetching user data', err);
@@ -493,7 +550,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {showUpgradeWall && <UpgradeWall bankInfo={bankInfo} onClose={() => setShowUpgradeWall(false)} />}
+      {showUpgradeWall && <UpgradeWall bankInfo={bankInfo} onClose={() => setShowUpgradeWall(false)} onGoToSubscriptions={() => { setShowUpgradeWall(false); setActiveTab('subscricoes'); }} />}
 
       {toastMessage && (
         <div style={{

@@ -3,10 +3,13 @@ import {
   Settings, Wifi, WifiOff, RefreshCcw, Trash2, Bell, Download,
   Monitor, Smartphone, Apple, User, Mail, Phone, Lock, Eye, EyeOff,
   Save, Globe, CheckCircle, Cloud, CloudOff, Database, ExternalLink,
-  AlertTriangle, ShieldCheck, TestTube, BookOpen
+  AlertTriangle, ShieldCheck, TestTube, BookOpen, MessageSquare
 } from 'lucide-react';
-import { isSupabaseConfigured, getSupabaseClient } from '../supabaseClient';
+
 import GuiaAppView from './GuiaAppView';
+import { supabase, isSupabaseConfigured } from '../supabaseClient';
+import ChatView from './ChatView';
+
 
 export default function ConfiguracoesView({
   role, userEmail, currentUser, users, setUsers,
@@ -24,6 +27,7 @@ export default function ConfiguracoesView({
   const [showPass, setShowPass] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [showGuia, setShowGuia] = useState(false);
+  const [showSupportChat, setShowSupportChat] = useState(false);
 
   // Cloud Sync state
   const [sbUrl, setSbUrl] = useState(() => localStorage.getItem('financas_supabase_url') || '');
@@ -429,6 +433,20 @@ export default function ConfiguracoesView({
             </button>
           </div>
 
+          {/* Support Chat Card */}
+          <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-accent)' }}>
+              <MessageSquare size={20} />
+              <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Suporte ao Cliente</h4>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Tem dúvidas ou precisa de ajuda? Fale com o administrador em tempo real.
+            </p>
+            <button onClick={() => setShowSupportChat(true)} className="btn btn-primary" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <MessageSquare size={16} /> Abrir Chat de Suporte
+            </button>
+          </div>
+
           {/* Install App Card */}
           <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-accent)' }}>
@@ -534,6 +552,27 @@ export default function ConfiguracoesView({
       </div>
 
       {showGuia && <GuiaAppView onClose={() => setShowGuia(false)} />}
+      
+      {showSupportChat && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+        }}>
+          <div className="glass-panel animate-fade-in" style={{
+            maxWidth: '900px', width: '100%', height: '80vh', padding: '20px',
+            display: 'flex', flexDirection: 'column', gap: '16px', border: '1px solid var(--border-color)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Suporte ao Cliente</h3>
+              <button onClick={() => setShowSupportChat(false)} className="btn btn-secondary" style={{ padding: '6px 12px' }}>Fechar</button>
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <ChatView currentUser={currentUser} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

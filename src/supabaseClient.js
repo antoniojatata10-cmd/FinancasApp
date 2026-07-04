@@ -4,7 +4,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Variáveis de ambiente do Supabase não encontradas. Verifique o ficheiro .env');
+  console.warn('⚠️ Variáveis de ambiente do Supabase não encontradas. Verifique o ficheiro .env');
 }
 
 export const supabase = createClient(
@@ -14,7 +14,7 @@ export const supabase = createClient(
 
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 export async function uploadComprovativo(file) {
-  const fileExt  = file.name.split('.').pop();
+  const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).slice(2, 15)}_${Date.now()}.${fileExt}`;
   const filePath = `receipts/${fileName}`;
 
@@ -31,5 +31,8 @@ export async function uploadComprovativo(file) {
   return publicUrl;
 }
 
-export const isSupabaseConfigured = () => true;
+export const isSupabaseConfigured = () => !!(supabaseUrl && supabaseAnonKey);
 
+export function getSupabaseClient() {
+  return supabase;
+}
