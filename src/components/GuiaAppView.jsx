@@ -103,6 +103,18 @@ const GUIA_PASSOS = [
     ]
   },
   {
+    id: 'chat',
+    icon: '💬',
+    titulo: 'Suporte SMS — Falar com o Admin',
+    cor: '#34d399',
+    passos: [
+      { titulo: 'Como Aceder', desc: 'Clique em "Suporte SMS" no menu principal (ícone de mensagem). Pode também clicar em "Falar com Suporte" no painel principal.' },
+      { titulo: 'Enviar Mensagem', desc: 'Escreva a sua dúvida, problema ou pedido na caixa de texto e clique em Enviar. O administrador receberá a mensagem e responderá.' },
+      { titulo: 'Receber Respostas', desc: 'As respostas do administrador aparecem no chat em tempo real. Vai receber uma notificação quando houver resposta.' },
+      { titulo: 'Tipos de Suporte', desc: 'Pode usar o chat para: Problemas com a conta, Dúvidas sobre o plano, Enviar comprovativos de pagamento, Reportar erros no app, ou qualquer outra questão.' },
+    ]
+  },
+  {
     id: 'admin',
     icon: '⚙️',
     titulo: 'Configurações e Administração',

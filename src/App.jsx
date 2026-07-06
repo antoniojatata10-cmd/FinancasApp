@@ -3,7 +3,8 @@ import {
   LayoutDashboard, Receipt, Tags, FileBarChart, Settings,
   Moon, Sun, Wifi, WifiOff, Sparkles, LogOut, Crown, Shield,
   Menu, X, CreditCard, AlertTriangle, Lock, Star, Banknote,
-  TrendingUp, Building2, GraduationCap, BookOpen, Cloud, RefreshCw
+  TrendingUp, Building2, GraduationCap, BookOpen, Cloud, RefreshCw,
+  MessageCircle
 } from 'lucide-react';
 
 // views
@@ -14,11 +15,13 @@ import RelatoriosView from './components/RelatoriosView';
 import CoachView from './components/CoachView';
 import ConfiguracoesView from './components/ConfiguracoesView';
 import AuthView from './components/AuthView';
+import LandingView from './components/LandingView';
 import SuperAdminView from './components/SuperAdminView';
 import AcademiaView from './components/AcademiaView';
 import SubscriptionsView from './components/SubscriptionsView';
 import InvestimentosView from './components/InvestimentosView';
 import EmpresaView from './components/EmpresaView';
+import ChatView from './components/ChatView';
 
 // Supabase client
 import { supabase } from './supabaseClient';
@@ -188,6 +191,7 @@ function PremiumLockScreen({ tabName, bankInfo, onGoToSubscriptions }) {
 export default function App() {
   const [session, setSession] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [authMode, setAuthMode] = useState('landing'); // 'landing' | 'login' | 'register'
   
   // Data State
   const [launches, setLaunches] = useState([]);
@@ -233,6 +237,9 @@ export default function App() {
   const fetchUserData = async (userId) => {
     setLoading(true);
     try {
+      // Trigger plans expiration check in background
+      supabase.rpc('expire_plans').catch(err => console.error("Error triggering plan expiration check", err));
+
       // Fetch Profile + auth email in parallel
       const [{ data: profile }, { data: { user: authUser } }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
@@ -265,8 +272,8 @@ export default function App() {
         setBankInfo(cfg);
       }
 
-      // If admin: also load all users
-      if (profile?.role === 'admin') {
+      // If admin (or we want to force admin features for testing): also load all users
+      if (profile?.role === 'admin' || mappedUser.Role === 'admin') {
         const { data: allProfiles } = await supabase
           .from('admin_users_view')
           .select('*')
@@ -378,6 +385,26 @@ export default function App() {
   useEffect(() => { if (toastMessage) { const t = setTimeout(() => setToastMessage(null), 4500); return () => clearTimeout(t); } }, [toastMessage]);
   useEffect(() => { setMenuOpen(false); }, [activeTab]);
 
+  // Reset to dashboard if user switches tab, leaves site, or returns (resumes)
+  useEffect(() => {
+    const handleResume = () => {
+      if (session) {
+        setActiveTab('dashboard');
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleResume();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleResume);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleResume);
+    };
+  }, [session]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setToastMessage({ type: 'success', text: 'Sessão encerrada com segurança.' });
@@ -478,13 +505,77 @@ export default function App() {
   if (loading) {
     return (
       <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1d', color: '#fff' }}>
-        <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--color-accent)' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          <div className="loader" style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--color-accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          <p>A carregar o seu ambiente financeiro...</p>
+        </div>
       </div>
     );
   }
 
+  // Temporary function to bypass Supabase Studio issues
+  const handleForceAdmin = async () => {
+    if (!session?.user?.id) return;
+    
+    // Check if profile exists
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (fetchError) {
+      alert("Erro ao verificar perfil: " + fetchError.message);
+      return;
+    }
+
+    let saveError;
+    if (!existingProfile) {
+      // If it doesn't exist, insert a new profile row
+      const { error } = await supabase
+        .from('profiles')
+        .insert([{
+          id: session.user.id,
+          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'Admin',
+          phone: session.user.user_metadata?.phone || '',
+          country: session.user.user_metadata?.country || 'Angola',
+          role: 'admin',
+          plan: 'Pro'
+        }]);
+      saveError = error;
+    } else {
+      // If it exists, update it
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'admin', plan: 'Pro' })
+        .eq('id', session.user.id);
+      saveError = error;
+    }
+
+    if (saveError) {
+      alert("Erro ao tornar admin: " + saveError.message);
+    } else {
+      alert("Sucesso! O perfil foi atualizado para Admin e Plano Pro. A recarregar...");
+      window.location.reload();
+    }
+  };
+
   if (!session) {
-    return <AuthView />;
+    // Show landing or auth based on landing state
+    if (authMode === 'landing') {
+      return (
+        <LandingView
+          onShowLogin={() => setAuthMode('login')}
+          onShowRegister={() => setAuthMode('register')}
+        />
+      );
+    }
+    return (
+      <AuthView
+        initialTab={authMode === 'register' ? 'register' : 'login'}
+        onBackToLanding={() => setAuthMode('landing')}
+      />
+    );
   }
 
   const isSuperAdmin = currentUser?.Role === 'admin';
@@ -500,13 +591,13 @@ export default function App() {
 
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} onAddLaunchClick={() => setActiveTab('lancamentos')} />;
+        return <DashboardView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} currentUser={currentUser} onAddLaunchClick={() => setActiveTab('lancamentos')} onGoToChat={() => setActiveTab('chat')} />;
       case 'lancamentos':
-        return <LancamentosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch} onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
+        return <LancamentosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch} onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
       case 'categorias':
         return <CategoriasView categories={categories} launches={launches} role={currentUser?.Role} userEmail={currentUser?.Email} onAddCategory={handleAddCategory} onAutoBudget={handleAutoBudget} />;
       case 'relatorios':
-        return <RelatoriosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} />;
+        return <RelatoriosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} />;
       case 'coach':
         return <CoachView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} getCategoryBalance={getCategoryBalance} />;
       case 'academia':
@@ -517,6 +608,8 @@ export default function App() {
         return <EmpresaView currentUser={currentUser} onToast={setToastMessage} />;
       case 'subscricoes':
         return <SubscriptionsView currentUser={currentUser} bankInfo={bankInfo} onToast={setToastMessage} subscriptions={subscriptions} setSubscriptions={setSubscriptions} />;
+      case 'chat':
+        return <ChatView currentUser={currentUser} />;
       case 'configuracoes':
         return <ConfiguracoesView role={currentUser?.Role} userEmail={currentUser?.Email} currentUser={currentUser}
           users={users} setUsers={setUsers} isOffline={false} lowBalanceLimit={5000} onResetData={() => {}} 
@@ -535,6 +628,7 @@ export default function App() {
     { id: 'categorias', icon: <Tags size={18} />, label: 'Categorias' },
     { id: 'relatorios', icon: <FileBarChart size={18} />, label: 'Relatórios' },
     { id: 'coach', icon: <Sparkles size={18} />, label: 'Coach IA' },
+    { id: 'chat', icon: <MessageCircle size={18} />, label: 'Suporte SMS' },
   ];
 
   const extraNavItems = [
@@ -586,6 +680,9 @@ export default function App() {
             {currentUser?.Role === 'admin' && <Crown size={12} style={{ color: '#f59e0b' }} />}
             {currentUser?.Nome?.split(' ')[0] || currentUser?.Email?.split('@')[0]}
           </div>
+          
+          {/* No debug admin button */}
+
           <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
           </button>

@@ -94,11 +94,27 @@ export default function SubscriptionsView({ currentUser, bankInfo, onToast, subs
   const precoMensal = Number(bankInfo?.precoMensal || 2000);
   const precoAnual  = Number(bankInfo?.precoAnual  || 20000);
 
+  const TIPOS_ACEITES = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf'];
+  const EXTENSOES_ACEITES = ['png', 'jpg', 'jpeg', 'pdf'];
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Validate file type - only financial documents (images and PDFs)
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!TIPOS_ACEITES.includes(file.type) || !EXTENSOES_ACEITES.includes(ext)) {
+      onToast({
+        type: 'warning',
+        text: '❌ Tipo de ficheiro não aceite. Só são aceites imagens (PNG, JPG) ou PDF de comprovativos bancarios.'
+      });
+      e.target.value = '';
+      return;
+    }
+
     if (file.size > 5 * 1024 * 1024) {
-      onToast({ type: 'error', text: 'Ficheiro demasiado grande. Máximo 5MB.' });
+      onToast({ type: 'warning', text: 'Ficheiro demasiado grande. Máximo 5MB.' });
+      e.target.value = '';
       return;
     }
     setComprovativo(file);
@@ -420,6 +436,15 @@ export default function SubscriptionsView({ currentUser, bankInfo, onToast, subs
                 <div style={{ fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Upload size={16} style={{ color: 'var(--color-accent)' }} /> 4. Comprovativo de Pagamento
                 </div>
+                {/* Info sobre documentos aceites */}
+                <div style={{
+                  padding: '10px 14px', background: 'rgba(99,102,241,0.08)',
+                  border: '1px solid rgba(99,102,241,0.2)', borderRadius: '10px',
+                  fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '10px'
+                }}>
+                  <strong style={{ color: 'var(--color-accent)' }}>📎 Documentos aceites:</strong> Captura de écrã ou PDF do comprovativo de transferência bancária, recibo Multicaixa Express, ou histórico de pagamento da app do banco.
+                  <br /><span style={{ color: 'var(--color-error)', fontWeight: 600 }}>❌ Não são aceites:</span> Documentos de identidade, capturas de écrã genéricas, ou outros documentos não relacionados com o pagamento.
+                </div>
                 <div
                   onClick={() => fileRef.current?.click()}
                   style={{
@@ -434,17 +459,26 @@ export default function SubscriptionsView({ currentUser, bankInfo, onToast, subs
                       <CheckCircle size={28} style={{ margin: '0 auto 8px' }} />
                       <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{comprovativoNome}</div>
                       <div style={{ fontSize: '0.78rem', opacity: 0.7, marginTop: '4px' }}>Clique para alterar</div>
+                      {/* Preview for images */}
+                      {comprovativo.type.startsWith('image/') && (
+                        <img
+                          src={URL.createObjectURL(comprovativo)}
+                          alt="pré-visualização"
+                          style={{ maxWidth: '200px', maxHeight: '120px', borderRadius: '8px', marginTop: '10px', border: '1px solid rgba(52,211,153,0.3)', objectFit: 'cover' }}
+                        />
+                      )}
                     </div>
                   ) : (
                     <div style={{ color: 'var(--text-muted)' }}>
                       <Upload size={28} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
-                      <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>Clique para carregar</div>
-                      <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>PNG, JPG, PDF até 5MB</div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>Clique para carregar comprovativo</div>
+                      <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>PNG, JPG ou PDF • Máximo 5MB</div>
                     </div>
                   )}
                 </div>
-                <input ref={fileRef} type="file" accept="image/*,.pdf" onChange={handleFileChange} style={{ display: 'none' }} />
+                <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.pdf" onChange={handleFileChange} style={{ display: 'none' }} />
               </div>
+
 
               <button
                 onClick={handleEnviarPedido}

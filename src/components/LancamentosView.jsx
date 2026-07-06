@@ -6,6 +6,7 @@ export default function LancamentosView({
   categories,
   role,
   userEmail,
+  userId,
   onAddLaunch,
   onEditLaunch,
   onDeleteLaunch,
@@ -31,9 +32,9 @@ export default function LancamentosView({
   });
   const [formError, setFormError] = useState('');
 
-  // Apply security filter: User sees only their own launches. Admin sees all.
+  // FIX: CriadoPor stores user_id (UUID), not email
   const filteredLaunches = launches.filter(l =>
-    role === 'Admin' || l.CriadoPor === userEmail
+    role === 'admin' || l.CriadoPor === userId
   );
 
   // Apply search and UI filters

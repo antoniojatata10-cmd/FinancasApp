@@ -79,6 +79,17 @@ export default function InvestimentosView({ currentUser, launches, categories })
   const [simAtivo, setSimAtivo] = useState('OT-TX-2029');
   const [simTaxa, setSimTaxa] = useState('17');
 
+  // Portfolio state
+  const [portfolio, setPortfolio] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('inv_portfolio_v1')) || []; } catch { return []; }
+  });
+  const [novoInvestimento, setNovoInvestimento] = useState({
+    ticker: 'OT-TX-2029',
+    quantidade: '',
+    precoCompra: '',
+    dataCompra: new Date().toISOString().split('T')[0]
+  });
+
   // Divisas from API
   const [divisas, setDivisas] = useState([
     { par: 'USD/AOA', preco: 922.50, variacao: 0.32 },
@@ -112,6 +123,109 @@ export default function InvestimentosView({ currentUser, launches, categories })
   useEffect(() => {
     if (perfilSelecionado) localStorage.setItem('inv_perfil', perfilSelecionado);
   }, [perfilSelecionado]);
+
+  // Persist portfolio
+  useEffect(() => {
+    localStorage.setItem('inv_portfolio_v1', JSON.stringify(portfolio));
+  }, [portfolio]);
+
+  const handleTickerChange = (ticker) => {
+    const asset = bodivaAtual.find(b => b.ticker === ticker);
+    setNovoInvestimento(p => ({
+      ...p,
+      ticker,
+      precoCompra: asset ? Math.round(asset.preco) : ''
+    }));
+  };
+
+  const handleAddInvestimento = (e) => {
+    e.preventDefault();
+    if (!novoInvestimento.quantidade || !novoInvestimento.precoCompra) return;
+    setPortfolio(prev => [...prev, {
+      id: Date.now().toString(),
+      ticker: novoInvestimento.ticker,
+      quantidade: Number(novoInvestimento.quantidade),
+      precoCompra: Number(novoInvestimento.precoCompra),
+      dataCompra: novoInvestimento.dataCompra
+    }]);
+    setNovoInvestimento(p => ({
+      ...p,
+      quantidade: '',
+      precoCompra: ''
+    }));
+  };
+
+  const handleRemoveInvestimento = (id) => {
+    if (window.confirm('Deseja realmente remover esta transação do seu portfólio?')) {
+      setPortfolio(prev => prev.filter(item => item.id !== id));
+    }
+  };
+
+  const handleRemoveByTicker = (ticker) => {
+    if (window.confirm(`Deseja remover TODAS as transações de ${ticker} do seu portfólio?`)) {
+      setPortfolio(prev => prev.filter(item => item.ticker !== ticker));
+    }
+  };
+
+  const portfolioCalculated = useMemo(() => {
+    const grouped = {};
+    let totalInvested = 0;
+    let totalCurrentValue = 0;
+
+    portfolio.forEach(item => {
+      const asset = bodivaAtual.find(b => b.ticker === item.ticker);
+      const currentPrice = asset ? asset.preco : item.precoCompra;
+      
+      const cost = item.quantidade * item.precoCompra;
+      const val = item.quantidade * currentPrice;
+      
+      totalInvested += cost;
+      totalCurrentValue += val;
+
+      if (!grouped[item.ticker]) {
+        grouped[item.ticker] = {
+          ticker: item.ticker,
+          nome: asset ? asset.nome : item.ticker,
+          tipo: asset ? asset.tipo : 'Outro',
+          cor: asset ? asset.cor : '#6b7280',
+          quantidade: 0,
+          totalCost: 0,
+          currentValue: 0
+        };
+      }
+
+      grouped[item.ticker].quantidade += item.quantidade;
+      grouped[item.ticker].totalCost += cost;
+      grouped[item.ticker].currentValue += val;
+    });
+
+    const items = Object.values(grouped).map(g => {
+      const avgPrice = g.quantidade > 0 ? g.totalCost / g.quantidade : 0;
+      const asset = bodivaAtual.find(b => b.ticker === g.ticker);
+      const currentPrice = asset ? asset.preco : avgPrice;
+      const profitLoss = g.currentValue - g.totalCost;
+      const profitLossPct = g.totalCost > 0 ? (profitLoss / g.totalCost) * 100 : 0;
+
+      return {
+        ...g,
+        avgPrice,
+        currentPrice,
+        profitLoss,
+        profitLossPct
+      };
+    });
+
+    const totalProfitLoss = totalCurrentValue - totalInvested;
+    const totalProfitLossPct = totalInvested > 0 ? (totalProfitLoss / totalInvested) * 100 : 0;
+
+    return {
+      items,
+      totalInvested,
+      totalCurrentValue,
+      totalProfitLoss,
+      totalProfitLossPct
+    };
+  }, [portfolio, bodivaAtual]);
 
   // Fetch real divisas
   const fetchRates = useCallback(async () => {
@@ -212,6 +326,7 @@ export default function InvestimentosView({ currentUser, launches, categories })
 
   const TABS = [
     { id: 'mercado', label: '📈 Cotações' },
+    { id: 'portfolio', label: '💼 Meu Portfólio' },
     { id: 'metas', label: '🎯 Metas' },
     { id: 'simulador', label: '🔢 Simulador' },
     { id: 'guia', label: '📚 Guia BODIVA' },
@@ -311,6 +426,241 @@ export default function InvestimentosView({ currentUser, launches, categories })
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ─── TAB PORTFOLIO ─── */}
+      {activeTab === 'portfolio' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="animate-fade-in">
+
+          {/* Portfolio Summary Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>💰 Total Investido</div>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem' }}>{portfolioCalculated.totalInvested.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz</div>
+            </div>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>📊 Valor Atual</div>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem' }}>{portfolioCalculated.totalCurrentValue.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz</div>
+            </div>
+            <div style={{ ...cardStyle, textAlign: 'center', background: portfolioCalculated.totalProfitLoss >= 0 ? 'rgba(52,211,153,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${portfolioCalculated.totalProfitLoss >= 0 ? 'rgba(52,211,153,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>📈 Lucro / Prejuízo</div>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: portfolioCalculated.totalProfitLoss >= 0 ? '#34d399' : '#ef4444' }}>
+                {portfolioCalculated.totalProfitLoss >= 0 ? '+' : ''}{portfolioCalculated.totalProfitLoss.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz
+              </div>
+              <div style={{ fontSize: '0.75rem', color: portfolioCalculated.totalProfitLoss >= 0 ? '#34d399' : '#ef4444', fontWeight: 700 }}>
+                ({portfolioCalculated.totalProfitLossPct >= 0 ? '+' : ''}{portfolioCalculated.totalProfitLossPct.toFixed(2)}%)
+              </div>
+            </div>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>🗂️ Ativos</div>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem' }}>{portfolioCalculated.items.length}</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '16px', alignItems: 'flex-start' }}>
+
+            {/* Add Investment Form */}
+            <div style={cardStyle}>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ background: 'var(--color-accent)', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: '#fff' }}>+</span>
+                Registar Compra
+              </div>
+              <form onSubmit={handleAddInvestimento} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Ativo</label>
+                  <select
+                    value={novoInvestimento.ticker}
+                    onChange={e => handleTickerChange(e.target.value)}
+                    className="form-input"
+                    style={{ width: '100%' }}
+                  >
+                    {bodivaAtual.map(a => (
+                      <option key={a.ticker} value={a.ticker}>{a.ticker} — {a.nome}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Quantidade / Unidades</label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="ex: 10"
+                    value={novoInvestimento.quantidade}
+                    onChange={e => setNovoInvestimento(p => ({ ...p, quantidade: e.target.value }))}
+                    className="form-input"
+                    style={{ width: '100%' }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Preço de Compra (Kz/unidade)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="ex: 95000"
+                    value={novoInvestimento.precoCompra}
+                    onChange={e => setNovoInvestimento(p => ({ ...p, precoCompra: e.target.value }))}
+                    className="form-input"
+                    style={{ width: '100%' }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Data da Compra</label>
+                  <input
+                    type="date"
+                    value={novoInvestimento.dataCompra}
+                    onChange={e => setNovoInvestimento(p => ({ ...p, dataCompra: e.target.value }))}
+                    className="form-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '11px', marginTop: '4px' }}>
+                  ➕ Adicionar ao Portfólio
+                </button>
+              </form>
+
+              {/* Preço atual do ativo selecionado */}
+              {(() => {
+                const selected = bodivaAtual.find(a => a.ticker === novoInvestimento.ticker);
+                if (!selected) return null;
+                return (
+                  <div style={{ marginTop: '12px', padding: '10px', borderRadius: '8px', background: `${selected.cor}10`, border: `1px solid ${selected.cor}30` }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Preço atual de mercado</div>
+                    <div style={{ fontWeight: 800, color: selected.cor }}>{selected.preco.toLocaleString('pt-AO', { maximumFractionDigits: 2 })} Kz</div>
+                    <VariacaoBadge variacao={Number(selected.variacao)} />
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Holdings list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {portfolioCalculated.items.length === 0 ? (
+                <div style={{ ...cardStyle, textAlign: 'center', padding: '40px 20px' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>💼</div>
+                  <div style={{ fontWeight: 700, marginBottom: '6px' }}>Portfólio vazio</div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    Registe a sua primeira compra no formulário ao lado para começar a acompanhar os seus investimentos.
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-secondary)', padding: '0 4px' }}>
+                    Posições em Carteira ({portfolioCalculated.items.length} ativo{portfolioCalculated.items.length !== 1 ? 's' : ''})
+                  </div>
+                  {portfolioCalculated.items.map(item => {
+                    const isProfit = item.profitLoss >= 0;
+                    const weight = portfolioCalculated.totalCurrentValue > 0
+                      ? (item.currentValue / portfolioCalculated.totalCurrentValue * 100).toFixed(1)
+                      : 0;
+                    return (
+                      <div key={item.ticker} style={{ ...cardStyle, borderLeft: `3px solid ${item.cor}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '0.9rem', color: item.cor }}>{item.ticker}</span>
+                              <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: '8px', background: `${item.cor}20`, color: item.cor }}>{item.tipo}</span>
+                              <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }}>{weight}% carteira</span>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{item.nome}</div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveByTicker(item.ticker)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '4px', fontSize: '0.8rem' }}
+                            title="Remover posição"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '10px' }}>
+                          <div>
+                            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Quantidade</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{item.quantidade}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Preço Médio</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{item.avgPrice.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Preço Atual</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem', color: item.cor }}>{item.currentPrice.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Custo Total</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{item.totalCost.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Valor Atual</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{item.currentValue.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Retorno</div>
+                            <div style={{ fontWeight: 800, fontSize: '0.88rem', color: isProfit ? '#34d399' : '#ef4444' }}>
+                              {isProfit ? '+' : ''}{item.profitLossPct.toFixed(2)}%
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* P&L bar */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>P&L</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isProfit ? '#34d399' : '#ef4444' }}>
+                            {isProfit ? '+' : ''}{item.profitLoss.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz
+                          </span>
+                        </div>
+                        <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${Math.min(Math.abs(item.profitLossPct), 100)}%`,
+                            background: isProfit ? '#34d399' : '#ef4444',
+                            borderRadius: '4px',
+                            transition: 'width 0.8s'
+                          }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+
+              {/* Histórico de transações */}
+              {portfolio.length > 0 && (
+                <div style={cardStyle}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '14px' }}>📋 Histórico de Transações</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[...portfolio].reverse().map(item => {
+                      const asset = bodivaAtual.find(b => b.ticker === item.ticker);
+                      return (
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '1rem' }}>🟢</span>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: '0.82rem', color: asset?.cor || 'var(--text-primary)' }}>{item.ticker}</div>
+                              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{item.dataCompra} · {item.quantidade} un. @ {item.precoCompra.toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz</div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontWeight: 800, fontSize: '0.82rem' }}>{(item.quantidade * item.precoCompra).toLocaleString('pt-AO', { maximumFractionDigits: 0 })} Kz</div>
+                            </div>
+                            <button
+                              onClick={() => handleRemoveInvestimento(item.id)}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '4px', fontSize: '0.75rem' }}
+                              title="Remover transação"
+                            >✕</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

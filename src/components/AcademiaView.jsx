@@ -85,21 +85,310 @@ const FACULDADES = [
           {
             tipo: 'intro',
             titulo: 'Introdução',
-            texto: `Muitas pessoas acreditam que a riqueza depende apenas de sorte, herança ou salário elevado.\n\nMas a realidade mostra algo diferente. Existem pessoas que ganham muito e permanecem pobres; e outras que ganham pouco e tornam-se milionárias.\n\nA diferença geralmente está na **mentalidade**..`,
+            texto: `Muitas pessoas acreditam que a riqueza depende apenas de sorte, herança ou salário elevado.\n\nMas a realidade mostra algo diferente. Existem pessoas que ganham muito e permanecem pobres; e outras que ganham pouco e tornam-se milionárias.\n\nA diferença geralmente está na **mentalidade**.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Capítulo 1 — O Que É Mentalidade Financeira',
+            texto: `Mentalidade financeira é o conjunto de crenças, hábitos e decisões relacionadas ao dinheiro. Ela influencia como ganha, gasta e investe dinheiro.\n\n**Exemplo:** Duas pessoas recebem 500.000 Kz.\n\nPessoa A: Compra roupas, telemóvel, festas → Após 1 ano: Saldo = 0\nPessoa B: Investe 30%, compra activos, estuda finanças → Após 1 ano: Património crescente\n\nMesmo rendimento. Resultados completamente diferentes.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Capítulo 2 — Crenças Limitantes',
+            texto: `Muitas pessoas cresceram a ouvir:\n• "Dinheiro é a raiz de todo o mal"\n• "Rico é ladrão"\n• "Quem nasce pobre morre pobre"\n• "Dinheiro não traz felicidade"\n• "Investir é perigoso"\n\nEstas crenças influenciam negativamente as decisões financeiras. Para criar riqueza, é necessário identificar e eliminar estas crenças limitantes.\n\n**Exercício de reflexão:** O que os seus pais diziam sobre dinheiro? O que acredita sobre pessoas ricas?`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Capítulo 3 — Pobres, Classe Média e Ricos',
+            texto: `**POBRES:** Recebem → Gastam tudo → Precisam trabalhar novamente\nFluxo: Salário → Despesas\n\n**CLASSE MÉDIA:** Recebem → Compram passivos → Criam mais despesas\nFluxo: Salário → Carro financiado → Casa financiada → Dívidas\n\n**RICOS:** Recebem → Compram activos → Activos geram renda → Compram mais activos\nFluxo: Dinheiro → Activos → Mais dinheiro`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Capítulo 4 — Activos vs Passivos',
+            texto: `**ACTIVO** = algo que coloca dinheiro no seu bolso:\n• Imóveis alugados\n• Dividendos\n• Empresas\n• Acções\n• Direitos autorais\n• Negócios digitais\n\n**PASSIVO** = algo que retira dinheiro do seu bolso:\n• Dívidas\n• Empréstimos\n• Carros financiados\n• Cartões de crédito\n\n**Exemplo:** Carro particular (combustível + seguro + manutenção) = Passivo. Táxi/Uber próprio que gera renda = pode ser Activo.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Capítulo 5 — O Quadrante do Fluxo de Caixa (Kiyosaki)',
+            texto: `**E – Empregado:** Troca tempo por dinheiro. Estabilidade mas limite de rendimento.\nExemplos: professor, médico contratado, funcionário público.\n\n**A – Autónomo:** Trabalha por conta própria. Se parar de trabalhar, deixa de ganhar.\nExemplos: mecânico, advogado independente, freelancer.\n\n**D – Dono de Negócio:** Possui sistemas e pessoas a trabalhar. Escalabilidade mas maior responsabilidade.\n\n**I – Investidor:** Dinheiro trabalha para ele. Liberdade financeira quase ilimitada.\n\n**Exemplo:** João (empregado) recebe 500.000 Kz apenas se trabalhar. Pedro (investidor) com 10 apartamentos recebe 2.000.000 Kz mesmo dormindo. Quem tem mais liberdade? **Pedro.**`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Capítulo 6 — O Poder dos Juros Compostos',
+            texto: `Albert Einstein está frequentemente associado à frase: *"Os juros compostos são a oitava maravilha do mundo."*\n\n**Exemplo:** Investindo 100.000 Kz/mês com rentabilidade de 10% ao ano durante 30 anos → acumula dezenas de milhões de Kz.\n\n**O tempo é o maior aliado do investidor.** Quem começa cedo normalmente vence, mesmo com menos capital.`,
           },
         ],
         exercicios: [
           'Explique a diferença entre activo e passivo com exemplos da sua vida.',
           'Em qual quadrante (E, A, D, I) está actualmente? Justifique.',
+          'Liste 5 crenças sobre dinheiro que ouviu durante a infância.',
+          'Identifique 3 activos que poderia adquirir nos próximos 5 anos.',
+          'Por que os ricos priorizam activos antes de luxos?',
         ],
         quiz: [
           { pergunta: 'O que é um activo segundo Kiyosaki?', opcoes: ['Algo que você possui', 'Algo que coloca dinheiro no seu bolso', 'O seu carro particular'], correto: 1, explicacao: 'Um activo é qualquer coisa que gera rendimento ou coloca dinheiro no bolso do proprietário.' },
+          { pergunta: 'No Quadrante do Fluxo de Caixa, quem representa o maior nível de liberdade financeira?', opcoes: ['E (Empregado)', 'A (Autónomo)', 'I (Investidor)'], correto: 2, explicacao: 'O Investidor tem o dinheiro a trabalhar por ele, permitindo liberdade financeira máxima.' },
+          { pergunta: 'Qual é o fluxo financeiro dos ricos?', opcoes: ['Salário → Despesas', 'Dinheiro → Activos → Mais dinheiro', 'Salário → Luxos → Poupança'], correto: 1, explicacao: 'Os ricos focam-se em adquirir activos que geram renda passiva, criando um ciclo de acumulação de riqueza.' },
+          { pergunta: 'O que é uma crença limitante?', opcoes: ['Uma meta financeira', 'Uma crença que bloqueia o crescimento financeiro', 'Um tipo de investimento'], correto: 1, explicacao: 'Crenças limitantes são pensamentos negativos sobre dinheiro que bloqueiam o crescimento financeiro e as decisões inteligentes.' },
         ],
-        leituras: ['Pai Rico, Pai Pobre — Robert Kiyosaki'],
-      }
-    ]
-  }
+        leituras: ['Pai Rico, Pai Pobre — Robert Kiyosaki', 'O Homem Mais Rico da Babilônia — George S. Clason', 'The Psychology of Money — Morgan Housel'],
+      },
+      {
+        id: 'F1A3',
+        titulo: 'Psicologia Financeira',
+        duracao: '75 min',
+        nivel: 'Iniciante',
+        objetivos: [
+          'Compreender como o cérebro toma decisões financeiras',
+          'Identificar emoções que afectam investimentos',
+          'Reconhecer os principais vieses cognitivos',
+          'Controlar impulsos financeiros e desenvolver disciplina',
+        ],
+        conteudo: [
+          {
+            tipo: 'intro',
+            titulo: 'Introdução',
+            texto: `Imagine dois investidores. O primeiro conhece análise técnica, análise fundamentalista e gestão de risco — mas perde dinheiro constantemente. O segundo tem menos conhecimento técnico mas mantém disciplina e controla emoções — e ganha consistentemente.\n\nPor quê? Porque o mercado financeiro é, acima de tudo, um **jogo psicológico**. Muitos investidores não perdem por falta de conhecimento, mas por não controlarem as suas emoções.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Os Dois Sistemas do Cérebro',
+            texto: `**Sistema 1 – Emocional:** Rápido, automático, instintivo, impulsivo. Quando vê "GANHE 500% EM 30 DIAS" sente entusiasmo imediato.\n\n**Sistema 2 – Racional:** Lento, analítico, lógico, disciplinado. Antes de investir analisa: riscos, retorno, histórico, probabilidade.\n\n**Regra de Ouro:** Investidores ricos usam o Sistema 2. Investidores emocionais usam o Sistema 1.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Medo e Ganância',
+            texto: `**MEDO** aparece quando o mercado cai, quando perde dinheiro, quando há incerteza.\nSintomas: fechar posições cedo, não entrar em boas oportunidades, vender no pior momento.\n\nExemplo: Compra uma acção a 100 → cai para 95 → você vende (medo) → dias depois sobe para 130. O medo expulsou-o do mercado.\n\n**GANÂNCIA** aparece quando ganha dinheiro rapidamente.\nSintomas: operar demais, assumir riscos excessivos, ignorar gestão de risco.\n\nExemplo: Ganhou 50.000 Kz → quer 500.000 → aumenta o lote sem critério → perde tudo.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Os Principais Vieses Cognitivos',
+            texto: `**🐑 Efeito Manada:** Tendência de seguir a maioria mesmo quando está errada. Durante a bolha imobiliária de 2008, todos compravam imóveis porque todos compravam. Resultado: colapso global.\n\n**🔍 Viés de Confirmação:** Procurar apenas informações que confirmam o que já acreditamos. Solução: Para cada argumento favorável, liste 1 argumento contrário.\n\n**💪 Excesso de Confiança:** Acreditar que sabe mais do que realmente sabe. Após 10 operações vencedoras, o trader pensa "sou invencível" → aumenta o risco → perde metade da conta. O mercado castiga a arrogância.\n\n**😰 Aversão à Perda:** Uma perda de 100 dólares causa mais dor do que um ganho de 100 dólares gera felicidade. Consequência: segurar prejuízos e vender lucros cedo — exactamente o oposto do correcto.\n\n**📱 FOMO (Fear Of Missing Out):** Bitcoin sobe 30%, todos falam → você compra no topo → mercado corrige. Antídoto: "Eu compraria isto se ninguém estivesse a falar disso?"\n\n**💢 Vingança Contra o Mercado:** Perde 50.000 Kz → fica irritado → abre nova operação emocional → perde novamente. Regra: após perdas, PARE, analise, respire, retorne apenas quando estiver racional.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'O Diário Emocional',
+            texto: `Ferramenta usada por traders profissionais. Após cada operação registe:\n\n• Data:\n• Activo:\n• Resultado:\n• Emoção antes da operação:\n• Emoção durante:\n• Emoção depois:\n• Lição aprendida:\n\n**Exemplo real:**\nData: 10/06 | Activo: NASDAQ | Resultado: -15.000 Kz | Emoção: Ansiedade | Erro: Entrei antes do sinal | Lição: Esperar confirmação.\n\n**Fórmula do sucesso:** Conhecimento + Psicologia + Disciplina = Resultados Consistentes`,
+          },
+        ],
+        exercicios: [
+          'Explique a diferença entre Sistema 1 e Sistema 2 no contexto financeiro.',
+          'Descreva um exemplo pessoal de FOMO em finanças.',
+          'Explique o efeito manada com um exemplo real.',
+          'Qual viés psicológico mais te afecta? Justifique.',
+          'Crie o seu Diário Emocional para as próximas 2 semanas.',
+        ],
+        quiz: [
+          { pergunta: 'O que é FOMO no contexto financeiro?', opcoes: ['Uma estratégia de investimento', 'O medo de ficar de fora de uma oportunidade', 'Uma técnica de análise técnica'], correto: 1, explicacao: 'FOMO (Fear Of Missing Out) é o medo de perder uma oportunidade, levando a decisões impulsivas como comprar no topo de mercado.' },
+          { pergunta: 'O que é o viés de confirmação?', opcoes: ['Confirmar uma operação no mercado', 'Procurar apenas informações que confirmam o que já acreditamos', 'Analisar ambos os lados de um investimento'], correto: 1, explicacao: 'O viés de confirmação faz-nos ignorar informações contrárias às nossas crenças, criando uma visão distorcida da realidade.' },
+          { pergunta: 'Qual é a regra após uma perda emocional no mercado?', opcoes: ['Operar mais para recuperar o prejuízo', 'Parar, analisar, respirar e retornar apenas racional', 'Aumentar o tamanho das posições'], correto: 1, explicacao: 'Após perdas, a "vingança contra o mercado" é um dos erros mais destrutivos. A disciplina exige paragem e reflexão antes de continuar.' },
+          { pergunta: 'Qual sistema do cérebro deve dominar as decisões financeiras?', opcoes: ['Sistema 1 — rápido e instintivo', 'Sistema 2 — racional e analítico', 'Ambos em igual proporção'], correto: 1, explicacao: 'O Sistema 2 (lento, analítico, lógico) é o que leva a decisões financeiras consistentes e bem fundamentadas.' },
+        ],
+        leituras: ['The Psychology of Money — Morgan Housel', 'Thinking, Fast and Slow — Daniel Kahneman', 'Trading in the Zone — Mark Douglas', 'Atomic Habits — James Clear'],
+      },
+      {
+        id: 'F1A4',
+        titulo: 'Fluxo de Caixa Pessoal',
+        duracao: '50 min',
+        nivel: 'Iniciante',
+        objetivos: ['Aprender para onde o dinheiro vai', 'Mapear toda a vida financeira', 'Classificar tipos de gastos', 'Identificar vazamentos financeiros'],
+        conteudo: [
+          {
+            tipo: 'intro',
+            titulo: 'Conceito Principal',
+            texto: `A maioria das pessoas sabe quanto ganha. Pouquíssimas sabem exactamente quanto gastam.\n\n**Fluxo de Caixa = Entradas – Saídas**\n\nExemplo prático:\nSalário: 500.000 Kz + Renda Extra: 100.000 Kz = **Total Entradas: 600.000 Kz**\n\nCasa: 150.000 | Transporte: 50.000 | Alimentação: 100.000 | Internet: 20.000 | Lazer: 80.000 | Outros: 50.000 = **Total Saídas: 450.000 Kz**\n\n**Fluxo de Caixa = 600.000 – 450.000 = 150.000 Kz positivo**`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Os 4 Tipos de Gastos',
+            texto: `**🔴 Necessários:** Água, luz, alimentação, habitação. Não pode eliminar.\n\n**🟡 Importantes:** Educação, saúde, poupança. Deve manter.\n\n**🟢 Supérfluos:** Luxos, compras por impulso, assinaturas não utilizadas. Analise criticamente.\n\n**🔵 Investimentos:** Acções, ETFs, imóveis, negócios. Maximize esta categoria!\n\n**Exercício prático:** Liste todos os gastos dos últimos 30 dias e classifique cada um nestas 4 categorias. Provavelmente vai surpreender-se com o que descobre.`,
+          },
+        ],
+        exercicios: [
+          'Liste todos os gastos dos últimos 30 dias e classifique cada um.',
+          'Calcule o seu fluxo de caixa mensal actual.',
+          'Identifique os 3 maiores "vazamentos financeiros" nos seus gastos.',
+          'Crie uma planilha completa de fluxo de caixa.',
+        ],
+        quiz: [
+          { pergunta: 'Qual é a fórmula do Fluxo de Caixa?', opcoes: ['Entradas × Saídas', 'Entradas – Saídas', 'Entradas + Poupança'], correto: 1, explicacao: 'Fluxo de Caixa = Entradas – Saídas. Um resultado positivo significa que está a viver dentro das suas possibilidades.' },
+          { pergunta: 'Qual tipo de gasto deve ser maximizado?', opcoes: ['Supérfluos', 'Necessários', 'Investimentos'], correto: 2, explicacao: 'Os Investimentos são o único tipo de gasto que geram retorno futuro e constroem riqueza ao longo do tempo.' },
+          { pergunta: 'O que são "vazamentos financeiros"?', opcoes: ['Dívidas bancárias', 'Gastos desnecessários que drenam o seu dinheiro sem valor percebido', 'Impostos pagos ao Estado'], correto: 1, explicacao: 'Vazamentos financeiros são gastos pequenos e invisíveis (assinaturas não usadas, café diário, compras impulsivas) que somados representam montantes significativos.' },
+        ],
+        leituras: ['I Will Teach You to Be Rich — Ramit Sethi', 'The Total Money Makeover — Dave Ramsey'],
+      },
+      {
+        id: 'F1A5',
+        titulo: 'Orçamento Profissional',
+        duracao: '55 min',
+        nivel: 'Iniciante',
+        objetivos: ['Criar um orçamento que funcione', 'Aplicar a Regra 50-30-20', 'Evitar os erros comuns de orçamento'],
+        conteudo: [
+          {
+            tipo: 'intro',
+            titulo: 'O Que É um Orçamento',
+            texto: `Um orçamento é um plano que determina **para onde o seu dinheiro irá antes de recebê-lo**.\n\nSem orçamento, o dinheiro simplesmente "some" no fim do mês e você não sabe para onde foi.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'A Regra 50-30-20',
+            texto: `**50% — Necessidades:** Habitação, alimentação, transporte, serviços essenciais.\nExemplo com 500.000 Kz: 250.000 Kz\n\n**30% — Desejos:** Lazer, restaurantes, roupas, entretenimento.\nExemplo: 150.000 Kz\n\n**20% — Investimentos/Poupança:** Obrigatório. Pague-se a si próprio primeiro.\nExemplo: 100.000 Kz\n\n**Método Militar:** 70% Custos | 20% Investimentos | 10% Reserva de emergência`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Os 4 Erros Fatais de Orçamento',
+            texto: `❌ **Gastar antes de planejar** — O dinheiro desaparece antes de chegar ao fim do mês.\n❌ **Não investir nada** — Trabalha-se para sobreviver, não para prosperar.\n❌ **Não registar despesas** — Impossível controlar o que não se mede.\n❌ **Comprar por emoção** — As compras por impulso destroem qualquer orçamento.`,
+          },
+        ],
+        exercicios: [
+          'Crie o seu orçamento mensal usando a Regra 50-30-20.',
+          'Identifique onde a sua distribuição actual se desvia da regra ideal.',
+          'Crie um plano de orçamento para os próximos 12 meses.',
+        ],
+        quiz: [
+          { pergunta: 'Na Regra 50-30-20, qual percentagem é destinada a investimentos?', opcoes: ['50%', '30%', '20%'], correto: 2, explicacao: '20% do rendimento deve ser destinado a poupança e investimentos. Este é o "salário que paga a si próprio".' },
+          { pergunta: 'O que significa "pagar-se a si próprio primeiro"?', opcoes: ['Gastar no lazer antes das contas', 'Transferir a poupança antes de qualquer gasto', 'Pagar as dívidas primeiro'], correto: 1, explicacao: 'Transferir a poupança/investimento logo ao receber o salário garante que este dinheiro não seja gasto por impulso.' },
+        ],
+        leituras: ['The Automatic Millionaire — David Bach', 'I Will Teach You to Be Rich — Ramit Sethi'],
+      },
+      {
+        id: 'F1A6',
+        titulo: 'Juros Simples',
+        duracao: '40 min',
+        nivel: 'Intermediário',
+        objetivos: ['Compreender o conceito de juros', 'Aplicar a fórmula dos juros simples', 'Resolver problemas práticos'],
+        conteudo: [
+          {
+            tipo: 'intro',
+            titulo: 'O Que São Juros',
+            texto: `Juros são o **preço do dinheiro no tempo**. Quando empresta dinheiro, cobra juros. Quando pede emprestado, paga juros.\n\n**Fórmula dos Juros Simples:**\n\n**J = C × i × t**\n\nOnde: J = Juros | C = Capital | i = Taxa | t = Tempo`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Exemplos Resolvidos',
+            texto: `**Exemplo 1:**\nCapital: 100.000 Kz | Taxa: 10% ao ano | Prazo: 2 anos\nJ = 100.000 × 0,10 × 2 = **20.000 Kz**\nMontante Final = 100.000 + 20.000 = **120.000 Kz**\n\n**Exemplo 2:**\nCapital: 200.000 Kz | Taxa: 5% ao ano | Prazo: 3 anos\nJ = 200.000 × 0,05 × 3 = **30.000 Kz**\nMontante Final = **230.000 Kz**\n\n**Aplicações práticas:** Empréstimos pessoais, financiamentos básicos, operações comerciais de curto prazo.`,
+          },
+        ],
+        exercicios: [
+          'Calcule os juros simples: C=500.000, i=8%, t=2 anos.',
+          'Um banco cobra 15% ao ano em juros simples. Num empréstimo de 1.000.000 Kz por 18 meses, qual o total a pagar?',
+          'Calcule 10 problemas de juros simples com diferentes cenários.',
+        ],
+        quiz: [
+          { pergunta: 'Na fórmula J = C × i × t, o que representa "i"?', opcoes: ['Investimento', 'Taxa de juro', 'Tempo'], correto: 1, explicacao: '"i" representa a taxa de juro aplicada sobre o capital.' },
+          { pergunta: 'Capital de 100.000 Kz a 10% ao ano por 1 ano em juros simples resulta em:', opcoes: ['10.000 Kz de juros', '100.000 Kz de juros', '110.000 Kz de juros'], correto: 0, explicacao: 'J = 100.000 × 0,10 × 1 = 10.000 Kz de juros. O montante final é 110.000 Kz.' },
+        ],
+        leituras: ['Matemática Financeira — Ion Ionescu', 'Finanças Pessoais para Dummies'],
+      },
+      {
+        id: 'F1A7',
+        titulo: 'Juros Compostos — A 8ª Maravilha do Mundo',
+        duracao: '60 min',
+        nivel: 'Intermediário',
+        objetivos: ['Compreender os juros compostos', 'Aplicar a fórmula M = C(1+i)^n', 'Simular cenários de longo prazo', 'Compreender o poder do tempo nos investimentos'],
+        conteudo: [
+          {
+            tipo: 'intro',
+            titulo: 'Juros sobre Juros',
+            texto: `Nos juros compostos, os **juros de cada período são adicionados ao capital** e passam a gerar mais juros no período seguinte. É o "efeito bola de neve".\n\n**Fórmula:** M = C(1+i)^n\nOnde: M = Montante Final | C = Capital Inicial | i = Taxa por período | n = Número de períodos`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Exemplos Comparativos',
+            texto: `**Capital:** 100.000 Kz | **Taxa:** 10%/ano | **Prazo:** 3 anos\n\nJuros Simples:\nAno 1: 110.000 | Ano 2: 120.000 | Ano 3: 130.000 Kz\n\nJuros Compostos:\nAno 1: 110.000 | Ano 2: 121.000 | Ano 3: 133.100 Kz\n\nDiferença: 3.100 Kz — e esta diferença cresce exponencialmente com o tempo!\n\n**Longo prazo:** 100.000 Kz a 10% durante 30 anos = **≈ 1.744.940 Kz**\n\n**A Regra dos Investidores: Tempo > Capital**\nQuem começa 10 anos antes, mesmo com menos capital, normalmente acaba com mais.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'A Regra dos 72',
+            texto: `A Regra dos 72 diz quanto tempo leva para dobrar o capital:\n\n**Anos para dobrar = 72 ÷ Taxa de juros**\n\nExemplos:\n• Taxa 10%: 72 ÷ 10 = 7,2 anos para dobrar\n• Taxa 14,5% (BTs Angola): 72 ÷ 14,5 = ≈ 5 anos para dobrar\n• Taxa 17% (OTs Angola): 72 ÷ 17 = ≈ 4,2 anos para dobrar\n\nIsso significa que investindo em OTs angolanas, o seu capital dobra a cada ≈ 4 anos!`,
+          },
+        ],
+        exercicios: [
+          'Calcule M = C(1+i)^n para: C=500.000, i=17%, n=5 anos.',
+          'Compare juros simples vs compostos para o mesmo cenário durante 20 anos.',
+          'Use a Regra dos 72 para calcular quando o seu capital dobra com as taxas actuais da BODIVA.',
+          'Simule investir 50.000 Kz/mês por 10, 20 e 30 anos com taxa de 17%.',
+        ],
+        quiz: [
+          { pergunta: 'Qual é a diferença fundamental entre juros simples e compostos?', opcoes: ['O tempo de aplicação', 'Nos compostos, os juros se somam ao capital e geram mais juros', 'A taxa de juro aplicada'], correto: 1, explicacao: 'Nos juros compostos, o rendimento de cada período é reinvestido, criando o efeito exponencial que multiplica o capital ao longo do tempo.' },
+          { pergunta: 'Pela Regra dos 72, com taxa de 12% ao ano, quanto tempo leva para dobrar o capital?', opcoes: ['6 anos', '8 anos', 'Exactamente 12 anos'], correto: 0, explicacao: '72 ÷ 12 = 6 anos. Num prazo de 6 anos com taxa de 12% compostos, o capital dobra.' },
+          { pergunta: 'O que é mais importante nos juros compostos?', opcoes: ['A taxa de juro', 'O capital inicial', 'O tempo de investimento'], correto: 2, explicacao: 'O tempo é o factor mais poderoso nos juros compostos. Quem começa cedo, mesmo com menos capital, normalmente termina com mais.' },
+        ],
+        leituras: ['The Compound Effect — Darren Hardy', 'Pai Rico, Pai Pobre — Robert Kiyosaki'],
+      },
+      {
+        id: 'F1A8',
+        titulo: 'Valor Presente e Valor Futuro',
+        duracao: '55 min',
+        nivel: 'Intermediário',
+        objetivos: ['Compreender o valor do dinheiro no tempo', 'Calcular Valor Futuro (VF)', 'Calcular Valor Presente (VP)', 'Aplicar conceitos em decisões reais'],
+        conteudo: [
+          {
+            tipo: 'intro',
+            titulo: 'O Dinheiro Muda de Valor no Tempo',
+            texto: `**100.000 Kz hoje NÃO têm o mesmo valor que 100.000 Kz daqui a 10 anos.**\n\nPorquê? Porque 100.000 Kz hoje podem ser investidos e crescer. A inflação também reduz o poder de compra.\n\nPor isso, precisamos de ferramentas para comparar dinheiro em diferentes momentos do tempo.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Valor Futuro (VF)',
+            texto: `Quanto valerá o seu dinheiro no futuro?\n\n**Fórmula:** VF = VP × (1+i)^n\n\nExemplo:\nVP = 100.000 Kz | Taxa = 10%/ano | Prazo = 5 anos\nVF = 100.000 × (1,10)^5 = **161.051 Kz**\n\nInvestindo 100.000 Kz hoje a 10%, terá 161.051 Kz daqui a 5 anos.`,
+          },
+          {
+            tipo: 'capitulo',
+            titulo: 'Valor Presente (VP)',
+            texto: `Quanto vale hoje um valor que receberá no futuro?\n\n**Fórmula:** VP = VF ÷ (1+i)^n\n\nExemplo:\nVF = 200.000 Kz (a receber daqui a 5 anos) | Taxa = 10%\nVP = 200.000 ÷ (1,10)^5 = **124.184 Kz**\n\nIsso significa que 200.000 Kz daqui a 5 anos equivalem apenas a 124.184 Kz hoje!\n\n**Decisão prática:** Opção A: Receber 1 milhão hoje. Opção B: Receber 1 milhão daqui a 10 anos. Qual é melhor? **Opção A!** — porque pode investir o dinheiro hoje.`,
+          },
+        ],
+        exercicios: [
+          'Calcule o VF de 500.000 Kz a 17% por 10 anos.',
+          'Calcule o VP de 2.000.000 Kz a receber em 15 anos com taxa de 10%.',
+          'Compare: receber 500.000 Kz hoje vs 800.000 Kz daqui a 3 anos (taxa 15%). O que é mais vantajoso?',
+        ],
+        quiz: [
+          { pergunta: 'Qual é a fórmula do Valor Futuro?', opcoes: ['VF = VP ÷ (1+i)^n', 'VF = VP × (1+i)^n', 'VF = VP × i × n'], correto: 1, explicacao: 'VF = VP × (1+i)^n — aplica-se a taxa composta durante n períodos sobre o capital presente.' },
+          { pergunta: '100.000 Kz hoje são mais valiosos do que 100.000 Kz daqui a 10 anos?', opcoes: ['Falso — o valor é igual', 'Verdadeiro — o dinheiro de hoje pode ser investido', 'Depende da inflação apenas'], correto: 1, explicacao: 'Verdadeiro. 100.000 Kz hoje podem ser investidos e crescer. Além disso, a inflação corrói o poder de compra do dinheiro futuro.' },
+        ],
+        leituras: ['Finanças para Empreendedores', 'Corporate Finance — Brealey, Myers & Allen'],
+      },
+    ],
+  },
+  {
+    id: 'F2',
+    nome: 'Faculdade 2 — Gestão Financeira Avançada',
+    icon: '📊',
+    cor: '#34d399',
+    desc: 'Estratégias avançadas de gestão, planeamento e construção de patrimônio.',
+    bloqueada: false,
+    aulas: [
+      { id: 'F2A1', titulo: 'Taxas Equivalentes e Taxa Real', duracao: '45 min', nivel: 'Avançado', objetivos: ['Converter taxas entre diferentes períodos', 'Calcular taxa real de retorno descontando inflação'], conteudo: [{ tipo: 'intro', titulo: 'Taxas Equivalentes', texto: `Uma taxa mensal de 1% é equivalente a quanto ao ano? NÃO é simplesmente 12%!\n\nTaxa Anual Equivalente = (1 + taxa mensal)^12 - 1\n= (1,01)^12 - 1 = 12,68%\n\n**Taxa Real de Retorno:**\nTaxa Real ≈ Taxa Nominal – Inflação\nSe um investimento rende 17% ao ano mas a inflação é 7%, o retorno real é ≈ 10%.\n\nIsto é crucial para avaliar se um investimento está realmente a gerar riqueza ou apenas a preservar o poder de compra.` }], exercicios: ['Converta: 2% ao mês para taxa anual efectiva.', 'Um investimento rende 14,5%. Com inflação de 6%, qual é o retorno real?'], quiz: [{ pergunta: 'Como calcular a taxa anual equivalente a 1% ao mês?', opcoes: ['1% × 12 = 12%', '(1,01)^12 - 1 ≈ 12,68%', '1% × 365'], correto: 1, explicacao: 'A conversão de taxas usa a fórmula da capitalização composta: (1 + taxa)^n - 1.' }], leituras: ['Matemática Financeira — Gilberto Assaf Neto'] },
+      { id: 'F2A2', titulo: 'Inflação e Poder de Compra', duracao: '50 min', nivel: 'Avançado', objetivos: ['Compreender a inflação angolana', 'Proteger o poder de compra'], conteudo: [{ tipo: 'intro', titulo: 'O Que É Inflação', texto: `Inflação é o aumento geral dos preços ao longo do tempo. Em Angola, medida pelo Índice de Preços ao Consumidor (IPC) pelo INE.\n\nSe a inflação é 10% ao ano, 100.000 Kz compram hoje o que 90.909 Kz comprariam no ano passado.\n\n**Como proteger o poder de compra:**\n• Invista em activos reais (imóveis, ouro)\n• Use instrumentos indexados à inflação\n• Invista em divisas fortes (USD, EUR)\n• Diversifique geograficamente` }], exercicios: ['Se a inflação é 8% e o salário não aumenta, quanto poder de compra perde em 5 anos?'], quiz: [{ pergunta: 'Como a inflação afecta o dinheiro guardado "debaixo do colchão"?', opcoes: ['Não afecta', 'Aumenta o valor', 'Destrói o poder de compra gradualmente'], correto: 2, explicacao: 'Dinheiro parado perde poder de compra em proporção à inflação. Num ambiente de 10% de inflação, perde 10% do poder de compra por ano.' }], leituras: ['A Riqueza das Nações — Adam Smith'] },
+    ],
+  },
+  {
+    id: 'F3',
+    nome: 'Faculdade 3 — Mercado de Capitais e BODIVA',
+    icon: '📈',
+    cor: '#f59e0b',
+    desc: 'Formação específica sobre o mercado angolano, BODIVA, BNA e instrumentos financeiros locais.',
+    bloqueada: false,
+    aulas: [
+      { id: 'F3A1', titulo: 'Estrutura do Mercado Financeiro Angolano', duracao: '60 min', nivel: 'Avançado', objetivos: ['Conhecer os reguladores angolanos', 'Entender BNA, BODIVA, ARSEG e CMC'], conteudo: [{ tipo: 'intro', titulo: 'O Sistema Financeiro Angolano', texto: `**BNA (Banco Nacional de Angola):** Banco central. Regula a política monetária, define a taxa de referência (BNA Rate), emite moeda e supervisiona o sistema bancário.\n\n**BODIVA (Bolsa de Dívida e Valores de Angola):** Bolsa de valores angolana. Negociação de Bilhetes do Tesouro (BTs), Obrigações do Tesouro (OTs) e acções cotadas.\n\n**CMC (Comissão do Mercado de Capitais):** Supervisiona o mercado de capitais, protege investidores e regula emissores de valores mobiliários.\n\n**ARSEG (Agência Reguladora de Seguros):** Supervisiona o sector segurador angolano.\n\n**Como investir:** Necessita de abrir conta num banco autorizado pela BODIVA e solicitar acesso ao mercado secundário.` }], exercicios: ['Pesquise as actuais taxas de BTs em leilão no BNA.', 'Liste 5 empresas cotadas na BODIVA e os seus sectores.'], quiz: [{ pergunta: 'Qual instituição regula o mercado de capitais em Angola?', opcoes: ['BNA', 'CMC (Comissão do Mercado de Capitais)', 'BODIVA'], correto: 1, explicacao: 'A CMC é o regulador do mercado de capitais angolano, supervisionando emissores, intermediários e protegendo investidores.' }], leituras: ['Website oficial da BODIVA — bodiva.ao', 'Website do BNA — bna.ao'] },
+    ],
+  },
+  {
+    id: 'F4',
+    nome: 'Faculdade 4 — Análise de Investimentos',
+    icon: '🔬',
+    cor: '#ec4899',
+    desc: 'Análise técnica, análise fundamentalista e gestão de risco profissional.',
+    bloqueada: false,
+    aulas: [
+      { id: 'F4A1', titulo: 'Análise Fundamentalista', duracao: '75 min', nivel: 'Avançado', objetivos: ['Avaliar o valor intrínseco de empresas e títulos', 'Analisar balanços e demonstrações financeiras'], conteudo: [{ tipo: 'intro', titulo: 'O Que É Análise Fundamentalista', texto: `Análise fundamentalista avalia o valor real (intrínseco) de um activo com base nos fundamentos económicos, financeiros e do sector.\n\n**Para acções:** Analisar receita, lucro, dívida, crescimento, gestão e perspectivas de mercado.\n\n**Para BTs/OTs:** Analisar a situação fiscal do Estado, rating soberano, taxa LUIBOR e spread de crédito.\n\n**Indicadores principais:**\n• P/E (Price-to-Earnings): preço da acção ÷ lucro por acção\n• ROE (Return on Equity): lucro ÷ capital próprio × 100\n• Dívida/Patrimônio: indica alavancagem\n• Dividend Yield: dividendo anual ÷ preço da acção × 100` }], exercicios: ['Pesquise o P/E ratio de 3 empresas cotadas na BODIVA.', 'Analise o balanço simplificado de uma empresa angolana conhecida.'], quiz: [{ pergunta: 'O que indica um P/E ratio baixo?', opcoes: ['A empresa está cara', 'A empresa pode estar subvalorizada ou ter perspectivas fracas', 'A empresa não paga dividendos'], correto: 1, explicacao: 'Um P/E baixo pode indicar que a acção está subvalorizada (oportunidade) ou que o mercado antecipa problemas futuros (risco). É necessário analisar o contexto completo.' }], leituras: ['The Intelligent Investor — Benjamin Graham', 'Security Analysis — Graham & Dodd'] },
+    ],
+  },
 ];
+
+// ─── Componente Aula Modal ─────────────────────────────────────────────────────
 
 // AulaModal para aulas escritas
 function AulaModal({ aula, onClose, onComplete, concluida }) {
@@ -205,7 +494,7 @@ function AulaModal({ aula, onClose, onComplete, concluida }) {
 
 // Componente Principal
 export default function AcademiaView({ currentUser }) {
-  const [activeModule, setActiveModule] = useState('videos'); // 'videos' | 'escrito' | 'admin'
+  const [activeModule, setActiveModule] = useState('escrito'); // 'videos' | 'escrito' | 'admin'
   
   // Written course state
   const [aulaAberta, setAulaAberta] = useState(null);
@@ -274,16 +563,22 @@ export default function AcademiaView({ currentUser }) {
         .select('*')
         .order('sort_order', { ascending: true });
 
-      if (vError) throw vError;
+      // If error (e.g. table not created yet), just show empty list
+      if (vError) {
+        console.warn('Tabela videos não encontrada ou erro:', vError.message);
+        setVideos([]);
+        setLoadingVideos(false);
+        return;
+      }
       setVideos(vData || []);
 
-      // Query watch stats for current user
-      const { data: sData, error: sError } = await supabase
+      // Query watch stats for current user (skip if no user)
+      if (!currentUser?.id) { setLoadingVideos(false); return; }
+      const { data: sData } = await supabase
         .from('video_watch_stats')
         .select('*')
         .eq('user_id', currentUser.id);
 
-      if (sError) throw sError;
       const statsObj = {};
       sData?.forEach(s => {
         statsObj[s.video_id] = s;
@@ -291,6 +586,7 @@ export default function AcademiaView({ currentUser }) {
       setWatchStats(statsObj);
     } catch (err) {
       console.error('Error fetching videos:', err);
+      setVideos([]);
     } finally {
       setLoadingVideos(false);
     }

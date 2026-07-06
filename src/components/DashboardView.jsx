@@ -1,10 +1,10 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Wallet, AlertCircle, Sparkles, CheckCircle2, Star, ShieldAlert } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Wallet, AlertCircle, Sparkles, CheckCircle2, Star, ShieldAlert, User, Crown, MessageCircle } from 'lucide-react';
 
-export default function DashboardView({ launches, categories, role, userEmail, onAddLaunchClick }) {
-  // Apply security filter: User sees only their own launches. Admin sees all.
+export default function DashboardView({ launches, categories, role, userEmail, userId, currentUser, onAddLaunchClick, onGoToChat }) {
+  // FIX: CriadoPor stores user_id (UUID), not email. Compare against userId.
   const filteredLaunches = launches.filter(l => 
-    role === 'Admin' || l.CriadoPor === userEmail
+    role === 'admin' || l.CriadoPor === userId
   );
 
   // Calculations
@@ -109,9 +109,69 @@ export default function DashboardView({ launches, categories, role, userEmail, o
     smsTheme = 'warning';
   }
 
+  const planBadge = currentUser?.Plano === 'Pro' ? { label: 'PRO', color: '#6366f1' }
+    : currentUser?.Plano === 'Enterprise' ? { label: 'ENTERPRISE', color: '#f59e0b' }
+    : { label: 'GRATUITO', color: '#6b7280' };
+
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      
+
+      {/* Profile Card */}
+      <div className="glass-panel" style={{
+        padding: '20px 24px',
+        background: 'linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(139,92,246,0.04) 100%)',
+        border: '1px solid rgba(99,102,241,0.15)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '48px', height: '48px', borderRadius: '50%',
+            background: role === 'admin'
+              ? 'linear-gradient(135deg, #f59e0b, #fbbf24)'
+              : 'linear-gradient(135deg, #6366f1, #a5b4fc)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 900, color: '#fff', fontSize: '1.2rem',
+            boxShadow: role === 'admin' ? '0 0 16px rgba(245,158,11,0.4)' : '0 0 16px rgba(99,102,241,0.3)'
+          }}>
+            {role === 'admin' ? <Crown size={22} /> : (currentUser?.Nome?.[0] || <User size={22} />)}
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>
+              Olá, {currentUser?.Nome?.split(' ')[0] || 'Utilizador'} 👋
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{userEmail}</span>
+              <span style={{
+                background: `${planBadge.color}20`, border: `1px solid ${planBadge.color}40`,
+                color: planBadge.color, fontSize: '0.6rem', fontWeight: 800,
+                padding: '1px 8px', borderRadius: '10px'
+              }}>{planBadge.label}</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {onGoToChat && (
+            <button
+              onClick={onGoToChat}
+              style={{
+                background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)',
+                color: 'var(--color-accent)', borderRadius: '10px',
+                padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                fontSize: '0.82rem', fontWeight: 600, transition: 'all 0.2s'
+              }}
+            >
+              <MessageCircle size={14} /> Falar com Suporte
+            </button>
+          )}
+          {role !== 'ReadOnly' && (
+            <button onClick={onAddLaunchClick} className="btn btn-primary" style={{ padding: '10px 18px' }}>
+              + Novo Lançamento
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Dynamic Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
@@ -120,11 +180,6 @@ export default function DashboardView({ launches, categories, role, userEmail, o
             Visão consolidada do seu patrimônio, dívidas e metas
           </p>
         </div>
-        {role !== 'ReadOnly' && (
-          <button onClick={onAddLaunchClick} className="btn btn-primary" style={{ padding: '10px 18px' }}>
-            + Novo Lançamento
-          </button>
-        )}
       </div>
 
       {/* Motivational Banner */}

@@ -88,6 +88,9 @@ export default function SuperAdminView({
   // Logs search state
   const [logSearch, setLogSearch] = useState('');
 
+  // Image preview lightbox
+  const [previewImg, setPreviewImg] = useState(null);
+
   const autoManageAccounts = () => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -161,16 +164,26 @@ export default function SuperAdminView({
   };
 
   const handlePlanoChange = async (userId, email, novoPlano) => {
+    const updates = { plan: novoPlano };
+    if (novoPlano === 'Gratuito') {
+      updates.plan_expires_at = null;
+    } else {
+      // Manual upgrade gives 30 days expiration by default
+      const expDate = new Date();
+      expDate.setDate(expDate.getDate() + 30);
+      updates.plan_expires_at = expDate.toISOString();
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({ plan: novoPlano })
+      .update(updates)
       .eq('id', userId);
 
     if (error) {
       onToast({ type: 'warning', text: 'Erro ao alterar plano: ' + error.message });
       return;
     }
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, Plano: novoPlano } : u));
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, Plano: novoPlano, PlanExpiresAt: updates.plan_expires_at } : u));
     onToast({ type: 'success', text: `Plano alterado para "${novoPlano}" com sucesso!` });
   };
 
@@ -326,6 +339,39 @@ export default function SuperAdminView({
       onToast({ type: 'success', text: 'Pagamento aprovado! Plano activado para o utilizador.' });
     } catch (err) {
       onToast({ type: 'warning', text: 'Erro ao aprovar: ' + (err.message || 'Tente novamente.') });
+    }
+  };
+
+  // Revoke plan (admin force reset to Gratuito)
+  const handleRevokePlan = async (sub) => {
+    if (!window.confirm(`⚠️ Revogar plano de "${sub.userName || sub.userEmail}"?\nO utilizador voltará ao plano Gratuito imediatamente.`)) return;
+    try {
+      // Reset profile plan
+      const { error: profErr } = await supabase
+        .from('profiles')
+        .update({ plan: 'Gratuito', plan_expires_at: null })
+        .eq('id', sub.user_id);
+      if (profErr) throw profErr;
+
+      // Mark payment as Expirada
+      const { error: payErr } = await supabase
+        .from('payments')
+        .update({ status: 'Expirada' })
+        .eq('id', sub.id);
+      if (payErr) throw payErr;
+
+      // Update local state
+      if (setSubscriptions) {
+        setSubscriptions(prev => prev.map(s =>
+          s.id === sub.id ? { ...s, status: 'Expirada' } : s
+        ));
+      }
+      setUsers(prev => prev.map(u =>
+        u.id === sub.user_id ? { ...u, Plano: 'Gratuito' } : u
+      ));
+      onToast({ type: 'success', text: `Plano de "${sub.userName || sub.userEmail}" revogado para Gratuito!` });
+    } catch (err) {
+      onToast({ type: 'warning', text: 'Erro ao revogar: ' + (err.message || 'Tente novamente.') });
     }
   };
 
@@ -749,6 +795,9 @@ export default function SuperAdminView({
               const sc = statusColors[sub.status] || statusColors.Pendente;
 
               // Aprovação/rejeição via Supabase RPC (ver handleApprovePayment / handleRejectPayment)
+              const compUrl = sub.comprovativo_url || sub.comprovativoUrl;
+              const compNome = sub.comprovativo_nome || sub.comprovativoNome || '';
+              const isImage = compUrl && (compNome.match(/\.(png|jpg|jpeg)$/i) || compUrl.match(/\.(png|jpg|jpeg)(\?|$)/i));
 
               return (
                 <div key={sub.id} style={{
@@ -756,7 +805,7 @@ export default function SuperAdminView({
                   borderRadius: '12px', padding: '14px 16px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
                         {sub.userName || sub.userEmail}
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: '8px' }}>{sub.userEmail}</span>
@@ -766,12 +815,32 @@ export default function SuperAdminView({
                       </div>
                       <div style={{ fontSize: '0.78rem', marginTop: '4px' }}>
                         Valor: <strong style={{ color: 'var(--color-accent)' }}>{Number(sub.valor || 0).toLocaleString('pt-AO')} Kz</strong>
-                        {(sub.comprovativo_nome || sub.comprovativoNome) && (
+                        {compNome && (
                           <span style={{ marginLeft: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-                            <FileText size={11} /> {sub.comprovativo_nome || sub.comprovativoNome}
+                            <FileText size={11} /> {compNome}
                           </span>
                         )}
                       </div>
+
+                      {/* Inline image preview of comprovativo */}
+                      {isImage && compUrl && (
+                        <div style={{ marginTop: '10px' }}>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 600 }}>📋 Comprovativo:</div>
+                          <img
+                            src={compUrl}
+                            alt="comprovativo"
+                            onClick={() => setPreviewImg(compUrl)}
+                            style={{
+                              maxWidth: '220px', maxHeight: '120px', borderRadius: '8px',
+                              border: '1px solid rgba(255,255,255,0.12)', objectFit: 'cover',
+                              cursor: 'zoom-in', transition: 'transform 0.2s'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                          />
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>Clique para ampliar</div>
+                        </div>
+                      )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span style={{
@@ -779,14 +848,14 @@ export default function SuperAdminView({
                         padding: '4px 12px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 700
                       }}>{sub.status}</span>
 
-                      {(sub.comprovativo_url || sub.comprovativoUrl) && (
-                        <a href={sub.comprovativo_url || sub.comprovativoUrl} target="_blank" rel="noopener noreferrer" style={{
+                      {compUrl && (
+                        <a href={compUrl} target="_blank" rel="noopener noreferrer" style={{
                           background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)',
                           color: 'var(--color-accent)', borderRadius: '6px', padding: '5px 10px',
                           cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
                           display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none'
                         }}>
-                          <Eye size={12} /> Ver
+                          <Eye size={12} /> Abrir Original
                         </a>
                       )}
 
@@ -809,6 +878,18 @@ export default function SuperAdminView({
                             <X size={13} /> Rejeitar
                           </button>
                         </>
+                      )}
+
+                      {/* Revoke active plan button */}
+                      {sub.status === 'Ativa' && (
+                        <button onClick={() => handleRevokePlan(sub)} style={{
+                          background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
+                          color: '#f59e0b', borderRadius: '6px', padding: '5px 12px',
+                          cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem',
+                          display: 'flex', alignItems: 'center', gap: '4px'
+                        }}>
+                          <Lock size={13} /> Revogar Plano
+                        </button>
                       )}
                     </div>
                   </div>
@@ -1018,6 +1099,46 @@ export default function SuperAdminView({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* IMAGE LIGHTBOX MODAL */}
+      {previewImg && (
+        <div
+          onClick={() => setPreviewImg(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 500,
+            background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px', cursor: 'zoom-out'
+          }}
+        >
+          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
+            <img
+              src={previewImg}
+              alt="Comprovativo de pagamento"
+              style={{
+                maxWidth: '100%', maxHeight: '85vh',
+                borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
+                border: '2px solid rgba(255,255,255,0.1)'
+              }}
+            />
+            <button
+              onClick={(e) => { e.stopPropagation(); setPreviewImg(null); }}
+              style={{
+                position: 'absolute', top: '-12px', right: '-12px',
+                background: '#ef4444', border: 'none', color: '#fff',
+                width: '32px', height: '32px', borderRadius: '50%',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 800, boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+              }}
+            >
+              <X size={16} />
+            </button>
+            <div style={{ textAlign: 'center', marginTop: '12px', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>
+              Clique fora da imagem para fechar · <a href={previewImg} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-accent)' }}>Abrir em tamanho original</a>
+            </div>
           </div>
         </div>
       )}

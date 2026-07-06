@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import {
   Mail, User, AlertCircle, LogIn, UserPlus,
-  Lock, Eye, EyeOff, CheckCircle, Globe, Phone
+  Lock, Eye, EyeOff, CheckCircle, Globe, Phone, ArrowLeft
 } from 'lucide-react';
 
 import { supabase } from '../supabaseClient';
 
-export default function AuthView() {
-  const [activeTab, setActiveTab] = useState('login');
+export default function AuthView({ initialTab = 'login', onBackToLanding }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [loading, setLoading] = useState(false);
 
   // LOGIN
@@ -151,6 +151,21 @@ export default function AuthView() {
         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
         border: '1px solid rgba(255, 255, 255, 0.08)'
       }}>
+
+        {/* Back to Landing */}
+        {onBackToLanding && (
+          <button
+            onClick={onBackToLanding}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              color: 'var(--text-muted)', fontSize: '0.82rem',
+              padding: '0', alignSelf: 'flex-start'
+            }}
+          >
+            <ArrowLeft size={14} /> Voltar ao início
+          </button>
+        )}
 
         {/* Brand Logo */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>

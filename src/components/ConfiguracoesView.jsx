@@ -37,7 +37,8 @@ export default function ConfiguracoesView({
   const [syncMsg, setSyncMsg] = useState('');
   const [isConfigured, setIsConfigured] = useState(isSupabaseConfigured());
 
-  const isSuperAdmin = role === 'SuperAdmin';
+  const isSuperAdmin = role === 'SuperAdmin' || role === 'superadmin';
+  const isAnyAdmin = role === 'admin' || role === 'Admin' || isSuperAdmin;
 
   const planoColor = (plano) => {
     switch (plano) {
@@ -310,7 +311,8 @@ export default function ConfiguracoesView({
         {/* ── RIGHT COLUMN ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          {/* ── CLOUD SYNC CARD ── */}
+          {/* ── CLOUD SYNC CARD — Admin Only ── */}
+          {isAnyAdmin && (
           <div className="glass-panel" style={{
             padding: '22px', display: 'flex', flexDirection: 'column', gap: '16px',
             border: `1px solid ${isConfigured ? 'rgba(52,211,153,0.25)' : 'rgba(99,102,241,0.2)'}`
@@ -337,7 +339,7 @@ export default function ConfiguracoesView({
               borderRadius: '10px', padding: '12px', fontSize: '0.8rem', lineHeight: 1.6,
               color: 'var(--text-secondary)'
             }}>
-              <strong style={{ color: 'var(--text-primary)' }}>🔑 Para sincronizar entre PC e telemóvel:</strong><br />
+              <strong style={{ color: 'var(--text-primary)' }}>🔑 Para sincronizar entre PC e telemovel:</strong><br />
               1. Crie um projeto gratuito em{' '}
               <a href="https://supabase.com" target="_blank" rel="noreferrer"
                 style={{ color: 'var(--color-accent)', textDecoration: 'none' }}>
@@ -418,6 +420,7 @@ export default function ConfiguracoesView({
               </button>
             )}
           </div>
+          )}
 
           {/* Guia App Card */}
           <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>

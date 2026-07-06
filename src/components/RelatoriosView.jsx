@@ -1,10 +1,10 @@
 import React from 'react';
 import { Calendar, Download, TrendingUp, TrendingDown, RefreshCw, Layers, Award, ShieldAlert } from 'lucide-react';
 
-export default function RelatoriosView({ launches, categories, role, userEmail }) {
-  // Apply security filter: User sees only their own launches. Admin sees all.
+export default function RelatoriosView({ launches, categories, role, userEmail, userId }) {
+  // FIX: CriadoPor stores user_id (UUID), not email
   const filteredLaunches = launches.filter(l => 
-    role === 'Admin' || l.CriadoPor === userEmail
+    role === 'admin' || l.CriadoPor === userId
   );
 
   // Group by months dynamically
