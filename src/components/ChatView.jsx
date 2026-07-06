@@ -7,8 +7,7 @@ import {
 import { supabase, isSupabaseConfigured } from '../supabaseClient';
 
 // ─── LOCAL (OFFLINE) CHAT ENGINE ─────────────────────────────────────────────
-// Persists messages locally when Supabase isn't available
-const LOCAL_KEY = 'financas_chat_local_v1';
+const LOCAL_KEY = 'financas_chat_local_v2';
 
 function loadLocalMessages() {
   try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; } catch { return []; }
@@ -18,21 +17,19 @@ function saveLocalMessages(msgs) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(msgs));
 }
 
-// ─── COMPONENT ────────────────────────────────────────────────────────────────
 export default function ChatView({ currentUser }) {
   const isAdmin = currentUser?.Role === 'admin' || currentUser?.Role === 'Admin' ||
     currentUser?.Role === 'superadmin' || currentUser?.Role === 'SuperAdmin';
 
-  // Detect if Supabase chat tables are available
   const [supabaseAvailable, setSupabaseAvailable] = useState(false);
   const [checking, setChecking] = useState(true);
 
-  // Local chat state (always available)
+  // Local/Offline state
   const [localMessages, setLocalMessages] = useState(loadLocalMessages);
   const [inputText, setInputText] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState(null); // for admin view
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
-  // Supabase chat state (when available)
+  // Supabase state
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -42,7 +39,6 @@ export default function ChatView({ currentUser }) {
   const [filterMode, setFilterMode] = useState('active');
 
   const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null);
 
   // Check if Supabase chat tables exist
   useEffect(() => {
@@ -72,7 +68,7 @@ export default function ChatView({ currentUser }) {
     checkSupabase();
   }, []);
 
-  // ── SUPABASE MODE: fetch conversations ────────────────────────────────────
+  // ── SUPABASE: fetch conversations ──────────────────────────────────────────
   useEffect(() => {
     if (!supabaseAvailable || checking) return;
     fetchConversations();
@@ -92,7 +88,8 @@ export default function ChatView({ currentUser }) {
 
         const { data, error } = await query.order('last_message_at', { ascending: false });
         if (!error) setConversations(data || []);
-      } else {
+      } else if (currentUser?.id) {
+        // User single conversation
         const { data, error } = await supabase
           .from('chat_conversations')
           .select('*')
@@ -121,7 +118,14 @@ export default function ChatView({ currentUser }) {
     }
   };
 
-  // ── SUPABASE MODE: fetch messages ──────────────────────────────────────────
+  // Auto-activate user's conversation for user
+  useEffect(() => {
+    if (!isAdmin && conversations.length > 0) {
+      setActiveConversation(conversations[0]);
+    }
+  }, [conversations, isAdmin]);
+
+  // ── SUPABASE: fetch messages ───────────────────────────────────────────────
   useEffect(() => {
     if (!supabaseAvailable || !activeConversation) return;
     fetchMessages();
@@ -159,16 +163,38 @@ export default function ChatView({ currentUser }) {
     }
   };
 
-  // ── SUPABASE MODE: send message ────────────────────────────────────────────
+  // ── SUPABASE: send message ─────────────────────────────────────────────────
   const handleSendSupabase = async (e) => {
     if (e) e.preventDefault();
-    if (!inputText.trim() || !activeConversation) return;
+    if (!inputText.trim()) return;
+    
+    // Ensure we have a conversation created first
+    let convId = activeConversation?.id;
+    if (!convId && !isAdmin && currentUser?.id) {
+      try {
+        const { data: newConv, error: createErr } = await supabase
+          .from('chat_conversations')
+          .insert([{ user_id: currentUser.id }])
+          .select()
+          .single();
+        if (!createErr && newConv) {
+          convId = newConv.id;
+          setActiveConversation(newConv);
+          setConversations([newConv]);
+        }
+      } catch (err) {
+        console.error('Error creating conversation on send:', err);
+      }
+    }
+
+    if (!convId) return;
+
     const text = inputText.trim();
     setInputText('');
     try {
       await supabase.from('chat_messages').insert([{
-        conversation_id: activeConversation.id,
-        sender_id: currentUser.id,
+        conversation_id: convId,
+        sender_id: currentUser?.id,
         content: text
       }]);
     } catch (err) {
@@ -176,7 +202,7 @@ export default function ChatView({ currentUser }) {
     }
   };
 
-  // ── LOCAL MODE: send message ───────────────────────────────────────────────
+  // ── LOCAL: send message ────────────────────────────────────────────────────
   const handleSendLocal = (e) => {
     if (e) e.preventDefault();
     if (!inputText.trim()) return;
@@ -212,9 +238,8 @@ export default function ChatView({ currentUser }) {
     }, 100);
   };
 
-  useEffect(() => { scrollToBottom(); }, [localMessages]);
+  useEffect(() => { scrollToBottom(); }, [localMessages, messages]);
 
-  // ── Archive / Resolve (Supabase) ───────────────────────────────────────────
   const handleToggleArchive = async () => {
     if (!activeConversation) return;
     const { error } = await supabase.from('chat_conversations')
@@ -243,7 +268,6 @@ export default function ChatView({ currentUser }) {
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (checking) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: '12px', color: 'var(--text-muted)' }}>
@@ -255,16 +279,11 @@ export default function ChatView({ currentUser }) {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LOCAL MODE (no Supabase chat tables)
+  // LOCAL / OFFLINE MODE
   // ══════════════════════════════════════════════════════════════════════════
   if (!supabaseAvailable) {
-    const displayMessages = isAdmin
-      ? localMessages
-      : localMessages; // all see all in local mode
-
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '400px' }}>
-
         {/* Header */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.1)', borderRadius: '12px 12px 0 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -273,10 +292,10 @@ export default function ChatView({ currentUser }) {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                {isAdmin ? 'Suporte ao Cliente — Painel Admin' : 'Suporte Finança ao Ponto'}
+                {isAdmin ? 'Suporte ao Cliente — Painel Admin' : 'Fale com o Administrador'}
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                {isAdmin ? `${localMessages.length} mensagem(ns) no histórico` : 'As suas mensagens são vistas pelo administrador'}
+                {isAdmin ? `${localMessages.length} mensagem(ns) no histórico` : 'Escreva a sua mensagem abaixo.'}
               </div>
             </div>
           </div>
@@ -289,22 +308,22 @@ export default function ChatView({ currentUser }) {
 
         {/* Notice banner */}
         <div style={{ padding: '8px 16px', background: 'rgba(245,158,11,0.07)', borderBottom: '1px solid rgba(245,158,11,0.15)', fontSize: '0.72rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          ⚠️ Modo local — mensagens guardadas neste dispositivo. Para chat em tempo real, execute o SQL do chat no Supabase.
+          ⚠️ Modo local — mensagens guardadas no seu dispositivo. Execute o SQL do chat no Supabase para ativar chat online.
         </div>
 
-        {/* Messages */}
+        {/* Messages list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(0,0,0,0.05)' }}>
-          {displayMessages.length === 0 ? (
+          {localMessages.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
               <MessageSquare size={40} style={{ margin: '0 auto 12px', opacity: 0.2 }} />
               <p style={{ fontSize: '0.85rem', lineHeight: 1.7 }}>
                 {isAdmin
                   ? 'Nenhuma mensagem de suporte ainda.\nOs utilizadores podem contactar-te aqui.'
-                  : 'Olá! 👋 Escreva a sua mensagem abaixo.\nO administrador responderá em breve.'}
+                  : 'Olá! 👋 Escreva a sua mensagem abaixo para o administrador.'}
               </p>
             </div>
           ) : (
-            displayMessages.map(m => {
+            localMessages.map(m => {
               const isOwn = isAdmin ? m.is_admin : !m.is_admin;
               return (
                 <div key={m.id} style={{ alignSelf: isOwn ? 'flex-end' : 'flex-start', maxWidth: '72%' }}>
@@ -335,11 +354,11 @@ export default function ChatView({ currentUser }) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
+        {/* Input box */}
         <form onSubmit={handleSendLocal} style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(0,0,0,0.1)', borderRadius: '0 0 12px 12px' }}>
           <input
             type="text"
-            placeholder={isAdmin ? 'Responder ao utilizador...' : 'Escreva a sua mensagem...'}
+            placeholder="Escreva a sua mensagem..."
             value={inputText}
             onChange={e => setInputText(e.target.value)}
             style={{ flex: 1, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.88rem', outline: 'none' }}
@@ -357,16 +376,16 @@ export default function ChatView({ currentUser }) {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SUPABASE MODE (full real-time chat)
+  // SUPABASE ONLINE MODE
   // ══════════════════════════════════════════════════════════════════════════
   return (
     <div style={{ display: 'flex', height: '100%', minHeight: '400px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
 
-      {/* ── CONVERSATIONS SIDEBAR (ADMIN) ── */}
+      {/* Conversations sidebar (Only shown for Admin) */}
       {isAdmin && (
-        <div style={{ width: '300px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.1)', flexShrink: 0 }}>
+        <div style={{ width: '280px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.1)', flexShrink: 0 }}>
           <div style={{ padding: '14px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>💬 Conversas de Suporte</h3>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>💬 Conversas</h3>
             <div style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: '9px', top: '9px', color: 'var(--text-muted)' }} />
               <input
@@ -417,17 +436,25 @@ export default function ChatView({ currentUser }) {
         </div>
       )}
 
-      {/* ── CHAT AREA ── */}
-      {activeConversation ? (
+      {/* Chat Area (Always rendered directly for normal users) */}
+      {(!isAdmin || activeConversation) ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.05)', minWidth: 0 }}>
           {/* Header */}
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.08)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>
-                {isAdmin ? (activeConversation.profiles?.full_name || 'Utilizador') : '💬 Fale com o Administrador'}
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-accent), #a5b4fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: '0.9rem' }}>
+                {isAdmin ? (activeConversation?.profiles?.full_name?.[0] || 'U') : '👑'}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>
+                  {isAdmin ? (activeConversation?.profiles?.full_name || 'Utilizador') : 'Fale com o Administrador'}
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  {isAdmin ? 'Conversa de Suporte' : 'Suporte Oficial Finança ao Ponto'}
+                </div>
               </div>
             </div>
-            {isAdmin && (
+            {isAdmin && activeConversation && (
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button onClick={handleToggleResolve} style={{
                   padding: '5px 10px', border: '1px solid var(--border-color)',
@@ -449,7 +476,7 @@ export default function ChatView({ currentUser }) {
             )}
           </div>
 
-          {/* Messages */}
+          {/* Messages list */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {loadingMessages ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -458,11 +485,11 @@ export default function ChatView({ currentUser }) {
             ) : messages.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
                 <MessageSquare size={36} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                <p style={{ fontSize: '0.85rem' }}>Escreva a primeira mensagem...</p>
+                <p style={{ fontSize: '0.85rem' }}>Olá! Escreva a sua mensagem abaixo. Ela será enviada diretamente para o administrador.</p>
               </div>
             ) : (
               messages.map(m => {
-                const isOwn = m.sender_id === currentUser.id;
+                const isOwn = m.sender_id === currentUser?.id;
                 return (
                   <div key={m.id} style={{
                     alignSelf: isOwn ? 'flex-end' : 'flex-start',
@@ -495,11 +522,11 @@ export default function ChatView({ currentUser }) {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
+          {/* Chat input form */}
           <form onSubmit={handleSendSupabase} style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(0,0,0,0.1)' }}>
             <input
               type="text"
-              placeholder="Escreva a sua mensagem..."
+              placeholder="Escreva a sua mensagem para o admin..."
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               style={{ flex: 1, padding: '10px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '0.88rem', outline: 'none' }}

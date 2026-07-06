@@ -695,6 +695,31 @@ export default function SuperAdminView({
                     {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
 
+                  {/* Quick "Tornar Admin" button — APENAS VISÍVEL LOCALMENTE (dev mode) */}
+                  {import.meta.env.DEV && user.Role !== 'admin' && user.Role !== 'Admin' && user.Role !== 'SuperAdmin' && user.Email !== currentUserEmail && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Tornar "${user.Nome || user.Email}" administrador?\n\nEsta ação dá ao utilizador acesso total ao painel de admin.`)) {
+                          handleRoleChange(user.id, user.Email, 'admin');
+                        }
+                      }}
+                      title="Tornar Administrador"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))',
+                        border: '1px solid rgba(245,158,11,0.4)',
+                        color: '#f59e0b',
+                        borderRadius: '6px', padding: '5px 10px',
+                        cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        whiteSpace: 'nowrap', transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.25)'; e.currentTarget.style.borderColor = '#f59e0b'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.4)'; }}
+                    >
+                      <Crown size={13} /> Tornar Admin
+                    </button>
+                  )}
+
                   <div style={{ display: 'flex', gap: '4px' }}>
                     {editingUser === user.Email ? (
                       <>
