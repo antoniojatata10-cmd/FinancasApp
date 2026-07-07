@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
-import {
-  Mail, User, AlertCircle, LogIn, UserPlus,
-  Lock, Eye, EyeOff, CheckCircle, Globe, Phone, ArrowLeft
-} from 'lucide-react';
+import { Mail, User, Shield, AlertCircle, LogIn, UserPlus, Lock, Eye, EyeOff, Phone, Globe, CheckCircle } from 'lucide-react';
+import { supabase } from "../supabaseClient"; // adjust import path if needed
 
-import { supabase } from '../supabaseClient';
+export default function AuthView({ users, onLogin, onRegister }) {
+  const [activeTab, setActiveTab] = useState('login');
 
-export default function AuthView({ initialTab = 'login', onBackToLanding }) {
-  const [activeTab, setActiveTab] = useState(initialTab);
-  const [loading, setLoading] = useState(false);
-
-  // LOGIN
+  // Login State
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [showLoginPass, setShowLoginPass] = useState(false);
 
-  // REGISTER
+  // Register State
   const [regNome, setRegNome] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -32,95 +27,140 @@ export default function AuthView({ initialTab = 'login', onBackToLanding }) {
     paddingLeft: '36px'
   };
 
-  // ================= LOGIN =================
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginError('');
-    setLoading(true);
 
     if (!loginEmail.trim() || !loginPassword.trim()) {
       setLoginError('Por favor, preencha o e-mail e a senha.');
-      setLoading(false);
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: loginEmail.trim().toLowerCase(),
-      password: loginPassword,
+      password: loginPassword
     });
 
     if (error) {
-      setLoginError(
-        error.message === 'Invalid login credentials'
-          ? 'Credenciais inválidas. Verifique o e-mail e a senha.'
-          : error.message
-      );
+      setLoginError(error.message);
+      return;
     }
-    setLoading(false);
+
+    // Fetch the user profile after login to pass to parent
+    const { data: profile, error: profileErr } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileErr) {
+      setLoginError('Erro ao obter perfil: ' + profileErr.message);
+      return;
+    }
+
+    const user = {
+      id: data.user.id,
+      Email: data.user.email,
+      Nome: profile?.full_name || '',
+      Role: profile?.role || 'user',
+      Plano: profile?.plan || 'Gratuito',
+      Ativo: profile?.is_active ?? true,
+      Pais: profile?.country || '',
+      Telefone: profile?.phone || ''
+    };
+    onLogin(user);
   };
 
-  // ================= REGISTER =================
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setRegError('');
-    setLoading(true);
 
     if (!regNome.trim() || !regEmail.trim() || !regPassword.trim()) {
       setRegError('Preencha todos os campos obrigatórios (*).');
-      setLoading(false);
       return;
     }
-
     if (regPassword.length < 6) {
       setRegError('A senha deve ter pelo menos 6 caracteres.');
-      setLoading(false);
       return;
     }
-
     if (regPassword !== regConfirmPassword) {
       setRegError('As senhas não correspondem.');
-      setLoading(false);
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
-      email: regEmail.trim().toLowerCase(),
-      password: regPassword,
-      options: {
-        data: {
-          full_name: regNome.trim(),
-          phone: regTelefone.trim(),
-          country: regPais,
-          role: 'user'
-        }
-      }
-    });
+    const emailClean = regEmail.trim().toLowerCase();
 
-    if (error) {
-      setRegError(error.message);
-    } else {
-      setRegSuccess(true);
-      setTimeout(() => {
-        setLoginEmail(regEmail.trim().toLowerCase());
-        setActiveTab('login');
-        setRegSuccess(false);
-      }, 2000);
+    // Check if email already exists via Supabase auth
+    const { data: existing, error: existingErr } = await supabase.auth.signUp({ email: emailClean, password: regPassword }, { redirectTo: '' });
+    if (existingErr && existingErr.message.includes('User already registered')) {
+      setRegError('Este e-mail já está cadastrado. Tente fazer login.');
+      return;
     }
-    setLoading(false);
+    if (existingErr && !existingErr.message.includes('User already registered')) {
+      setRegError('Erro ao registrar: ' + existingErr.message);
+      return;
+    }
+
+    // Create profile record
+    const userId = existing?.user?.id;
+    if (!userId) {
+      setRegError('Falha ao obter ID do usuário recém-criado.');
+      return;
+    }
+    const { error: profileErr } = await supabase.from('profiles').insert([
+      {
+        id: userId,
+        full_name: regNome.trim(),
+        phone: regTelefone.trim(),
+        country: regPais,
+        role: 'user',
+        plan: 'Gratuito',
+        is_active: true
+      }
+    ]);
+    if (profileErr) {
+      setRegError('Erro ao salvar perfil: ' + profileErr.message);
+      return;
+    }
+
+    setRegSuccess(true);
+    // Auto login after registration
+    const { data: loginData, error: loginErr } = await supabase.auth.signInWithPassword({
+      email: emailClean,
+      password: regPassword
+    });
+    if (loginErr) {
+      setRegError('Registrado, mas falha ao fazer login: ' + loginErr.message);
+      setRegSuccess(false);
+      return;
+    }
+    const { data: profileAfter, error: profErr } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', loginData.user.id)
+      .single();
+    const user = {
+      id: loginData.user.id,
+      Email: loginData.user.email,
+      Nome: profileAfter?.full_name || '',
+      Role: profileAfter?.role || 'user',
+      Plano: profileAfter?.plan || 'Gratuito',
+      Ativo: profileAfter?.is_active ?? true,
+      Pais: profileAfter?.country || '',
+      Telefone: profileAfter?.phone || ''
+    };
+    onLogin(user);
   };
 
-  // ================= SUCCESS SCREEN =================
   if (regSuccess) {
     return (
       <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'center',
-        background: 'radial-gradient(circle at center, #131a30 0%, #0a0f1d 100%)',
-        padding: '16px'
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'radial-gradient(circle at center, #131a30 0%, #0a0f1d 100%)', padding: '16px'
       }}>
         <div className="glass-panel animate-fade-in" style={{
-          padding: '48px 32px', textAlign: 'center', maxWidth: '380px', width: '100%',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
+          padding: '48px 32px', textAlign: 'center', maxWidth: '380px', width: '100%', gap: '16px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center'
         }}>
           <div style={{
             background: 'var(--color-success-bg)', border: '2px solid var(--color-success)',
@@ -152,21 +192,6 @@ export default function AuthView({ initialTab = 'login', onBackToLanding }) {
         border: '1px solid rgba(255, 255, 255, 0.08)'
       }}>
 
-        {/* Back to Landing */}
-        {onBackToLanding && (
-          <button
-            onClick={onBackToLanding}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '6px',
-              color: 'var(--text-muted)', fontSize: '0.82rem',
-              padding: '0', alignSelf: 'flex-start'
-            }}
-          >
-            <ArrowLeft size={14} /> Voltar ao início
-          </button>
-        )}
-
         {/* Brand Logo */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
           <div style={{
@@ -181,11 +206,11 @@ export default function AuthView({ initialTab = 'login', onBackToLanding }) {
             Finança ao Ponto
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-            Acesso seguro à sua área financeira
+            Controle financeiro profissional — acesse ou crie a sua conta
           </p>
         </div>
 
-        {/* Tab Switcher */}
+        {/* Tab Switchers */}
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr',
           border: '1px solid var(--border-color)', borderRadius: '8px',
@@ -219,7 +244,7 @@ export default function AuthView({ initialTab = 'login', onBackToLanding }) {
           </button>
         </div>
 
-        {/* ─── LOGIN ─── */}
+        {/* --- LOGIN VIEW --- */}
         {activeTab === 'login' && (
           <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }} className="animate-fade-in">
             {loginError && (
@@ -275,14 +300,14 @@ export default function AuthView({ initialTab = 'login', onBackToLanding }) {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', padding: '13px', marginTop: '4px', fontSize: '0.95rem' }}>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '13px', marginTop: '4px', fontSize: '0.95rem' }}>
               <LogIn size={16} style={{ marginRight: '6px' }} />
-              {loading ? 'A processar...' : 'Acessar Conta'}
+              Acessar Conta
             </button>
           </form>
         )}
 
-        {/* ─── REGISTER ─── */}
+        {/* --- REGISTER VIEW --- */}
         {activeTab === 'register' && (
           <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="animate-fade-in">
             {regError && (
@@ -342,7 +367,7 @@ export default function AuthView({ initialTab = 'login', onBackToLanding }) {
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <Lock size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
                   <input
-                    type="password" placeholder="Repita a senha"
+                    type={showRegPass ? 'text' : 'password'} placeholder="Confirme a senha"
                     value={regConfirmPassword} onChange={(e) => setRegConfirmPassword(e.target.value)}
                     className="form-input" style={inputStyle} required
                   />
@@ -350,44 +375,37 @@ export default function AuthView({ initialTab = 'login', onBackToLanding }) {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Telefone</label>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <Phone size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
-                  <input
-                    type="tel" placeholder="+244..."
-                    value={regTelefone} onChange={(e) => setRegTelefone(e.target.value)}
-                    className="form-input" style={inputStyle}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">País</label>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <Globe size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)', zIndex: 1 }} />
-                  <select
-                    value={regPais} onChange={(e) => setRegPais(e.target.value)}
-                    className="form-input" style={{ ...inputStyle, appearance: 'none' }}
-                  >
-                    <option>Angola</option>
-                    <option>Portugal</option>
-                    <option>Brasil</option>
-                    <option>Moçambique</option>
-                    <option>Cabo Verde</option>
-                    <option>Outro</option>
-                  </select>
-                </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Telefone (opcional)</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Phone size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
+                <input
+                  type="text" placeholder="+244 923 456 789"
+                  value={regTelefone} onChange={(e) => setRegTelefone(e.target.value)}
+                  className="form-input" style={inputStyle}
+                />
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', padding: '13px', marginTop: '4px', fontSize: '0.95rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">País</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Globe size={15} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
+                <input
+                  type="text" placeholder="Angola"
+                  value={regPais} onChange={(e) => setRegPais(e.target.value)}
+                  className="form-input" style={inputStyle}
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '0.93rem' }}>
               <UserPlus size={16} style={{ marginRight: '6px' }} />
-              {loading ? 'A processar...' : 'Criar Conta'}
+              Criar Conta
             </button>
           </form>
         )}
+
       </div>
     </div>
   );

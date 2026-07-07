@@ -93,7 +93,7 @@ function UpgradeWall({ bankInfo, onClose, onGoToSubscriptions }) {
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={onClose} className="btn btn-secondary" style={{ flex: 1 }}>Voltar</button>
-          <button onClick={() => { onClose(); if(onGoToSubscriptions) onGoToSubscriptions(); }} className="btn btn-primary" style={{ flex: 1 }}>Ir para Subscrições</button>
+          <button onClick={() => { onClose(); if (onGoToSubscriptions) onGoToSubscriptions(); }} className="btn btn-primary" style={{ flex: 1 }}>Ir para Subscrições</button>
         </div>
       </div>
     </div>
@@ -103,10 +103,10 @@ function UpgradeWall({ bankInfo, onClose, onGoToSubscriptions }) {
 // ─────────────────────────── PREMIUM LOCK SCREEN ─────────────────────────────
 function PremiumLockScreen({ tabName, bankInfo, onGoToSubscriptions }) {
   const featureInfo = {
-    coach:        { icon: '🤖', nome: 'Coach IA', desc: 'Consultor financeiro em tempo real com análise dos seus dados.' },
-    academia:     { icon: '🎓', nome: 'Academia Financeira', desc: '8 níveis de formação financeira com quizzes e certificado.' },
-    investimentos:{ icon: '📈', nome: 'Área de Investimentos', desc: 'Taxas de câmbio reais, perfil de investidor e simulações.' },
-    empresa:      { icon: '🏢', nome: 'Módulo Empresa', desc: 'Gestão financeira empresarial, DRE, fluxo de caixa e tesouraria.' }
+    coach: { icon: '🤖', nome: 'Coach IA', desc: 'Consultor financeiro em tempo real com análise dos seus dados.' },
+    academia: { icon: '🎓', nome: 'Academia Financeira', desc: '8 níveis de formação financeira com quizzes e certificado.' },
+    investimentos: { icon: '📈', nome: 'Área de Investimentos', desc: 'Taxas de câmbio reais, perfil de investidor e simulações.' },
+    empresa: { icon: '🏢', nome: 'Módulo Empresa', desc: 'Gestão financeira empresarial, DRE, fluxo de caixa e tesouraria.' }
   };
   const info = featureInfo[tabName] || { icon: '⭐', nome: tabName, desc: 'Funcionalidade exclusiva do plano Pro.' };
 
@@ -192,11 +192,11 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [authMode, setAuthMode] = useState('landing'); // 'landing' | 'login' | 'register'
-  
+
   // Data State
   const [launches, setLaunches] = useState([]);
   const [categories, setCategories] = useState([]);
-  
+
   // Global App State
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -206,7 +206,7 @@ export default function App() {
   const [showUpgradeWall, setShowUpgradeWall] = useState(false);
 
   // Fallbacks for missing admin features
-  const [users, setUsers] = useState([]); 
+  const [users, setUsers] = useState([]);
   const [bankInfo, setBankInfo] = useState({});
   const [subscriptions, setSubscriptions] = useState([]);
   const [inviteCodes, setInviteCodes] = useState(['AFA2026', 'FINPRO2026']);
@@ -216,13 +216,13 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if(session) fetchUserData(session.user.id);
+      if (session) fetchUserData(session.user.id);
       else setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if(session) fetchUserData(session.user.id);
+      if (session) fetchUserData(session.user.id);
       else {
         setCurrentUser(null);
         setLaunches([]);
@@ -238,8 +238,9 @@ export default function App() {
     setLoading(true);
     try {
       // Trigger plans expiration check in background
-      supabase.rpc('expire_plans').catch(err => console.error("Error triggering plan expiration check", err));
-
+      supabase.rpc('expire_plans')
+        .then(() => { })
+        .catch(err => console.error("Error triggering plan expiration check", err));
       // Fetch Profile + auth email in parallel
       const [{ data: profile }, { data: { user: authUser } }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
@@ -328,7 +329,7 @@ export default function App() {
       // Categories
       const categoriesQuery = role === 'admin' ? supabase.from('categories').select('*') : supabase.from('categories').select('*').eq('user_id', userId);
       const { data: catData } = await categoriesQuery;
-      
+
       if (catData) {
         setCategories(catData.map(c => ({
           CategoriaID: c.id,
@@ -344,7 +345,7 @@ export default function App() {
       // Transactions
       const transQuery = role === 'admin' ? supabase.from('transactions').select('*') : supabase.from('transactions').select('*').eq('user_id', userId);
       const { data: txData } = await transQuery;
-      
+
       if (txData) {
         setLaunches(txData.map(t => ({
           LancID: t.id,
@@ -358,7 +359,7 @@ export default function App() {
           CriadoPor: t.user_id // using user_id instead of email to avoid complex joins
         })));
       }
-    } catch(err) {
+    } catch (err) {
       console.error('Error loading data', err);
     }
   };
@@ -366,7 +367,7 @@ export default function App() {
   // Realtime listeners
   useEffect(() => {
     if (!session?.user?.id) return;
-    
+
     const channel = supabase.channel('public:transactions')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, payload => {
         loadDataFromSupabase(session.user.id, currentUser?.Role);
@@ -435,7 +436,7 @@ export default function App() {
     if (!session?.user?.id) return;
     const isPro = currentUser?.Plano !== 'Gratuito';
     const isAdmin = currentUser?.Role === 'admin';
-    
+
     if (!isAdmin && !isPro) {
       const thisMonth = new Date().toISOString().slice(0, 7);
       const monthLaunches = launches.filter(l => l.CriadoPor === session.user.id && l.Data?.startsWith(thisMonth)).length;
@@ -516,7 +517,7 @@ export default function App() {
   // Temporary function to bypass Supabase Studio issues
   const handleForceAdmin = async () => {
     if (!session?.user?.id) return;
-    
+
     // Check if profile exists
     const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
@@ -591,7 +592,7 @@ export default function App() {
 
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} currentUser={currentUser} onAddLaunchClick={() => setActiveTab('lancamentos')} onGoToChat={() => setActiveTab('chat')} />;
+        return <DashboardView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} currentUser={currentUser} onAddLaunchClick={() => setActiveTab('lancamentos')} onGoToChat={() => setActiveTab('chat')} onForceAdmin={handleForceAdmin} />;
       case 'lancamentos':
         return <LancamentosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch} onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
       case 'categorias':
@@ -612,12 +613,12 @@ export default function App() {
         return <ChatView currentUser={currentUser} />;
       case 'configuracoes':
         return <ConfiguracoesView role={currentUser?.Role} userEmail={currentUser?.Email} currentUser={currentUser}
-          users={users} setUsers={setUsers} isOffline={false} lowBalanceLimit={5000} onResetData={() => {}} 
-          onInstallApp={() => {}} onToast={setToastMessage} bankInfo={bankInfo} onShowUpgrade={() => setShowUpgradeWall(true)} />;
+          users={users} setUsers={setUsers} isOffline={false} lowBalanceLimit={5000} onResetData={() => { }}
+          onInstallApp={() => { }} onToast={setToastMessage} bankInfo={bankInfo} onShowUpgrade={() => setShowUpgradeWall(true)} />;
       case 'superadmin':
-          return isSuperAdmin
-            ? <SuperAdminView users={users} setUsers={setUsers} currentUserEmail={currentUser?.Email} onToast={setToastMessage} launches={launches} bankInfo={bankInfo} setBankInfo={setBankInfo} subscriptions={subscriptions} setSubscriptions={setSubscriptions} inviteCodes={inviteCodes} setInviteCodes={setInviteCodes} auditLogs={auditLogs} onAddAuditLog={() => {}} />
-            : <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-error)' }}>⛔ Acesso negado.</div>;
+        return isSuperAdmin
+          ? <SuperAdminView users={users} setUsers={setUsers} currentUserEmail={currentUser?.Email} onToast={setToastMessage} launches={launches} bankInfo={bankInfo} setBankInfo={setBankInfo} subscriptions={subscriptions} setSubscriptions={setSubscriptions} inviteCodes={inviteCodes} setInviteCodes={setInviteCodes} auditLogs={auditLogs} onAddAuditLog={() => { }} />
+          : <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-error)' }}>⛔ Acesso negado.</div>;
       default: return null;
     }
   };
@@ -680,7 +681,7 @@ export default function App() {
             {currentUser?.Role === 'admin' && <Crown size={12} style={{ color: '#f59e0b' }} />}
             {currentUser?.Nome?.split(' ')[0] || currentUser?.Email?.split('@')[0]}
           </div>
-          
+
           {/* No debug admin button */}
 
           <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

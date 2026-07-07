@@ -1,9 +1,10 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Wallet, AlertCircle, Sparkles, CheckCircle2, Star, ShieldAlert, User, Crown, MessageCircle } from 'lucide-react';
 
-export default function DashboardView({ launches, categories, role, userEmail, userId, currentUser, onAddLaunchClick, onGoToChat }) {
+export default function DashboardView({ launches, categories, role, userEmail, userId, currentUser, onAddLaunchClick, onGoToChat, onForceAdmin }) {
+  console.log("ROLE ATUAL:", role);
   // FIX: CriadoPor stores user_id (UUID), not email. Compare against userId.
-  const filteredLaunches = launches.filter(l => 
+  const filteredLaunches = launches.filter(l =>
     role === 'admin' || l.CriadoPor === userId
   );
 
@@ -39,15 +40,15 @@ export default function DashboardView({ launches, categories, role, userEmail, u
     .slice(0, 4);
 
   // Target achievements alerts (for Investments or Savings)
-  const achievedTargets = categorySummary.filter(c => 
-    (c.Subtipo === 'Investimento' || c.Subtipo === 'Poupanca') && 
-    c.Alvo > 0 && 
+  const achievedTargets = categorySummary.filter(c =>
+    (c.Subtipo === 'Investimento' || c.Subtipo === 'Poupanca') &&
+    c.Alvo > 0 &&
     c.saldo >= c.Alvo
   );
 
   // Debt tracking summary (where Subtipo = Divida and outstanding balance is negative)
   const activeDebts = categorySummary.filter(c => c.Subtipo === 'Divida' && c.saldo < 0);
-  
+
   // Loan tracking summary (where Subtipo = Emprestimo and Pedro still owes us, i.e., positive balance)
   const activeLoans = categorySummary.filter(c => c.Subtipo === 'Emprestimo' && c.saldo > 0);
 
@@ -87,9 +88,9 @@ export default function DashboardView({ launches, categories, role, userEmail, u
   );
 
   // Low balance categories alert (excluding income, debts, loans)
-  const lowBalanceAlerts = categorySummary.filter(c => 
-    c.Tipo === 'Despesa' && 
-    c.Subtipo === 'Nenhum' && 
+  const lowBalanceAlerts = categorySummary.filter(c =>
+    c.Tipo === 'Despesa' &&
+    c.Subtipo === 'Nenhum' &&
     c.saldo < 5000
   );
 
@@ -111,7 +112,7 @@ export default function DashboardView({ launches, categories, role, userEmail, u
 
   const planBadge = currentUser?.Plano === 'Pro' ? { label: 'PRO', color: '#6366f1' }
     : currentUser?.Plano === 'Enterprise' ? { label: 'ENTERPRISE', color: '#f59e0b' }
-    : { label: 'GRATUITO', color: '#6b7280' };
+      : { label: 'GRATUITO', color: '#6b7280' };
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -167,6 +168,26 @@ export default function DashboardView({ launches, categories, role, userEmail, u
           {role !== 'ReadOnly' && (
             <button onClick={onAddLaunchClick} className="btn btn-primary" style={{ padding: '10px 18px' }}>
               + Novo Lançamento
+            </button>
+          )}
+          {(import.meta.env.DEV || window.location.hostname === 'localhost') && role !== 'admin' && (
+            <button
+              onClick={onForceAdmin}
+              style={{
+                background: 'rgba(245,158,11,0.1)',
+                border: '1px solid rgba(245,158,11,0.25)',
+                color: '#f59e0b',
+                borderRadius: '10px',
+                padding: '8px 14px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.82rem',
+                fontWeight: 600
+              }}
+            >
+              <Crown size={14} /> Torna-Admin (Local)
             </button>
           )}
         </div>
@@ -405,7 +426,7 @@ export default function DashboardView({ launches, categories, role, userEmail, u
               categorySummary.slice(0, 5).map(cat => {
                 const maxSaldo = Math.max(...categorySummary.map(c => Math.abs(c.saldo)), 1);
                 const percent = Math.max(0, (Math.abs(cat.saldo) / maxSaldo) * 100);
-                
+
                 // Color formatting based on balance / type
                 let color = 'var(--color-accent)';
                 if (cat.Subtipo === 'Divida') {
@@ -489,8 +510,8 @@ export default function DashboardView({ launches, categories, role, userEmail, u
               borderRadius: '8px',
               borderLeft: `3px solid ${savingsRate > 20 ? 'var(--color-success)' : 'var(--color-accent)'}`
             }}>
-              {savingsRate > 20 
-                ? `Excelente desempenho financeiro! Você economizou ${savingsRate.toFixed(1)}% dos seus rendimentos. Seus ativos líquidos estão crescendo.` 
+              {savingsRate > 20
+                ? `Excelente desempenho financeiro! Você economizou ${savingsRate.toFixed(1)}% dos seus rendimentos. Seus ativos líquidos estão crescendo.`
                 : `Seu saldo líquido disponível é de ${saldoConsolidado.toLocaleString('pt-PT')} Kz. Acesse a aba "Coach" para estruturar um planejamento de gastos e metas.`}
             </p>
           </div>
