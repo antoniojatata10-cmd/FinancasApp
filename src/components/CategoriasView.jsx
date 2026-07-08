@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tag, Check, ArrowUpRight, ArrowDownLeft, Info, Plus, AlertCircle, Target, Sparkles } from 'lucide-react';
 
-export default function CategoriasView({ categories, launches, role, userEmail, onAddCategory, onAutoBudget }) {
+export default function CategoriasView({ categories, launches, role, userEmail, userId, onAddCategory, onAutoBudget }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   
@@ -20,7 +20,7 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
 
   // Apply security filter to matches what the user can see
   const filteredLaunches = launches.filter(l => 
-    role === 'Admin' || l.CriadoPor === userEmail
+    role === 'admin' || l.CriadoPor === userId
   );
 
   // Filter possible mother categories (categories that don't have mothers themselves)

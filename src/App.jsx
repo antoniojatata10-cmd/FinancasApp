@@ -387,7 +387,7 @@ export default function App() {
   useEffect(() => { setMenuOpen(false); }, [activeTab]);
 
   // Reset to dashboard if user switches tab, leaves site, or returns (resumes)
-  useEffect(() => {
+  /*useEffect(() => {
     const handleResume = () => {
       if (session) {
         setActiveTab('dashboard');
@@ -405,6 +405,7 @@ export default function App() {
       window.removeEventListener('focus', handleResume);
     };
   }, [session]);
+  */
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -596,11 +597,11 @@ export default function App() {
       case 'lancamentos':
         return <LancamentosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch} onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
       case 'categorias':
-        return <CategoriasView categories={categories} launches={launches} role={currentUser?.Role} userEmail={currentUser?.Email} onAddCategory={handleAddCategory} onAutoBudget={handleAutoBudget} />;
+        return <CategoriasView categories={categories} launches={launches} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} onAddCategory={handleAddCategory} onAutoBudget={handleAutoBudget} />;
       case 'relatorios':
         return <RelatoriosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} />;
       case 'coach':
-        return <CoachView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} getCategoryBalance={getCategoryBalance} />;
+        return <CoachView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} getCategoryBalance={getCategoryBalance} />;
       case 'academia':
         return <AcademiaView currentUser={currentUser} />;
       case 'investimentos':

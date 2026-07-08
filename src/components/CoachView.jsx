@@ -264,7 +264,7 @@ function BudgetPlanner() {
 }
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
-export default function CoachView({ launches, categories, role, userEmail, getCategoryBalance }) {
+export default function CoachView({ launches, categories, role, userEmail, userId, getCategoryBalance }) {
   const [activeSection, setActiveSection] = useState('chat');
   const [mensagens, setMensagens] = useState([
     {
@@ -278,8 +278,8 @@ export default function CoachView({ launches, categories, role, userEmail, getCa
   const chatEndRef = useRef(null);
 
   const userLaunches = useMemo(() =>
-    launches.filter(l => role === 'SuperAdmin' || role === 'Admin' || l.CriadoPor === userEmail),
-    [launches, role, userEmail]
+    launches.filter(l => role === 'SuperAdmin' || role === 'Admin' || role === 'admin' || l.CriadoPor === userId),
+    [launches, role, userId]
   );
 
   const contexto = useMemo(() => {

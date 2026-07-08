@@ -58,31 +58,34 @@ export default function ConfiguracoesView({
   useEffect(() => {
     const checkChatTables = async () => {
       if (!isSupabaseConfigured()) return;
+
       try {
-        const { error } = await supabase.from('chat_conversations').select('id').limit(1);
+        const { error } = await supabase
+          .from('chat_messages')
+          .select('id')
+          .limit(1);
+
         if (!error || error.code !== '42P01') {
           setSupabaseChatAvailable(true);
-          // Auto-load or create user conversation
+
+          // Carregar mensagens do utilizador
           if (currentUser?.id) {
-            const { data, error: fetchErr } = await supabase
-              .from('chat_conversations')
+            const { data: msgs } = await supabase
+              .from('chat_messages')
               .select('*')
-              .eq('user_id', currentUser.id)
-              .single();
-            if (data) {
-              setActiveConversationId(data.id);
-              // Load messages
-              const { data: msgs } = await supabase
-                .from('chat_messages')
-                .select('*')
-                .eq('conversation_id', data.id)
-                .order('created_at', { ascending: true });
-              if (msgs) setChatMessages(msgs);
+              .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+              .order('created_at', { ascending: true });
+
+            if (msgs) {
+              setChatMessages(msgs);
             }
           }
         }
-      } catch {}
+      } catch (err) {
+        console.error('Erro ao verificar chat:', err);
+      }
     };
+
     checkChatTables();
   }, [currentUser?.id]);
 
@@ -222,39 +225,48 @@ export default function ConfiguracoesView({
 
     try {
       if (supabaseChatAvailable && currentUser?.id) {
-        // Ensure conversation exists
         let convId = activeConversationId;
+
         if (!convId) {
           const { data: newConv, error: convErr } = await supabase
             .from('chat_conversations')
             .insert([{ user_id: currentUser.id }])
             .select()
             .single();
+
           if (!convErr && newConv) {
             convId = newConv.id;
             setActiveConversationId(convId);
           }
         }
+
         if (convId) {
           const { data: sentMsg, error: sendErr } = await supabase
             .from('chat_messages')
-            .insert([{ conversation_id: convId, sender_id: currentUser.id, content: text }])
+            .insert([{
+              conversation_id: convId,
+              sender_id: currentUser.id,
+              content: text
+            }])
             .select()
             .single();
+
           if (!sendErr && sentMsg) {
             setChatMessages(prev => [...prev, sentMsg]);
           }
         }
+
       } else {
-        // Local fallback
         const updated = [...chatMessages, newMsg];
         setChatMessages(updated);
         saveChat(updated);
       }
+
     } catch (err) {
       const updated = [...chatMessages, newMsg];
       setChatMessages(updated);
       saveChat(updated);
+
     } finally {
       setSendingMsg(false);
     }
@@ -389,8 +401,8 @@ export default function ConfiguracoesView({
             {savingProfile
               ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> A guardar...</>
               : profileSaved
-              ? <><CheckCircle size={16} /> Salvo!</>
-              : <><Save size={16} /> Guardar Alterações</>
+                ? <><CheckCircle size={16} /> Salvo!</>
+                : <><Save size={16} /> Guardar Alterações</>
             }
           </button>
         </div>

@@ -561,7 +561,7 @@ export default function AcademiaView({ currentUser }) {
       const { data: vData, error: vError } = await supabase
         .from('videos')
         .select('*')
-        .order('sort_order', { ascending: true });
+        .order('order_index', { ascending: true });
 
       // If error (e.g. table not created yet), just show empty list
       if (vError) {
@@ -697,10 +697,10 @@ export default function AcademiaView({ currentUser }) {
           description,
           category,
           level,
-          sort_order: parseInt(sortOrder) || 0,
-          duration: parseInt(duration) || 0,
+          order_index: parseInt(sortOrder) || 0,
+          duration_seconds: parseInt(duration) || 0,
           plan_allowed: planAllowed,
-          video_url: videoUrl,
+          youtube_url: videoUrl,
           thumbnail_url: thumbnailUrl
         }]);
 
@@ -799,7 +799,7 @@ export default function AcademiaView({ currentUser }) {
                 {/* HTML5 video player configured to disable download buttons and allow streaming */}
                 <video
                   ref={videoPlayerRef}
-                  src={selectedVideo.video_url}
+                  src={selectedVideo.youtube_url}
                   controls
                   controlsList="nodownload"
                   onTimeUpdate={handleTimeUpdate}

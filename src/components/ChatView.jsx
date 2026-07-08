@@ -18,8 +18,9 @@ function saveLocalMessages(msgs) {
 }
 
 export default function ChatView({ currentUser }) {
-  const isAdmin = currentUser?.Role === 'admin' || currentUser?.Role === 'Admin' ||
-    currentUser?.Role === 'superadmin' || currentUser?.Role === 'SuperAdmin';
+  console.log("CURRENT USER NO CHAT:", currentUser);
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'Admin' ||
+    currentUser?.role === 'superadmin' || currentUser?.role === 'SuperAdmin';
 
   const [supabaseAvailable, setSupabaseAvailable] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -50,7 +51,7 @@ export default function ChatView({ currentUser }) {
       }
       try {
         const { error } = await supabase
-          .from('chat_conversations')
+          .from('chat_messages')
           .select('id')
           .limit(1);
 
@@ -75,6 +76,7 @@ export default function ChatView({ currentUser }) {
   }, [supabaseAvailable, checking, filterMode]);
 
   const fetchConversations = async () => {
+    console.log("CHATVIEW VERSÃO - FETCH CONVERSATIONS");
     setLoadingConv(true);
     try {
       if (isAdmin) {
@@ -86,8 +88,13 @@ export default function ChatView({ currentUser }) {
         else if (filterMode === 'resolved') query = query.eq('is_resolved', true);
         else query = query.eq('is_archived', false).eq('is_resolved', false);
 
-        const { data, error } = await query.order('last_message_at', { ascending: false });
-        if (!error) setConversations(data || []);
+        const { data, error } = await query;
+        console.table(data);
+        console.log("ADMIN ERRO:", error);
+
+        if (!error) {
+          setConversations(data || []);
+        }
       } else if (currentUser?.id) {
         // User single conversation
         const { data, error } = await supabase
@@ -145,10 +152,12 @@ export default function ChatView({ currentUser }) {
 
   const fetchMessages = async () => {
     setLoadingMessages(true);
+    console.log("FETCH MESSAGES - Conversation:", activeConversation.id);
+    console.log("FETCH MESSAGES INICIADO");
     try {
       const { data, error } = await supabase
         .from('chat_messages')
-        .select('*, message_attachments (*)')
+        .select('*')
         .eq('conversation_id', activeConversation.id)
         .order('created_at', { ascending: true });
 
@@ -167,7 +176,7 @@ export default function ChatView({ currentUser }) {
   const handleSendSupabase = async (e) => {
     if (e) e.preventDefault();
     if (!inputText.trim()) return;
-    
+
     // Ensure we have a conversation created first
     let convId = activeConversation?.id;
     if (!convId && !isAdmin && currentUser?.id) {
@@ -190,17 +199,39 @@ export default function ChatView({ currentUser }) {
     if (!convId) return;
 
     const text = inputText.trim();
+    console.log("ANTES DO ENVIO:", {
+      isAdmin,
+      conversation_id: convId,
+      activeConversation_id: activeConversation?.id,
+      user_id_da_conversa: activeConversation?.user_id,
+      currentUser_id: currentUser?.id
+    });
     setInputText('');
     try {
-      await supabase.from('chat_messages').insert([{
-        conversation_id: convId,
-        sender_id: currentUser?.id,
-        content: text
-      }]);
+      const { data: newMsg, error: sendErr } = await supabase
+        .from('chat_messages')
+        .insert([{
+          conversation_id: convId,
+          sender_id: currentUser.id,
+          receiver_id: isAdmin ? activeConversation.user_id : null,
+          is_admin_reply: isAdmin,
+          content: text,
+          message: text
+        }])
+        .select()
+        .single();
+
+      console.log("SEND MESSAGE:", newMsg);
+      console.log("SEND MESSAGE ERROR:", sendErr);
+
+      if (sendErr) {
+        alert(sendErr.message);
+      }
     } catch (err) {
-      console.error('Error sending message:', err);
+      console.error("Error sending message:", err);
     }
-  };
+
+  }
 
   // ── LOCAL: send message ────────────────────────────────────────────────────
   const handleSendLocal = (e) => {
@@ -242,7 +273,7 @@ export default function ChatView({ currentUser }) {
 
   const handleToggleArchive = async () => {
     if (!activeConversation) return;
-    const { error } = await supabase.from('chat_conversations')
+    const { error } = await supabase.from('chat_messages')
       .update({ is_archived: !activeConversation.is_archived })
       .eq('id', activeConversation.id);
     if (!error) {
@@ -253,7 +284,7 @@ export default function ChatView({ currentUser }) {
 
   const handleToggleResolve = async () => {
     if (!activeConversation) return;
-    const { error } = await supabase.from('chat_conversations')
+    const { error } = await supabase.from('chat_messages')
       .update({ is_resolved: !activeConversation.is_resolved })
       .eq('id', activeConversation.id);
     if (!error) {
@@ -355,7 +386,7 @@ export default function ChatView({ currentUser }) {
         </div>
 
         {/* Input box */}
-        <form onSubmit={handleSendLocal} style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(0,0,0,0.1)', borderRadius: '0 0 12px 12px' }}>
+        <form onSubmit={handleSendSupabase} style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(0,0,0,0.1)', borderRadius: '0 0 12px 12px' }}>
           <input
             type="text"
             placeholder="Escreva a sua mensagem..."
@@ -415,7 +446,10 @@ export default function ChatView({ currentUser }) {
               <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sem conversas.</div>
             ) : (
               filteredConversations.map(c => (
-                <div key={c.id} onClick={() => setActiveConversation(c)} style={{
+                <div key={c.id} onClick={() => {
+                  console.log("CONVERSA ADMIN SELECIONADA:", c);
+                  setActiveConversation(c);
+                }} style={{
                   padding: '10px', borderRadius: '9px', cursor: 'pointer', display: 'flex', gap: '9px', alignItems: 'center', marginBottom: '4px',
                   background: activeConversation?.id === c.id ? 'rgba(99,102,241,0.12)' : 'transparent',
                   border: activeConversation?.id === c.id ? '1px solid rgba(99,102,241,0.25)' : '1px solid transparent',
