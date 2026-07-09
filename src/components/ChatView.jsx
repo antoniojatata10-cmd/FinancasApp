@@ -19,8 +19,7 @@ function saveLocalMessages(msgs) {
 
 export default function ChatView({ currentUser }) {
   console.log("CURRENT USER NO CHAT:", currentUser);
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'Admin' ||
-    currentUser?.role === 'superadmin' || currentUser?.role === 'SuperAdmin';
+  const isAdmin = (currentUser?.role === 'admin' || currentUser?.role === 'Admin' || currentUser?.role === 'superadmin' || currentUser?.role === 'SuperAdmin' || currentUser?.Role === 'admin' || currentUser?.Role === 'Admin' || currentUser?.Role === 'superadmin' || currentUser?.Role === 'SuperAdmin');
 
   const [supabaseAvailable, setSupabaseAvailable] = useState(false);
   const [checking, setChecking] = useState(true);
