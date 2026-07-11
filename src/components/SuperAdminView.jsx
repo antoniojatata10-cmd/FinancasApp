@@ -145,22 +145,36 @@ export default function SuperAdminView({
       onToast({ type: 'error', text: 'Não pode bloquear a sua própria conta!' });
       return;
     }
-    const newState = !currentlyActive;
-    // Update Supabase
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_active: newState })
-      .eq('id', userId);
+
+    const action = currentlyActive ? 'block' : 'unblock';
+
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      body: {
+        action,
+        user_id: userId
+      },
+      headers: {
+        Authorization: `Bearer ${sessionData.session?.access_token}`
+      }
+    });
 
     if (error) {
-      onToast({ type: 'warning', text: 'Erro ao actualizar estado: ' + error.message });
+      onToast({ type: 'warning', text: 'Erro ao alterar estado: ' + error.message });
       return;
     }
-    // Update local state
+
+    const newState = !currentlyActive;
+
     setUsers(prev => prev.map(u =>
       u.id === userId ? { ...u, Ativo: newState } : u
     ));
-    onToast({ type: 'success', text: `Conta ${newState ? 'desbloqueada' : 'bloqueada'} com sucesso!` });
+
+    onToast({
+      type: 'success',
+      text: data.message || `Conta ${newState ? 'desbloqueada' : 'bloqueada'} com sucesso!`
+    });
   };
 
   const handlePlanoChange = async (userId, email, novoPlano) => {
@@ -205,16 +219,49 @@ export default function SuperAdminView({
     onToast({ type: 'success', text: `Papel alterado para "${novoRole}" com sucesso!` });
   };
 
-  const handleDeleteUser = (email) => {
+  const handleDeleteUser = async (email) => {
     if (email === currentUserEmail) {
       onToast({ type: 'error', text: 'Não pode eliminar a sua própria conta!' });
       return;
     }
+
     const user = users.find(u => u.Email === email);
-    if (window.confirm(`⚠️ Confirmar eliminação permanente da conta de "${user?.Nome}"?\n\nEsta ação não pode ser desfeita.`)) {
-      setUsers(prev => prev.filter(u => u.Email !== email));
-      onToast({ type: 'success', text: `Conta de "${user?.Nome}" eliminada permanentemente.` });
-      if (onAddAuditLog) onAddAuditLog(currentUserEmail, `ELIMINOU permanentemente o utilizador: ${email}`);
+
+    if (!window.confirm(
+      `⚠️ Confirmar eliminação permanente da conta de "${user?.Nome}"?\n\nEsta ação não pode ser desfeita.`
+    )) {
+      return;
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      body: {
+        action: 'delete',
+        user_id: user.id
+      },
+      headers: {
+        Authorization: `Bearer ${sessionData.session?.access_token}`
+      }
+    });
+
+    if (error) {
+      onToast({ type: 'warning', text: 'Erro ao eliminar utilizador: ' + error.message });
+      return;
+    }
+
+    setUsers(prev => prev.filter(u => u.Email !== email));
+
+    onToast({
+      type: 'success',
+      text: data.message || `Conta de "${user?.Nome}" eliminada permanentemente.`
+    });
+
+    if (onAddAuditLog) {
+      onAddAuditLog(
+        currentUserEmail,
+        `ELIMINOU permanentemente o utilizador: ${email}`
+      );
     }
   };
 
@@ -327,7 +374,7 @@ export default function SuperAdminView({
     try {
       const { error } = await supabase.rpc('approve_payment', {
         payment_id: paymentId,
-        admin_id:   adminId
+        admin_id: adminId
       });
       if (error) throw error;
       // Refresh local payments list
@@ -380,7 +427,7 @@ export default function SuperAdminView({
     try {
       const { error } = await supabase.rpc('reject_payment', {
         payment_id: paymentId,
-        admin_id:   adminId,
+        admin_id: adminId,
         motivo
       });
       if (error) throw error;
@@ -936,7 +983,7 @@ export default function SuperAdminView({
 
       {/* Grid for Invite Codes and Audit Logs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
-        
+
         {/* INVITE CODES PANEL */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--color-accent)' }}>
@@ -1071,7 +1118,7 @@ export default function SuperAdminView({
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 200, padding: '16px'
         }} className="animate-fade-in">
-          
+
           <div className="glass-panel animate-scale-in" style={{
             background: 'var(--bg-secondary)', width: '100%', maxWidth: '440px',
             padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px'
