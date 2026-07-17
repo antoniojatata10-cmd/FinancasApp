@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   role text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
   plan text NOT NULL DEFAULT 'Gratuito' CHECK (plan IN ('Gratuito', 'Pro')),
   is_active boolean NOT NULL DEFAULT true,
+  plan_expires_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -42,7 +43,8 @@ CREATE TABLE IF NOT EXISTS public.categories (
   type text NOT NULL CHECK (type IN ('income', 'expense')),
   subtype text DEFAULT 'Nenhum',
   parent_id uuid REFERENCES public.categories(id) ON DELETE SET NULL,
-  target_amount numeric(15,2) NOT NULL DEFAULT 0.00 CHECK (target_amount >= 0)
+  target_amount numeric(15,2) NOT NULL DEFAULT 0.00 CHECK (target_amount >= 0),
+  monthly_limit numeric(15,2) NOT NULL DEFAULT 0.00 CHECK (monthly_limit >= 0)
 );
 
 CREATE TABLE IF NOT EXISTS public.transactions (
@@ -108,7 +110,43 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 );
 
 -- ==========================================
--- 4. TABELAS DO MÓDULO DE CHAT
+-- 4. CONFIGURAÇÕES DE ADMINISTRAÇÃO
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS public.admin_settings (
+  key text PRIMARY KEY,
+  value text NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by uuid REFERENCES public.profiles(id) ON DELETE SET NULL
+);
+
+ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admin settings are readable by all authenticated users" ON public.admin_settings
+  FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Admin settings are updatable by admins only" ON public.admin_settings
+  FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
+
+CREATE OR REPLACE VIEW public.admin_users_view AS
+SELECT 
+  p.id,
+  p.full_name,
+  p.phone,
+  p.country,
+  p.role,
+  p.plan,
+  p.is_active,
+  p.created_at,
+  p.updated_at,
+  u.email,
+  u.last_sign_in_at,
+  (SELECT COUNT(*) FROM public.transactions t WHERE t.user_id = p.id) AS total_transactions
+FROM public.profiles p
+LEFT JOIN auth.users u ON u.id = p.id;
+
+-- ==========================================
+-- 5. TABELAS DO MÓDULO DE CHAT
 -- ==========================================
 
 CREATE TABLE IF NOT EXISTS public.chat_conversations (
@@ -148,7 +186,7 @@ CREATE TABLE IF NOT EXISTS public.user_presence (
 );
 
 -- ==========================================
--- 5. TABELAS DO CENTRO DE VÍDEOS (ACADEMIA)
+-- 6. TABELAS DO CENTRO DE VÍDEOS (ACADEMIA)
 -- ==========================================
 
 CREATE TABLE IF NOT EXISTS public.videos (
@@ -166,6 +204,24 @@ CREATE TABLE IF NOT EXISTS public.videos (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS public.written_lessons (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  description text,
+  content text NOT NULL,
+  exercicios jsonb NOT NULL DEFAULT '[]'::jsonb,
+  quiz jsonb NOT NULL DEFAULT '[]'::jsonb,
+  image_url text,
+  category text NOT NULL DEFAULT 'Educação Financeira',
+  level text NOT NULL DEFAULT 'Iniciante',
+  plan_allowed text NOT NULL DEFAULT 'Gratuito' CHECK (plan_allowed IN ('Gratuito', 'Pro')),
+  is_published boolean NOT NULL DEFAULT false,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_by uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS public.video_watch_stats (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -179,7 +235,7 @@ CREATE TABLE IF NOT EXISTS public.video_watch_stats (
 );
 
 -- ==========================================
--- 6. ÍNDICES PARA OTIMIZAÇÃO
+-- 7. ÍNDICES PARA OTIMIZAÇÃO
 -- ==========================================
 
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
@@ -193,7 +249,7 @@ CREATE INDEX IF NOT EXISTS idx_video_watch_stats_user ON public.video_watch_stat
 CREATE INDEX IF NOT EXISTS idx_videos_plan ON public.videos(plan_allowed);
 
 -- ==========================================
--- 7. CONFIGURAÇÃO DE STORAGE BUCKETS
+-- 8. CONFIGURAÇÃO DE STORAGE BUCKETS
 -- ==========================================
 
 INSERT INTO storage.buckets (id, name, public) 
@@ -205,7 +261,7 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================
--- 8. ROW LEVEL SECURITY (RLS) POLICIES
+-- 9. ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================
 
 -- Habilitar RLS
@@ -222,9 +278,10 @@ ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.message_attachments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_presence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.written_lessons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.video_watch_stats ENABLE ROW LEVEL SECURITY;
 
--- 8.1 Profiles
+-- 9.1 Profiles
 CREATE POLICY "Profiles are readable by owner and admins" ON public.profiles
   FOR SELECT USING (auth.uid() = id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
@@ -234,7 +291,7 @@ CREATE POLICY "Profiles are updatable by owner and admins" ON public.profiles
 CREATE POLICY "Profiles are insertable by trigger only" ON public.profiles
   FOR INSERT WITH CHECK (true);
 
--- 8.2 Settings
+-- 9.2 Settings
 CREATE POLICY "Settings are readable by owner" ON public.settings
   FOR SELECT USING (auth.uid() = user_id);
 
@@ -244,19 +301,19 @@ CREATE POLICY "Settings are updatable by owner" ON public.settings
 CREATE POLICY "Settings are insertable by trigger only" ON public.settings
   FOR INSERT WITH CHECK (true);
 
--- 8.3 Categories
+-- 9.3 Categories
 CREATE POLICY "Categories CRUD by owner" ON public.categories
   FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.4 Transactions
+-- 9.4 Transactions
 CREATE POLICY "Transactions CRUD by owner" ON public.transactions
   FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.5 Goals
+-- 9.5 Goals
 CREATE POLICY "Goals CRUD by owner" ON public.goals
   FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.6 Subscriptions
+-- 9.6 Subscriptions
 CREATE POLICY "Users read own subscriptions" ON public.subscriptions
   FOR SELECT USING (user_email = auth.email() OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
@@ -266,19 +323,19 @@ CREATE POLICY "Users insert own subscription requests" ON public.subscriptions
 CREATE POLICY "Admins full control subscriptions" ON public.subscriptions
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.7 Audit Logs
+-- 9.7 Audit Logs
 CREATE POLICY "Admins read/insert logs" ON public.audit_logs
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.8 Notifications
+-- 9.8 Notifications
 CREATE POLICY "Notifications CRUD by owner" ON public.notifications
   FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.9 Chat Conversations
+-- 9.9 Chat Conversations
 CREATE POLICY "Conversations check own" ON public.chat_conversations
   FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.10 Chat Messages
+-- 9.10 Chat Messages
 CREATE POLICY "Messages check conversation participant" ON public.chat_messages
   FOR ALL USING (
     sender_id = auth.uid() 
@@ -286,7 +343,7 @@ CREATE POLICY "Messages check conversation participant" ON public.chat_messages
     OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
   );
 
--- 8.11 Message Attachments
+-- 9.11 Message Attachments
 CREATE POLICY "Attachments access control" ON public.message_attachments
   FOR ALL USING (
     EXISTS (
@@ -297,11 +354,11 @@ CREATE POLICY "Attachments access control" ON public.message_attachments
     OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin'))
   );
 
--- 8.12 Presence
+-- 9.12 Presence
 CREATE POLICY "Presence CRUD" ON public.user_presence
   FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.13 Videos
+-- 9.13 Videos
 CREATE POLICY "Videos visible based on plan" ON public.videos
   FOR SELECT USING (
     plan_allowed = 'Gratuito'
@@ -311,12 +368,19 @@ CREATE POLICY "Videos visible based on plan" ON public.videos
 CREATE POLICY "Admins control videos" ON public.videos
   FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
--- 8.14 Video Watch Stats
+-- 9.14 Written Lessons
+CREATE POLICY "Users read published written lessons" ON public.written_lessons
+  FOR SELECT USING (is_published = true OR auth.uid() = created_by OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
+
+CREATE POLICY "Admins insert/update/delete written lessons" ON public.written_lessons
+  FOR ALL USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
+
+-- 9.15 Video Watch Stats
 CREATE POLICY "Watch stats CRUD by owner" ON public.video_watch_stats
   FOR ALL USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
 
 -- ==========================================
--- 9. TRIGGERS E FUNÇÕES AUXILIARES
+-- 10. TRIGGERS E FUNÇÕES AUXILIARES
 -- ==========================================
 
 -- Criar perfil automático ao registar utilizador
@@ -420,6 +484,22 @@ DROP TRIGGER IF EXISTS on_new_video_published ON public.videos;
 CREATE TRIGGER on_new_video_published
   AFTER INSERT ON public.videos
   FOR EACH ROW EXECUTE FUNCTION public.notify_on_new_video();
+
+-- Função para expirar planos automaticamente
+CREATE OR REPLACE FUNCTION public.expire_plans()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.profiles
+  SET plan = 'Gratuito'
+  WHERE plan = 'Pro'
+    AND plan_expires_at IS NOT NULL
+    AND plan_expires_at < now();
+END;
+$$;
 
 -- Habilitar replicação Realtime
 DO $$

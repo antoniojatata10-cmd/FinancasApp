@@ -1,0 +1,61 @@
+﻿
+  // Admin: Create written lesson
+  const handleAddWrittenLesson = async (e) => {
+    e.preventDefault();
+
+    if (!writtenTitle || !writtenContent) {
+      alert('Preencha o título e o conteúdo da aula.');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      let imageUrl = '';
+
+      if (writtenImageFile) {
+        const ext = writtenImageFile.name.split('.').pop();
+        const fileName = Math.random().toString(36).substring(2,15) + '_' + Date.now() + '.' + ext;
+
+        const { error: uploadError } = await supabase.storage
+          .from('lesson-images')
+          .upload(fileName, writtenImageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from('lesson-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = data.publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('written_lessons')
+        .insert([{
+          title: writtenTitle,
+          description: writtenDescription,
+          content: writtenContent,
+          image_url: imageUrl,
+          category: writtenCategory,
+          level: writtenLevel,
+          plan_allowed: writtenPlanAllowed,
+          created_by: currentUser.id
+        }]);
+
+      if (error) throw error;
+
+      alert('Aula escrita criada com sucesso!');
+
+      setShowWrittenForm(false);
+      fetchWrittenLessons();
+
+    } catch (err) {
+      console.error('Erro ao criar aula escrita:', err);
+      alert(err.message);
+
+    } finally {
+      setSubmitting(false);
+    }
+  };
+

@@ -1,0 +1,24 @@
+﻿
+  // Fetch written lessons from database
+  const fetchWrittenLessons = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('written_lessons')
+        .select('*')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Erro ao carregar aulas escritas:', error.message);
+        setWrittenLessons([]);
+        return;
+      }
+
+      setWrittenLessons(data || []);
+
+    } catch (err) {
+      console.error('Erro fetchWrittenLessons:', err);
+      setWrittenLessons([]);
+    }
+  };
+

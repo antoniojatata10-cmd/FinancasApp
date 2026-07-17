@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Tag, Check, ArrowUpRight, ArrowDownLeft, Info, Plus, AlertCircle, Target, Sparkles } from 'lucide-react';
 
-export default function CategoriasView({ categories, launches, role, userEmail, userId, onAddCategory, onAutoBudget }) {
+export default function CategoriasView({ categories, launches, role, userEmail, userId, onAddCategory, onEditCategory, onDeleteCategory, onAutoBudget }) {
+  console.log("onDeleteCategory recebido:", onDeleteCategory);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
-  
+  const [editingCategory, setEditingCategory] = useState(null);
+
   // Form State
   const [nome, setNome] = useState('');
   const [tipo, setTipo] = useState('Despesa');
@@ -12,14 +14,16 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
   const [subtipo, setSubtipo] = useState('Nenhum');
   const [alvo, setAlvo] = useState('');
   const [descricao, setDescricao] = useState('');
+  const [limiteMensal, setLimiteMensal] = useState('');
   const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   // Auto Budget State
   const [salaryInput, setSalaryInput] = useState('');
   const [budgetError, setBudgetError] = useState('');
 
   // Apply security filter to matches what the user can see
-  const filteredLaunches = launches.filter(l => 
+  const filteredLaunches = launches.filter(l =>
     role === 'admin' || l.CriadoPor === userId
   );
 
@@ -28,6 +32,7 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
 
   // Handle Form Open
   const handleOpenAdd = () => {
+    setEditingCategory(null);
     if (role === 'ReadOnly') {
       alert('Seu perfil de Leitura Apenas não possui permissão para criar categorias.');
       return;
@@ -38,34 +43,64 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
     setSubtipo('Nenhum');
     setAlvo('');
     setDescricao('');
+    setLimiteMensal('');
+    setFormError('');
+    setIsFormOpen(true);
+  };
+  const handleOpenEdit = (cat) => {
+    setEditingCategory(cat);
+
+    setNome(cat.Nome);
+    setTipo(cat.Tipo);
+    setSubtipo(cat.Subtipo);
+    setCategoriaMaeID(cat.CategoriaMaeID || '');
+    setAlvo(cat.Alvo || '');
+    setDescricao(cat.Descricao || '');
+    setLimiteMensal(cat.LimiteMensal || '');
+
     setFormError('');
     setIsFormOpen(true);
   };
 
   // Handle Form Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
+    if (saving) return;
 
     if (!nome.trim()) {
       setFormError('Por favor, informe o nome da categoria.');
       return;
     }
 
-    const catID = 'C_' + Math.random().toString(36).substring(2, 7).toUpperCase();
-    const newCat = {
-      CategoriaID: catID,
+    const categoryData = {
+      CategoriaID: editingCategory
+        ? editingCategory.CategoriaID
+        : 'C_' + Math.random().toString(36).substring(2, 7).toUpperCase(),
       Nome: nome,
       Tipo: tipo,
       CategoriaMaeID: categoriaMaeID,
       Subtipo: subtipo,
-      Alvo: subtipo === 'Investimento' || subtipo === 'Poupanca' ? Number(alvo) || 0 : 0,
+      Alvo:
+        subtipo === 'Investimento' || subtipo === 'Poupanca'
+          ? Number(alvo) || 0
+          : 0,
+      LimiteMensal:
+        tipo === 'Despesa' && subtipo === 'Nenhum' && limiteMensal
+          ? Number(limiteMensal) || 0
+          : 0,
       Descricao: descricao,
       Ativa: true
     };
 
-    const success = onAddCategory(newCat);
+    setSaving(true);
+    const success = editingCategory
+      ? await onEditCategory(categoryData)
+      : await onAddCategory(categoryData);
+    setSaving(false);
+
     if (success) {
+      setEditingCategory(null);
       setIsFormOpen(false);
     }
   };
@@ -85,7 +120,7 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
@@ -259,6 +294,8 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
                 </div>
               </div>
 
+
+
               {/* Net Balance Footer */}
               <div style={{
                 background: 'rgba(255, 255, 255, 0.02)',
@@ -279,242 +316,300 @@ export default function CategoriasView({ categories, launches, role, userEmail, 
                 </span>
               </div>
 
+              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+
+                <button
+                  onClick={() => handleOpenEdit(cat)}
+                  className="btn"
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    color: 'var(--color-accent)',
+                    border: '1px solid var(--color-accent)',
+                    borderRadius: '8px',
+                    padding: '10px',
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  Editar
+                </button>
+
+                {onDeleteCategory && (
+                  <button
+                    onClick={() => onDeleteCategory(cat.CategoriaID)}
+                    className="btn"
+                    style={{
+                      flex: 1,
+                      background: 'transparent',
+                      color: 'var(--color-error)',
+                      border: '1px solid var(--color-error)',
+                      borderRadius: '8px',
+                      padding: '10px',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                )}
+
+              </div>
             </div>
           );
         })}
+
       </div>
 
       {/* NEW CATEGORY MODAL */}
-      {isFormOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100,
-          padding: '16px'
-        }} className="animate-fade-in">
-          
-          <div className="glass-panel animate-scale-in" style={{
-            background: 'var(--bg-secondary)',
-            width: '100%',
-            maxWidth: '480px',
-            padding: '24px',
+      {
+        isFormOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-            
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-              Nova Categoria
-            </h3>
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+            padding: '16px'
+          }} className="animate-fade-in">
 
-            {formError && (
-              <div style={{
-                background: 'var(--color-error-bg)',
-                color: 'var(--color-error)',
-                border: '1px solid var(--color-error)',
-                padding: '12px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.85rem'
-              }}>
-                <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                <span>{formError}</span>
-              </div>
-            )}
+            <div className="glass-panel animate-scale-in" style={{
+              background: 'var(--bg-secondary)',
+              width: '100%',
+              maxWidth: '480px',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              
-              {/* Nome */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nome da Categoria</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Farmácia, Viagens, Dívida com Pedro"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  className="form-input"
-                  required
-                />
-              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                {editingCategory ? 'Editar Categoria' : 'Nova Categoria'}
+              </h3>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {/* Tipo */}
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Tipo Geral</label>
-                  <select
-                    value={tipo}
-                    onChange={(e) => setTipo(e.target.value)}
-                    className="form-select"
-                  >
-                    <option value="Despesa">Despesa (Saídas)</option>
-                    <option value="Receita">Receita (Entradas)</option>
-                  </select>
+              {formError && (
+                <div style={{
+                  background: 'var(--color-error-bg)',
+                  color: 'var(--color-error)',
+                  border: '1px solid var(--color-error)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.85rem'
+                }}>
+                  <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                  <span>{formError}</span>
                 </div>
+              )}
 
-                {/* Subtipo Especial */}
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                {/* Nome */}
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Subtipo Especial</label>
-                  <select
-                    value={subtipo}
-                    onChange={(e) => setSubtipo(e.target.value)}
-                    className="form-select"
-                  >
-                    <option value="Nenhum">Nenhum (Comum)</option>
-                    <option value="Divida">Dívida (Saldo Negativo Inicial)</option>
-                    <option value="Emprestimo">Empréstimo (A receber)</option>
-                    <option value="Investimento">Investimento (Com Meta)</option>
-                    <option value="Poupanca">Poupança (Com Meta)</option>
-                    <option value="Guardar">Guardar (Dinheiro alheio)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Mother Category Binding */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Categoria Mãe (Opcional - para dependência)</label>
-                <select
-                  value={categoriaMaeID}
-                  onChange={(e) => setCategoriaMaeID(e.target.value)}
-                  className="form-select"
-                >
-                  <option value="">Nenhuma (Esta é uma Categoria Mãe)</option>
-                  {motherCategories.map(c => (
-                    <option key={c.CategoriaID} value={c.CategoriaID}>
-                      {c.Nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Target / Alvo */}
-              {(subtipo === 'Investimento' || subtipo === 'Poupanca') && (
-                <div className="form-group animate-slide-up" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Valor Alvo da Meta (Kz)</label>
+                  <label className="form-label">Nome da Categoria</label>
                   <input
-                    type="number"
-                    placeholder="Ex: 150000"
-                    value={alvo}
-                    onChange={(e) => setAlvo(e.target.value)}
+                    type="text"
+                    placeholder="Ex: Farmácia, Viagens, Dívida com Pedro"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
                     className="form-input"
                     required
                   />
                 </div>
-              )}
 
-              {/* Descrição */}
-              <div className="form-group">
-                <label className="form-label">Descrição / Notas</label>
-                <textarea
-                  placeholder="Explique o propósito desta categoria..."
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  className="form-textarea"
-                />
-              </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {/* Tipo */}
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Tipo Geral</label>
+                    <select
+                      value={tipo}
+                      onChange={(e) => setTipo(e.target.value)}
+                      className="form-select"
+                    >
+                      <option value="Despesa">Despesa (Saídas)</option>
+                      <option value="Receita">Receita (Entradas)</option>
+                    </select>
+                  </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px' }}>
-                <button type="button" onClick={() => setIsFormOpen(false)} className="btn btn-secondary">
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Criar Categoria
-                </button>
-              </div>
+                  {/* Subtipo Especial */}
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Subtipo Especial</label>
+                    <select
+                      value={subtipo}
+                      onChange={(e) => setSubtipo(e.target.value)}
+                      className="form-select"
+                    >
+                      <option value="Nenhum">Nenhum (Comum)</option>
+                      <option value="Divida">Dívida (Saldo Negativo Inicial)</option>
+                      <option value="Emprestimo">Empréstimo (A receber)</option>
+                      <option value="Investimento">Investimento (Com Meta)</option>
+                      <option value="Poupanca">Poupança (Com Meta)</option>
+                      <option value="Guardar">Guardar (Dinheiro alheio)</option>
+                    </select>
+                  </div>
+                </div>
 
-            </form>
+                {/* Mother Category Binding */}
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Categoria Mãe (Opcional - para dependência)</label>
+                  <select
+                    value={categoriaMaeID}
+                    onChange={(e) => setCategoriaMaeID(e.target.value)}
+                    className="form-select"
+                  >
+                    <option value="">Nenhuma (Esta é uma Categoria Mãe)</option>
+                    {motherCategories.map(c => (
+                      <option key={c.CategoriaID} value={c.CategoriaID}>
+                        {c.Nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
+                {/* Target / Alvo */}
+                {(subtipo === 'Investimento' || subtipo === 'Poupanca') && (
+                  <div className="form-group animate-slide-up" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Valor Alvo da Meta (Kz)</label>
+                    <input
+                      type="number"
+                      placeholder="Ex: 150000"
+                      value={alvo}
+                      onChange={(e) => setAlvo(e.target.value)}
+                      className="form-input"
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Limite Mensal de Orçamento — só para Despesas comuns */}
+                {tipo === 'Despesa' && subtipo === 'Nenhum' && (
+                  <div className="form-group animate-slide-up" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Limite Mensal de Orçamento (Kz) — Opcional</label>
+                    <input
+                      type="number"
+                      placeholder="Ex: 50000 — recebe alerta ao atingir 80% e 100%"
+                      value={limiteMensal}
+                      onChange={(e) => setLimiteMensal(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                )}
+
+                {/* Descrição */}
+                <div className="form-group">
+                  <label className="form-label">Descrição / Notas</label>
+                  <textarea
+                    placeholder="Explique o propósito desta categoria..."
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value)}
+                    className="form-textarea"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px' }}>
+                  <button type="button" onClick={() => setIsFormOpen(false)} className="btn btn-secondary">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={saving}>
+                    {saving ? 'A guardar...' : (editingCategory ? 'Guardar Alterações' : 'Criar Categoria')}
+                  </button>
+                </div>
+
+              </form>
+
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* AUTO BUDGET MODAL */}
-      {isBudgetModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 100,
-          padding: '16px'
-        }} className="animate-fade-in">
-          
-          <div className="glass-panel animate-scale-in" style={{
-            background: 'var(--bg-secondary)',
-            width: '100%',
-            maxWidth: '440px',
-            padding: '24px',
+      {
+        isBudgetModalOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}>
-            
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={20} style={{ color: 'var(--color-accent)' }} /> Orçamento Automático (50/20/20/10)
-            </h3>
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+            padding: '16px'
+          }} className="animate-fade-in">
 
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Introduza o seu rendimento/salário líquido mensal. O sistema irá criar automaticamente a estrutura de categorias baseada na regra de ouro financeira e fazer as distribuições iniciais:
-              <br /><br />
-              • <strong>50%</strong> Necessidades (Alimentação, Habitação)<br />
-              • <strong>20%</strong> Metas e Poupança (Reserva Financeira)<br />
-              • <strong>20%</strong> Investimentos<br />
-              • <strong>10%</strong> Gastos Livres / Lazer (Extras)
-            </p>
+            <div className="glass-panel animate-scale-in" style={{
+              background: 'var(--bg-secondary)',
+              width: '100%',
+              maxWidth: '440px',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
 
-            {budgetError && (
-              <div style={{
-                background: 'var(--color-error-bg)',
-                color: 'var(--color-error)',
-                border: '1px solid var(--color-error)',
-                padding: '12px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.85rem'
-              }}>
-                <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                <span>{budgetError}</span>
-              </div>
-            )}
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={20} style={{ color: 'var(--color-accent)' }} /> Orçamento Automático (50/20/20/10)
+              </h3>
 
-            <form onSubmit={handleBudgetSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Rendimento Geral Mensal (Kz)</label>
-                <input
-                  type="number"
-                  placeholder="Ex: 500000"
-                  value={salaryInput}
-                  onChange={(e) => setSalaryInput(e.target.value)}
-                  className="form-input"
-                  required
-                />
-              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                Introduza o seu rendimento/salário líquido mensal. O sistema irá criar automaticamente a estrutura de categorias baseada na regra de ouro financeira e fazer as distribuições iniciais:
+                <br /><br />
+                • <strong>50%</strong> Necessidades (Alimentação, Habitação)<br />
+                • <strong>20%</strong> Metas e Poupança (Reserva Financeira)<br />
+                • <strong>20%</strong> Investimentos<br />
+                • <strong>10%</strong> Gastos Livres / Lazer (Extras)
+              </p>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '12px' }}>
-                <button type="button" onClick={() => setIsBudgetModalOpen(false)} className="btn btn-secondary">
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Gerar Estrutura
-                </button>
-              </div>
-            </form>
+              {budgetError && (
+                <div style={{
+                  background: 'var(--color-error-bg)',
+                  color: 'var(--color-error)',
+                  border: '1px solid var(--color-error)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.85rem'
+                }}>
+                  <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                  <span>{budgetError}</span>
+                </div>
+              )}
 
+              <form onSubmit={handleBudgetSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Rendimento Geral Mensal (Kz)</label>
+                  <input
+                    type="number"
+                    placeholder="Ex: 500000"
+                    value={salaryInput}
+                    onChange={(e) => setSalaryInput(e.target.value)}
+                    className="form-input"
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '12px' }}>
+                  <button type="button" onClick={() => setIsBudgetModalOpen(false)} className="btn btn-secondary">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Gerar Estrutura
+                  </button>
+                </div>
+              </form>
+
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
     </div>
   );

@@ -4,7 +4,7 @@ import {
   Moon, Sun, Wifi, WifiOff, Sparkles, LogOut, Crown, Shield,
   Menu, X, CreditCard, AlertTriangle, Lock, Star, Banknote,
   TrendingUp, Building2, GraduationCap, BookOpen, Cloud, RefreshCw,
-  MessageCircle
+  MessageCircle, Bell, BellRing, CheckCheck, Target, ArrowLeftRight
 } from 'lucide-react';
 
 // views
@@ -22,6 +22,8 @@ import SubscriptionsView from './components/SubscriptionsView';
 import InvestimentosView from './components/InvestimentosView';
 import EmpresaView from './components/EmpresaView';
 import ChatView from './components/ChatView';
+import MetasView from './components/MetasView';
+import DividasView from './components/DividasView';
 
 // Supabase client
 import { supabase } from './supabaseClient';
@@ -103,6 +105,8 @@ function UpgradeWall({ bankInfo, onClose, onGoToSubscriptions }) {
 // ─────────────────────────── PREMIUM LOCK SCREEN ─────────────────────────────
 function PremiumLockScreen({ tabName, bankInfo, onGoToSubscriptions }) {
   const featureInfo = {
+    metas: { icon: '🎯', nome: 'Metas Financeiras', desc: 'Defina e acompanhe objectivos financeiros com projetores de crescimento.' },
+    dividas: { icon: '🔄', nome: 'Gestão de Dívidas', desc: 'Controle dívidas que tem e que lhe devem com alertas inteligentes.' },
     coach: { icon: '🤖', nome: 'Coach IA', desc: 'Consultor financeiro em tempo real com análise dos seus dados.' },
     academia: { icon: '🎓', nome: 'Academia Financeira', desc: '8 níveis de formação financeira com quizzes e certificado.' },
     investimentos: { icon: '📈', nome: 'Área de Investimentos', desc: 'Taxas de câmbio reais, perfil de investidor e simulações.' },
@@ -146,6 +150,8 @@ function PremiumLockScreen({ tabName, bankInfo, onGoToSubscriptions }) {
           {[
             ['Lançamentos', '50/mês', 'Ilimitados'],
             ['Categorias', 'Básicas', 'Ilimitadas'],
+            ['Metas', '❌', '✅ Objectivos'],
+            ['Dívidas', '❌', '✅ Controlo total'],
             ['Coach IA', '❌', '✅ Chat em tempo real'],
             ['Academia', '❌', '✅ 8 níveis + certificado'],
             ['Investimentos', '❌', '✅ Dados reais'],
@@ -212,6 +218,11 @@ export default function App() {
   const [inviteCodes, setInviteCodes] = useState(['AFA2026', 'FINPRO2026']);
   const [auditLogs, setAuditLogs] = useState([]);
 
+  // Notifications
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   // Supabase Auth Listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -236,28 +247,64 @@ export default function App() {
 
   const fetchUserData = async (userId) => {
     setLoading(true);
+
     try {
-      // Trigger plans expiration check in background
-      supabase.rpc('expire_plans')
-        .then(() => { })
-        .catch(err => console.error("Error triggering plan expiration check", err));
+      // Trigger plans expiration check — must complete BEFORE fetching profile
+      // so that expired plans are reverted to Gratuito before we read the user data
+      await supabase.rpc('expire_plans').then(() => {}).catch(err => {
+        console.error("Error expiring plans:", err);
+      });
+
       // Fetch Profile + auth email in parallel
       const [{ data: profile }, { data: { user: authUser } }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userId).single(),
         supabase.auth.getUser()
       ]);
 
-      const mappedUser = profile ? {
-        id: profile.id,
+      console.log("AUTH USER:", authUser?.id, authUser?.email);
+      console.log("PROFILE:", profile);
+
+      let userProfile = profile;
+      if (!userProfile && authUser) {
+        console.log("Profile missing, creating default profile for:", userId);
+        const defaultName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Utilizador';
+        const { data: newProfile, error: insertErr } = await supabase
+          .from('profiles')
+          .insert([{
+            id: userId,
+            full_name: defaultName,
+            phone: authUser.user_metadata?.phone || '',
+            country: authUser.user_metadata?.country || 'Angola',
+            role: 'user',
+            plan: 'Gratuito',
+            is_active: true
+          }])
+          .select()
+          .single();
+        
+        if (!insertErr && newProfile) {
+          userProfile = newProfile;
+        } else {
+          console.error("Error creating default profile:", insertErr);
+        }
+      }
+
+      if (userProfile && userProfile.is_active === false) {
+        await supabase.auth.signOut({ scope: 'local' });
+        return;
+      }
+
+      const mappedUser = userProfile ? {
+        id: userProfile.id,
         Email: authUser?.email || '',
-        Nome: profile.full_name,
-        Role: profile.role,
-        Plano: profile.plan,
-        PlanExpiresAt: profile.plan_expires_at,
-        Ativo: profile.is_active,
-        Pais: profile.country,
-        Telefone: profile.phone,
-        AvatarUrl: profile.avatar_url
+        Nome: userProfile.full_name,
+        Role: userProfile.role?.toLowerCase() || 'user',
+        Plano: userProfile.plan,
+        PlanExpiresAt: userProfile.plan_expires_at,
+        Ativo: userProfile.is_active,
+        Pais: userProfile.country,
+        Telefone: userProfile.phone,
+        AvatarUrl: userProfile.avatar_url
       } : { Role: 'user', Plano: 'Gratuito', Email: authUser?.email || '' };
 
       setCurrentUser(mappedUser);
@@ -274,7 +321,7 @@ export default function App() {
       }
 
       // If admin (or we want to force admin features for testing): also load all users
-      if (profile?.role === 'admin' || mappedUser.Role === 'admin') {
+      if (userProfile?.role?.toLowerCase() === 'admin' || mappedUser.Role === 'admin') {
         const { data: allProfiles } = await supabase
           .from('admin_users_view')
           .select('*')
@@ -285,7 +332,7 @@ export default function App() {
             id: u.id,
             Email: u.email || '',
             Nome: u.full_name || '',
-            Role: u.role,
+            Role: u.role?.toLowerCase() || 'user',
             Plano: u.plan,
             PlanExpiresAt: u.plan_expires_at,
             Ativo: u.is_active,
@@ -315,7 +362,7 @@ export default function App() {
       }
 
       // Fetch categories & transactions concurrently
-      await loadDataFromSupabase(userId, profile?.role || 'user');
+      await loadDataFromSupabase(userId, userProfile?.role?.toLowerCase() || 'user');
 
     } catch (err) {
       console.error('Error fetching user data', err);
@@ -338,6 +385,7 @@ export default function App() {
           CategoriaMaeID: c.parent_id || '',
           Subtipo: c.subtype,
           Alvo: c.target_amount,
+          LimiteMensal: c.monthly_limit || 0,
           Ativa: true
         })));
       }
@@ -385,6 +433,41 @@ export default function App() {
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => { if (toastMessage) { const t = setTimeout(() => setToastMessage(null), 4500); return () => clearTimeout(t); } }, [toastMessage]);
   useEffect(() => { setMenuOpen(false); }, [activeTab]);
+
+  // Fetch notifications for current user
+  const fetchNotifications = useCallback(async (userId) => {
+    if (!userId) return;
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      if (!error && data) setNotifications(data);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session?.user?.id) fetchNotifications(session.user.id);
+  }, [session, fetchNotifications]);
+
+  const markAllNotificationsRead = async () => {
+    if (!session?.user?.id || unreadCount === 0) return;
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', session.user.id)
+      .eq('read', false);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const deleteNotification = async (id) => {
+    await supabase.from('notifications').delete().eq('id', id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
 
   // Reset to dashboard if user switches tab, leaves site, or returns (resumes)
   /*useEffect(() => {
@@ -458,7 +541,8 @@ export default function App() {
     }]);
 
     if (error) setToastMessage({ type: 'warning', text: 'Erro ao salvar: ' + error.message });
-    else setToastMessage({ type: 'success', text: 'Lançamento registrado!' });
+    await loadDataFromSupabase(session.user.id, currentUser?.Role);
+    setToastMessage({ type: 'success', text: 'Lançamento registrado!' });
   };
 
   const handleEditLaunch = async (updated) => {
@@ -472,13 +556,36 @@ export default function App() {
     }).eq('id', updated.LancID);
 
     if (error) setToastMessage({ type: 'warning', text: 'Erro ao atualizar: ' + error.message });
-    else setToastMessage({ type: 'success', text: 'Lançamento atualizado!' });
+    await loadDataFromSupabase(session.user.id, currentUser?.Role);
+    setToastMessage({ type: 'success', text: 'Lançamento atualizado!' });
   };
 
   const handleDeleteLaunch = async (id) => {
-    const { error } = await supabase.from('transactions').delete().eq('id', id);
-    if (error) setToastMessage({ type: 'warning', text: 'Erro ao remover: ' + error.message });
-    else setToastMessage({ type: 'success', text: 'Lançamento removido!' });
+    console.log("TENTANDO ELIMINAR ID:", id);
+
+    let query = supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id);
+
+    if (currentUser?.Role !== 'admin') {
+      query = query.eq('user_id', session.user.id);
+    }
+
+    const { data, error } = await query.select();
+
+    console.log("REGISTOS APAGADOS:", data);
+    console.log("ERRO DELETE:", error);
+
+    if (error) {
+      setToastMessage({ type: 'warning', text: 'Erro ao remover: ' + error.message });
+    } else {
+      await loadDataFromSupabase(session.user.id, currentUser?.Role);
+      setToastMessage({
+        type: 'success',
+        text: 'Lançamento removido!'
+      });
+    }
   };
 
   const handleAddCategory = async (newCat) => {
@@ -488,7 +595,8 @@ export default function App() {
       type: newCat.Tipo === 'Receita' ? 'income' : 'expense',
       subtype: newCat.Subtipo,
       parent_id: newCat.CategoriaMaeID ? newCat.CategoriaMaeID : null,
-      target_amount: newCat.Alvo || 0
+      target_amount: newCat.Alvo || 0,
+      monthly_limit: newCat.LimiteMensal || 0
     }]);
 
     if (error) {
@@ -496,6 +604,68 @@ export default function App() {
       return false;
     }
     setToastMessage({ type: 'success', text: 'Categoria criada!' });
+    return true;
+  };
+
+  const handleDeleteCategory = async (id) => {
+    const confirmDelete = window.confirm('Deseja realmente eliminar esta categoria?');
+    if (!confirmDelete) return;
+
+    let query = supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (currentUser?.Role !== 'admin') {
+      query = query.eq('user_id', session.user.id);
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      setToastMessage({ type: 'warning', text: 'Erro ao remover categoria: ' + error.message });
+    } else {
+      await loadDataFromSupabase(session.user.id, currentUser?.Role);
+      setToastMessage({ type: 'success', text: 'Categoria removida!' });
+    }
+  };
+
+  const handleEditCategory = async (updated) => {
+    const isAdmin = ['admin', 'superadmin'].includes(currentUser?.Role?.toLowerCase());
+    let query = supabase
+      .from('categories')
+      .update({
+        name: updated.Nome,
+        type: updated.Tipo === 'Receita' ? 'income' : 'expense',
+        subtype: updated.Subtipo,
+        parent_id: updated.CategoriaMaeID || null,
+        target_amount: updated.Alvo || 0,
+        monthly_limit: updated.LimiteMensal || 0
+      })
+      .eq('id', updated.CategoriaID);
+
+    // Admins podem editar qualquer categoria; utilizadores comuns só as suas
+    if (!isAdmin) {
+      query = query.eq('user_id', session.user.id);
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      setToastMessage({
+        type: 'warning',
+        text: 'Erro ao atualizar categoria: ' + error.message
+      });
+      return false;
+    }
+
+    setToastMessage({
+      type: 'success',
+      text: 'Categoria atualizada!'
+    });
+
+    await loadDataFromSupabase(session.user.id, currentUser?.Role);
+
     return true;
   };
 
@@ -527,7 +697,7 @@ export default function App() {
       .maybeSingle();
 
     if (fetchError) {
-      alert("Erro ao verificar perfil: " + fetchError.message);
+      console.error("Erro ao verificar perfil:", fetchError.message);
       return;
     }
 
@@ -576,6 +746,10 @@ export default function App() {
       <AuthView
         initialTab={authMode === 'register' ? 'register' : 'login'}
         onBackToLanding={() => setAuthMode('landing')}
+        onLogin={(user) => {
+          setCurrentUser(user);
+          setActiveTab('dashboard');
+        }}
       />
     );
   }
@@ -583,7 +757,7 @@ export default function App() {
   const isSuperAdmin = currentUser?.Role === 'admin';
   const isProUser = currentUser?.Plano && currentUser.Plano !== 'Gratuito';
 
-  const PREMIUM_TABS = ['coach', 'academia', 'investimentos', 'empresa'];
+  const PREMIUM_TABS = ['metas', 'dividas', 'coach', 'academia', 'investimentos', 'empresa'];
   const isPremiumLocked = (tab) => PREMIUM_TABS.includes(tab) && !isProUser && !isSuperAdmin;
 
   const renderTabContent = () => {
@@ -597,7 +771,11 @@ export default function App() {
       case 'lancamentos':
         return <LancamentosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch} onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
       case 'categorias':
-        return <CategoriasView categories={categories} launches={launches} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} onAddCategory={handleAddCategory} onAutoBudget={handleAutoBudget} />;
+        return <CategoriasView categories={categories} launches={launches} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id}
+          onAddCategory={handleAddCategory}
+          onEditCategory={handleEditCategory}
+          onDeleteCategory={handleDeleteCategory}
+          onAutoBudget={handleAutoBudget} />;
       case 'relatorios':
         return <RelatoriosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} />;
       case 'coach':
@@ -616,6 +794,10 @@ export default function App() {
         return <ConfiguracoesView role={currentUser?.Role} userEmail={currentUser?.Email} currentUser={currentUser}
           users={users} setUsers={setUsers} isOffline={false} lowBalanceLimit={5000} onResetData={() => { }}
           onInstallApp={() => { }} onToast={setToastMessage} bankInfo={bankInfo} onShowUpgrade={() => setShowUpgradeWall(true)} />;
+      case 'metas':
+        return <MetasView currentUser={currentUser} session={session} launches={launches} categories={categories} />;
+      case 'dividas':
+        return <DividasView currentUser={currentUser} launches={launches} />;
       case 'superadmin':
         return isSuperAdmin
           ? <SuperAdminView users={users} setUsers={setUsers} currentUserEmail={currentUser?.Email} onToast={setToastMessage} launches={launches} bankInfo={bankInfo} setBankInfo={setBankInfo} subscriptions={subscriptions} setSubscriptions={setSubscriptions} inviteCodes={inviteCodes} setInviteCodes={setInviteCodes} auditLogs={auditLogs} onAddAuditLog={() => { }} />
@@ -634,6 +816,8 @@ export default function App() {
   ];
 
   const extraNavItems = [
+    { id: 'metas', icon: <Target size={18} />, label: 'Metas' },
+    { id: 'dividas', icon: <ArrowLeftRight size={18} />, label: 'Dívidas' },
     { id: 'academia', icon: <GraduationCap size={18} />, label: 'Academia' },
     { id: 'investimentos', icon: <TrendingUp size={18} />, label: 'Investimentos' },
     { id: 'empresa', icon: <Building2 size={18} />, label: 'Empresa' },
@@ -685,6 +869,23 @@ export default function App() {
 
           {/* No debug admin button */}
 
+          {/* Notification Bell */}
+          <button
+            onClick={() => { setShowNotifications(v => !v); if (!showNotifications) markAllNotificationsRead(); }}
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+            title="Notificações"
+          >
+            {unreadCount > 0 ? <BellRing size={13} style={{ color: '#f59e0b' }} /> : <Bell size={13} />}
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute', top: '-4px', right: '-4px',
+                background: '#ef4444', color: '#fff', borderRadius: '50%',
+                width: '15px', height: '15px', fontSize: '0.6rem', fontWeight: 800,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+            )}
+          </button>
+
           <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
           </button>
@@ -693,6 +894,60 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* Notification Panel */}
+      {showNotifications && (
+        <>
+          <div onClick={() => setShowNotifications(false)} style={{ position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(0,0,0,0.3)' }} />
+          <div className="glass-panel animate-fade-in" style={{
+            position: 'fixed', top: '56px', right: '12px', zIndex: 99,
+            width: '320px', maxHeight: '480px', overflowY: 'auto',
+            padding: '8px', borderRadius: '14px', boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+            display: 'flex', flexDirection: 'column', gap: '4px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>🔔 Notificações</div>
+              {unreadCount > 0 && (
+                <button onClick={markAllNotificationsRead} style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--color-accent)', fontSize: '0.75rem', fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: '4px'
+                }}><CheckCheck size={13} /> Marcar todas lidas</button>
+              )}
+            </div>
+            {notifications.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                📭 Nenhuma notificação.
+              </div>
+            ) : (
+              notifications.map(n => (
+                <div key={n.id} style={{
+                  display: 'flex', gap: '10px', alignItems: 'flex-start',
+                  padding: '10px 12px', borderRadius: '10px', cursor: 'default',
+                  background: n.read ? 'transparent' : 'rgba(99,102,241,0.07)',
+                  border: n.read ? '1px solid transparent' : '1px solid rgba(99,102,241,0.15)'
+                }}>
+                  <div style={{
+                    width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, marginTop: '5px',
+                    background: n.read ? 'transparent' : 'var(--color-accent)'
+                  }} />
+                  <div style={{ flex: 1 }}>
+                    {n.title && <div style={{ fontWeight: 700, fontSize: '0.82rem', marginBottom: '2px' }}>{n.title}</div>}
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{n.message}</div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      {new Date(n.created_at).toLocaleString('pt-AO', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <button onClick={() => deleteNotification(n.id)} style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--text-muted)', padding: '2px', flexShrink: 0, fontSize: '0.8rem'
+                  }}>✕</button>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
 
       {menuOpen && (
         <>
@@ -706,11 +961,15 @@ export default function App() {
             ))}
             <div style={{ borderTop: '1px solid var(--border-color)', margin: '4px 0' }} />
             <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, padding: '4px 12px 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avançado</div>
-            {extraNavItems.map(item => (
-              <button key={item.id} onClick={() => { setActiveTab(item.id); setMenuOpen(false); }} style={{ background: activeTab === item.id ? (item.gold ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)') : 'transparent', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: activeTab === item.id ? (item.gold ? '#f59e0b' : 'var(--color-accent)') : 'var(--text-secondary)', fontWeight: activeTab === item.id ? 700 : 500, fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left' }}>
+            {extraNavItems.map(item => {
+              const locked = isPremiumLocked(item.id);
+              return (
+              <button key={item.id} onClick={() => { setActiveTab(item.id); setMenuOpen(false); }} style={{ background: activeTab === item.id ? (item.gold ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)') : 'transparent', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: activeTab === item.id ? (item.gold ? '#f59e0b' : 'var(--color-accent)') : 'var(--text-secondary)', fontWeight: activeTab === item.id ? 700 : 500, fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left', opacity: locked ? 0.7 : 1 }}>
                 <span style={{ color: activeTab === item.id ? (item.gold ? '#f59e0b' : 'var(--color-accent)') : 'var(--text-muted)' }}>{item.icon}</span>{item.label}
+                {locked && <Lock size={13} style={{ marginLeft: 'auto', color: '#f59e0b', flexShrink: 0 }} />}
               </button>
-            ))}
+              );
+            })}
             <div style={{ borderTop: '1px solid var(--border-color)', margin: '4px 0' }} />
             <button onClick={handleLogout} style={{ background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-error)', fontWeight: 600, fontSize: '0.88rem', width: '100%' }}>
               <LogOut size={18} /> Sair da Conta

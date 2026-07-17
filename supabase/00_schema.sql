@@ -58,6 +58,7 @@ CREATE TABLE public.categories (
   subtype       text DEFAULT 'Nenhum',
   parent_id     uuid REFERENCES public.categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
   target_amount numeric(15,2) NOT NULL DEFAULT 0 CHECK (target_amount >= 0),
+  monthly_limit numeric(15,2) NOT NULL DEFAULT 0 CHECK (monthly_limit >= 0),
   color         text DEFAULT '#6366f1',
   icon          text DEFAULT '📁',
   created_at    timestamptz NOT NULL DEFAULT now()
@@ -195,6 +196,25 @@ CREATE TABLE public.videos (
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
 
+-- AULAS ESCRITAS (FORMAÇÃO)
+CREATE TABLE public.written_lessons (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title         text NOT NULL,
+  description   text,
+  content       text NOT NULL,
+  exercicios    jsonb NOT NULL DEFAULT '[]'::jsonb,
+  quiz          jsonb NOT NULL DEFAULT '[]'::jsonb,
+  image_url     text,
+  category      text NOT NULL DEFAULT 'Educação Financeira',
+  level         text NOT NULL DEFAULT 'Iniciante',
+  plan_allowed  text NOT NULL DEFAULT 'Gratuito' CHECK (plan_allowed IN ('Gratuito','Pro')),
+  is_published  boolean NOT NULL DEFAULT false,
+  sort_order    integer NOT NULL DEFAULT 0,
+  created_by    uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now()
+);
+
 -- ESTATÍSTICAS DE VÍDEO
 CREATE TABLE public.video_watch_stats (
   id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -238,6 +258,7 @@ ALTER TABLE public.admin_settings   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_messages    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.videos           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.written_lessons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.video_watch_stats ENABLE ROW LEVEL SECURITY;
 
 -- Função auxiliar admin
@@ -291,6 +312,10 @@ CREATE POLICY "chat_admin_all"          ON public.chat_messages FOR ALL USING (p
 -- POLICIES: videos
 CREATE POLICY "videos_read_published" ON public.videos FOR SELECT USING (auth.uid() IS NOT NULL AND is_published = true);
 CREATE POLICY "videos_admin_all"      ON public.videos FOR ALL USING (public.is_admin());
+
+-- POLICIES: written_lessons
+CREATE POLICY "wl_read_published" ON public.written_lessons FOR SELECT USING (is_published = true OR auth.uid() = created_by OR public.is_admin());
+CREATE POLICY "wl_admin_all"      ON public.written_lessons FOR ALL USING (public.is_admin());
 
 -- POLICIES: video_watch_stats
 CREATE POLICY "vws_own"   ON public.video_watch_stats FOR ALL USING (auth.uid() = user_id);

@@ -112,8 +112,8 @@ export default function SuperAdminView({
     total: users.length,
     ativos: users.filter(u => u.Ativo).length,
     bloqueados: users.filter(u => !u.Ativo).length,
-    pagos: users.filter(u => u.Plano !== 'Gratuito' && u.Role !== 'SuperAdmin').length,
-    admins: users.filter(u => u.Role === 'Admin').length,
+    pagos: users.filter(u => u.Plano !== 'Gratuito' && u.Role?.toLowerCase() !== 'superadmin').length,
+    admins: users.filter(u => u.Role?.toLowerCase() === 'admin').length,
   }), [users]);
 
   const filtered = useMemo(() => {
@@ -682,9 +682,9 @@ export default function SuperAdminView({
               }}>
                 <div style={{
                   width: '38px', height: '38px', borderRadius: '50%', flexShrink: 0,
-                  background: user.Role === 'SuperAdmin'
+                  background: user.Role?.toLowerCase() === 'superadmin'
                     ? 'linear-gradient(135deg, #f59e0b, #fbbf24)'
-                    : user.Role === 'Admin'
+                    : user.Role?.toLowerCase() === 'admin'
                       ? 'linear-gradient(135deg, #a78bfa, #6366f1)'
                       : 'linear-gradient(135deg, #34d399, #6366f1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -720,30 +720,27 @@ export default function SuperAdminView({
                   </span>
 
                   <select value={user.Plano || 'Gratuito'}
-                    onChange={e => handlePlanoChange(user.id, user.Email, e.target.value)}
-                    disabled={user.Role === 'SuperAdmin'}
+                    disabled={user.Role?.toLowerCase() === 'superadmin'}
                     style={{
                       background: `${planoColor(user.Plano)}22`,
                       color: planoColor(user.Plano),
                       border: `1px solid ${planoColor(user.Plano)}55`,
                       borderRadius: '20px', padding: '3px 10px',
                       fontSize: '0.72rem', fontWeight: 700,
-                      cursor: user.Role === 'SuperAdmin' ? 'not-allowed' : 'pointer',
+                      cursor: user.Role?.toLowerCase() === 'superadmin' ? 'not-allowed' : 'pointer',
                       appearance: 'none'
                     }}>
                     {PLANOS.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
 
-                  <select value={user.Role}
+                  <select value={user.Role?.toLowerCase() === 'admin' ? 'Admin' : user.Role?.toLowerCase() === 'superadmin' ? 'SuperAdmin' : 'User'}
                     onChange={e => handleRoleChange(user.id, user.Email, e.target.value)}
-                    disabled={user.Role === 'SuperAdmin' || user.Email === currentUserEmail}
+                    disabled={user.Role?.toLowerCase() === 'superadmin' || user.Email === currentUserEmail}
                     className="form-input"
                     style={{ width: 'auto', padding: '4px 8px', fontSize: '0.78rem', height: 'auto' }}>
                     {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
-
-                  {/* Quick "Tornar Admin" button — APENAS VISÍVEL LOCALMENTE (dev mode) */}
-                  {import.meta.env.DEV && user.Role !== 'admin' && user.Role !== 'Admin' && user.Role !== 'SuperAdmin' && user.Email !== currentUserEmail && (
+                  {import.meta.env.DEV && user.Role?.toLowerCase() !== 'admin' && user.Role?.toLowerCase() !== 'superadmin' && user.Email !== currentUserEmail && (
                     <button
                       onClick={() => {
                         if (window.confirm(`Tornar "${user.Nome || user.Email}" administrador?\n\nEsta ação dá ao utilizador acesso total ao painel de admin.`)) {
@@ -785,6 +782,8 @@ export default function SuperAdminView({
                         <Edit3 size={13} />
                       </button>
                     )}
+
+
 
                     {user.Role !== 'SuperAdmin' && (
                       <>

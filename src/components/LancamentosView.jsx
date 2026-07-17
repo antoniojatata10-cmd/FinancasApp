@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter, LayoutGrid, List, Plus, Edit2, Trash2, Calendar, FileText, AlertCircle } from 'lucide-react';
+console.log("LancamentosView CARREGOU");
 
 export default function LancamentosView({
   launches,
@@ -32,7 +33,6 @@ export default function LancamentosView({
   });
   const [formError, setFormError] = useState('');
 
-  // FIX: CriadoPor stores user_id (UUID), not email
   const filteredLaunches = launches.filter(l =>
     role === 'admin' || l.CriadoPor === userId
   );
@@ -68,8 +68,23 @@ export default function LancamentosView({
 
   // Check user permission for Edit/Delete actions
   const canModify = (launch) => {
-    if (role === 'Admin') return true;
-    if (role === 'User' && launch.CriadoPor === userEmail) return true;
+    console.log("===== CAN MODIFY =====");
+    console.log("ROLE RECEBIDO:", role);
+    console.log("ROLE lower:", role?.toLowerCase());
+    console.log("USER ID:", userId);
+    console.log("CRIADO POR:", launch.CriadoPor);
+
+    if (role?.toLowerCase() === "admin") {
+      console.log("ADMIN -> TRUE");
+      return true;
+    }
+
+    if (role?.toLowerCase() === "user" && launch.CriadoPor === userId) {
+      console.log("USER -> TRUE");
+      return true;
+    }
+
+    console.log("FALSE");
     return false;
   };
 
@@ -96,10 +111,8 @@ export default function LancamentosView({
 
   // Open Form for Editing
   const handleOpenEdit = (launch) => {
-    if (!canModify(launch)) {
-      alert('Você não tem permissão para editar este lançamento.');
-      return;
-    }
+    console.log("ABRINDO EDIÇÃO:", launch);
+
     setEditingLaunch(launch);
     setFormData({
       Data: launch.Data,
@@ -154,7 +167,7 @@ export default function LancamentosView({
       ...formData,
       Valor: val,
       LancID: editingLaunch ? editingLaunch.LancID : 'L_' + Math.random().toString(36).substring(2, 9),
-      CriadoPor: editingLaunch ? editingLaunch.CriadoPor : userEmail,
+      CriadoPor: editingLaunch ? editingLaunch.CriadoPor : userId,
       EditadoEm: new Date().toISOString().replace('T', ' ').substring(0, 19)
     };
 
@@ -164,7 +177,12 @@ export default function LancamentosView({
       onAddLaunch(launchPayload);
     }
 
-    setIsFormOpen(false);
+    // Se estamos a guardar um item de factura, voltar aos resultados
+    if (savingItemIndex !== null) {
+      handleItemSaved();
+    } else {
+      setIsFormOpen(false);
+    }
   };
 
   const getCategoryName = (catId) => {
@@ -182,7 +200,7 @@ export default function LancamentosView({
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      
+
       {/* Header and Controls */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
@@ -192,9 +210,11 @@ export default function LancamentosView({
           </p>
         </div>
         {role !== 'ReadOnly' && (
-          <button onClick={handleOpenAdd} className="btn btn-primary" style={{ padding: '10px 18px' }}>
-            <Plus size={18} /> Novo Lançamento
-          </button>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button onClick={handleOpenAdd} className="btn btn-primary" style={{ padding: '10px 18px' }}>
+              <Plus size={18} /> Novo Lançamento
+            </button>
+          </div>
         )}
       </div>
 
@@ -222,7 +242,7 @@ export default function LancamentosView({
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="form-select"
-              style={{ padding: '8px 30px 8px 12px', fontSize: '0.85rem' }}
+              style={{ padding: '8px 30px 8px 12px', fontSize: '0.85rem', color: '#000', backgroundColor: '#fff' }}
             >
               <option value="all">Todas Categorias</option>
               {categories.map(cat => (
@@ -238,7 +258,7 @@ export default function LancamentosView({
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
               className="form-select"
-              style={{ padding: '8px 30px 8px 12px', fontSize: '0.85rem' }}
+              style={{ padding: '8px 30px 8px 12px', fontSize: '0.85rem', color: '#000', backgroundColor: '#fff' }}
             >
               <option value="all">Todo Histórico</option>
               <option value="month">Este Mês</option>
@@ -308,6 +328,14 @@ export default function LancamentosView({
                 const isIncome = launch.Tipo === 'Entrada';
                 const editable = canModify(launch);
 
+                console.log("================================");
+                console.log("ROLE:", role);
+                console.log("USER ID:", userId);
+                console.log("USER EMAIL:", userEmail);
+                console.log("CRIADO POR:", launch.CriadoPor);
+                console.log("EDITABLE:", editable);
+                console.log("================================");
+
                 return (
                   <tr key={launch.LancID} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.15s' }}>
                     <td style={{ padding: '12px 16px', fontSize: '0.85rem' }}>{launch.Data}</td>
@@ -345,7 +373,7 @@ export default function LancamentosView({
                           onClick={() => handleOpenEdit(launch)}
                           disabled={!editable}
                           style={{
-                            padding: '4px',
+                            padding: '6px 12px',
                             border: 'none',
                             background: 'transparent',
                             cursor: editable ? 'pointer' : 'not-allowed',
@@ -353,7 +381,7 @@ export default function LancamentosView({
                             opacity: editable ? 1 : 0.4
                           }}
                         >
-                          <Edit2 size={16} />
+                          Editar
                         </button>
                         <button
                           onClick={() => {
@@ -361,17 +389,16 @@ export default function LancamentosView({
                               onDeleteLaunch(launch.LancID);
                             }
                           }}
-                          disabled={!editable}
                           style={{
-                            padding: '4px',
+                            padding: '6px 12px',
                             border: 'none',
-                            background: 'transparent',
-                            cursor: editable ? 'pointer' : 'not-allowed',
-                            color: editable ? 'var(--color-error)' : 'var(--text-muted)',
-                            opacity: editable ? 1 : 0.4
+                            borderRadius: '6px',
+                            background: '#dc2626',
+                            color: '#fff',
+                            cursor: 'pointer'
                           }}
                         >
-                          <Trash2 size={16} />
+                          Eliminar
                         </button>
                       </div>
                     </td>
@@ -387,6 +414,12 @@ export default function LancamentosView({
           {processedLaunches.map((launch) => {
             const isIncome = launch.Tipo === 'Entrada';
             const editable = canModify(launch);
+            console.log("PERMISSÃO LANÇAMENTO:", {
+              role,
+              userEmail,
+              CriadoPor: launch.CriadoPor,
+              editable
+            });
 
             return (
               <div key={launch.LancID} className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
@@ -422,7 +455,7 @@ export default function LancamentosView({
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '10px', marginTop: '4px' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Por: {launch.CriadoPor.split('@')[0]}</span>
-                  
+
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button
                       onClick={() => handleOpenEdit(launch)}
@@ -477,7 +510,7 @@ export default function LancamentosView({
           zIndex: 100,
           padding: '16px'
         }} className="animate-fade-in">
-          
+
           <div className="glass-panel animate-scale-in" style={{
             background: 'var(--bg-secondary)',
             width: '100%',
@@ -487,7 +520,7 @@ export default function LancamentosView({
             flexDirection: 'column',
             gap: '16px'
           }}>
-            
+
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
               {editingLaunch ? 'Editar Lançamento' : 'Novo Lançamento'}
             </h3>
@@ -510,7 +543,7 @@ export default function LancamentosView({
             )}
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 {/* Data */}
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -643,11 +676,19 @@ export default function LancamentosView({
 
               {/* Action Buttons */}
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px' }}>
-                <button type="button" onClick={() => setIsFormOpen(false)} className="btn btn-secondary">
+                <button type="button" onClick={() => {
+                  // Se estamos a guardar um item de factura, cancelar volta aos resultados
+                  if (savingItemIndex !== null) {
+                    setSavingItemIndex(null);
+                    setIsFormOpen(false);
+                  } else {
+                    setIsFormOpen(false);
+                  }
+                }} className="btn btn-secondary">
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  {editingLaunch ? 'Salvar Alterações' : 'Adicionar Lançamento'}
+                  {savingItemIndex !== null ? 'Guardar Item' : editingLaunch ? 'Salvar Alterações' : 'Adicionar Lançamento'}
                 </button>
               </div>
 
@@ -657,6 +698,7 @@ export default function LancamentosView({
         </div>
       )}
 
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

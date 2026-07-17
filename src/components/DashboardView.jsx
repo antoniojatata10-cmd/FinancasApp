@@ -87,6 +87,40 @@ export default function DashboardView({ launches, categories, role, userEmail, u
     10000
   );
 
+  // Budget limit alerts — current month spending vs LimiteMensal
+  const thisMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  const budgetAlerts = categorySummary
+    .filter(c => c.LimiteMensal > 0 && c.Tipo === 'Despesa')
+    .map(c => {
+      const monthSaidas = filteredLaunches
+        .filter(l => l.CategoriaID === c.CategoriaID && l.Tipo === 'Saida' && l.Data?.startsWith(thisMonth))
+        .reduce((sum, l) => sum + Number(l.Valor), 0);
+      const pct = c.LimiteMensal > 0 ? (monthSaidas / c.LimiteMensal) * 100 : 0;
+      return { ...c, monthSaidas, pct };
+    })
+    .filter(c => c.pct >= 80)
+    .sort((a, b) => b.pct - a.pct);
+
+  // Donut chart data — top 6 expense categories by saidas
+  const donutCategories = [...categorySummary]
+    .filter(c => c.saidas > 0 && c.Tipo === 'Despesa')
+    .sort((a, b) => b.saidas - a.saidas)
+    .slice(0, 6);
+  const donutTotal = donutCategories.reduce((sum, c) => sum + c.saidas, 0);
+  const DONUT_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4'];
+  // Build donut arc segments
+  const DONUT_R = 70; const DONUT_STROKE = 28; const DONUT_CX = 90; const DONUT_CY = 90;
+  const donutCircumference = 2 * Math.PI * DONUT_R;
+  let donutOffset = 0;
+  const donutSegments = donutCategories.map((cat, i) => {
+    const frac = donutTotal > 0 ? cat.saidas / donutTotal : 0;
+    const dash = frac * donutCircumference;
+    const gap = donutCircumference - dash;
+    const seg = { cat, color: DONUT_COLORS[i % DONUT_COLORS.length], dash, gap, offset: donutOffset, frac };
+    donutOffset += dash;
+    return seg;
+  });
+
   // Low balance categories alert (excluding income, debts, loans)
   const lowBalanceAlerts = categorySummary.filter(c =>
     c.Tipo === 'Despesa' &&
@@ -413,56 +447,121 @@ export default function DashboardView({ launches, categories, role, userEmail, u
           </div>
         </div>
 
-        {/* Chart 2: Saldo por Categoria (Horizontal progress bars) */}
+        {/* Chart 2: Donut + Saldo por Categoria */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <h4 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Saldos de Categorias</h4>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Disponibilidade atual por categoria</p>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Distribuição de Despesas</h4>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Percentagem por categoria de saídas</p>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
-            {categorySummary.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>Sem dados de categoria cadastrados</p>
-            ) : (
-              categorySummary.slice(0, 5).map(cat => {
-                const maxSaldo = Math.max(...categorySummary.map(c => Math.abs(c.saldo)), 1);
-                const percent = Math.max(0, (Math.abs(cat.saldo) / maxSaldo) * 100);
-
-                // Color formatting based on balance / type
-                let color = 'var(--color-accent)';
-                if (cat.Subtipo === 'Divida') {
-                  color = 'var(--color-error)';
-                } else if (cat.Subtipo === 'Emprestimo') {
-                  color = 'var(--color-success)';
-                } else if (cat.saldo < 5000 && cat.Tipo === 'Despesa') {
-                  color = 'var(--color-error)';
-                }
-
-                return (
-                  <div key={cat.CategoriaID} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                      <span style={{ fontWeight: 600 }}>
-                        {cat.Nome} {cat.CategoriaMaeID ? `(filha)` : `(mãe)`}
-                      </span>
-                      <span style={{ fontWeight: 700, color: color }}>
-                        {cat.saldo.toLocaleString('pt-PT')} Kz
-                      </span>
-                    </div>
-                    <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%',
-                        width: `${percent}%`,
-                        backgroundColor: color,
-                        borderRadius: '3px',
-                        transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
-                      }} />
-                    </div>
+          {donutTotal > 0 ? (
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* SVG Donut */}
+              <svg width="180" height="180" viewBox="0 0 180 180" style={{ flexShrink: 0 }}>
+                {donutSegments.map((seg, i) => (
+                  <circle
+                    key={i}
+                    cx={DONUT_CX} cy={DONUT_CY} r={DONUT_R}
+                    fill="none"
+                    stroke={seg.color}
+                    strokeWidth={DONUT_STROKE}
+                    strokeDasharray={`${seg.dash} ${seg.gap}`}
+                    strokeDashoffset={-seg.offset}
+                    style={{ transform: 'rotate(-90deg)', transformOrigin: `${DONUT_CX}px ${DONUT_CY}px`, transition: 'stroke-dasharray 0.6s ease' }}
+                  />
+                ))}
+                <text x={DONUT_CX} y={DONUT_CY - 8} textAnchor="middle" fill="var(--text-secondary)" fontSize="11" fontWeight="600">Total</text>
+                <text x={DONUT_CX} y={DONUT_CY + 10} textAnchor="middle" fill="var(--text-primary)" fontSize="12" fontWeight="700">{(donutTotal / 1000).toFixed(0)}k Kz</text>
+              </svg>
+              {/* Legend */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}>
+                {donutSegments.map((seg, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: seg.color, flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontWeight: 500, color: 'var(--text-primary)' }}>{seg.cat.Nome}</span>
+                    <span style={{ color: seg.color, fontWeight: 700 }}>{(seg.frac * 100).toFixed(1)}%</span>
                   </div>
-                );
-              })
-            )}
-          </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flexGrow: 1, justifyContent: 'center' }}>
+              {categorySummary.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>Sem dados de categoria cadastrados</p>
+              ) : (
+                categorySummary.slice(0, 5).map(cat => {
+                  const maxSaldo = Math.max(...categorySummary.map(c => Math.abs(c.saldo)), 1);
+                  const percent = Math.max(0, (Math.abs(cat.saldo) / maxSaldo) * 100);
+                  let color = 'var(--color-accent)';
+                  if (cat.Subtipo === 'Divida') color = 'var(--color-error)';
+                  else if (cat.Subtipo === 'Emprestimo') color = 'var(--color-success)';
+                  else if (cat.saldo < 5000 && cat.Tipo === 'Despesa') color = 'var(--color-error)';
+                  return (
+                    <div key={cat.CategoriaID} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                        <span style={{ fontWeight: 600 }}>{cat.Nome} {cat.CategoriaMaeID ? '(filha)' : '(mãe)'}</span>
+                        <span style={{ fontWeight: 700, color }}>{cat.saldo.toLocaleString('pt-PT')} Kz</span>
+                      </div>
+                      <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${percent}%`, backgroundColor: color, borderRadius: '3px', transition: 'width 0.6s cubic-bezier(0.16,1,0.3,1)' }} />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Budget Limit Alerts */}
+      {budgetAlerts.length > 0 && (
+        <div className="glass-panel" style={{
+          padding: '16px',
+          borderLeft: '4px solid var(--color-warning)',
+          background: 'var(--color-warning-bg)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-warning)', fontWeight: 700 }}>
+            <AlertCircle size={20} />
+            <span>Alertas de Orçamento Mensal</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {budgetAlerts.map(c => (
+              <div key={c.CategoriaID}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 600 }}>{c.Nome}</span>
+                  <span style={{ color: c.pct >= 100 ? 'var(--color-error)' : 'var(--color-warning)', fontWeight: 700 }}>
+                    {c.monthSaidas.toLocaleString('pt-PT')} / {c.LimiteMensal.toLocaleString('pt-PT')} Kz ({c.pct.toFixed(0)}%)
+                  </span>
+                </div>
+                <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${Math.min(c.pct, 100)}%`,
+                    background: c.pct >= 100
+                      ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                      : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                    borderRadius: '3px',
+                    transition: 'width 0.6s ease'
+                  }} />
+                </div>
+                {c.pct >= 100 && (
+                  <p style={{ fontSize: '0.72rem', color: 'var(--color-error)', marginTop: '3px', fontWeight: 600 }}>
+                    ⛔ Limite atingido! Gastos nesta categoria excedem o orçamento deste mês.
+                  </p>
+                )}
+                {c.pct >= 80 && c.pct < 100 && (
+                  <p style={{ fontSize: '0.72rem', color: 'var(--color-warning)', marginTop: '3px', fontWeight: 600 }}>
+                    ⚠️ Atenção! Já utilizou {c.pct.toFixed(0)}% do limite mensal desta categoria.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Low balance alert logs */}
       {lowBalanceAlerts.length > 0 && (

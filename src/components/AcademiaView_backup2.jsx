@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   GraduationCap, BookOpen, ChevronRight, ChevronDown, CheckCircle,
   Lock, Star, Play, Award, BarChart2, Brain, TrendingUp, DollarSign,
@@ -366,31 +366,31 @@ const FACULDADES = [
   },
   {
     id: 'F3',
-    nome: 'Faculdade 3 — Mercado de Capitais e BODIVA',
-    icon: '📈',
+    nome: 'Faculdade 3 â€” Mercado de Capitais e BODIVA',
+    icon: 'ðŸ“ˆ',
     cor: '#f59e0b',
-    desc: 'Formação específica sobre o mercado angolano, BODIVA, BNA e instrumentos financeiros locais.',
+    desc: 'FormaÃ§Ã£o especÃ­fica sobre o mercado angolano, BODIVA, BNA e instrumentos financeiros locais.',
     bloqueada: false,
     aulas: [
-      { id: 'F3A1', titulo: 'Estrutura do Mercado Financeiro Angolano', duracao: '60 min', nivel: 'Avançado', objetivos: ['Conhecer os reguladores angolanos', 'Entender BNA, BODIVA, ARSEG e CMC'], conteudo: [{ tipo: 'intro', titulo: 'O Sistema Financeiro Angolano', texto: `**BNA (Banco Nacional de Angola):** Banco central. Regula a política monetária, define a taxa de referência (BNA Rate), emite moeda e supervisiona o sistema bancário.\n\n**BODIVA (Bolsa de Dívida e Valores de Angola):** Bolsa de valores angolana. Negociação de Bilhetes do Tesouro (BTs), Obrigações do Tesouro (OTs) e acções cotadas.\n\n**CMC (Comissão do Mercado de Capitais):** Supervisiona o mercado de capitais, protege investidores e regula emissores de valores mobiliários.\n\n**ARSEG (Agência Reguladora de Seguros):** Supervisiona o sector segurador angolano.\n\n**Como investir:** Necessita de abrir conta num banco autorizado pela BODIVA e solicitar acesso ao mercado secundário.` }], exercicios: ['Pesquise as actuais taxas de BTs em leilão no BNA.', 'Liste 5 empresas cotadas na BODIVA e os seus sectores.'], quiz: [{ pergunta: 'Qual instituição regula o mercado de capitais em Angola?', opcoes: ['BNA', 'CMC (Comissão do Mercado de Capitais)', 'BODIVA'], correto: 1, explicacao: 'A CMC é o regulador do mercado de capitais angolano, supervisionando emissores, intermediários e protegendo investidores.' }], leituras: ['Website oficial da BODIVA — bodiva.ao', 'Website do BNA — bna.ao'] },
+      { id: 'F3A1', titulo: 'Estrutura do Mercado Financeiro Angolano', duracao: '60 min', nivel: 'AvanÃ§ado', objetivos: ['Conhecer os reguladores angolanos', 'Entender BNA, BODIVA, ARSEG e CMC'], conteudo: [{ tipo: 'intro', titulo: 'O Sistema Financeiro Angolano', texto: `**BNA (Banco Nacional de Angola):** Banco central. Regula a polÃ­tica monetÃ¡ria, define a taxa de referÃªncia (BNA Rate), emite moeda e supervisiona o sistema bancÃ¡rio.\n\n**BODIVA (Bolsa de DÃ­vida e Valores de Angola):** Bolsa de valores angolana. NegociaÃ§Ã£o de Bilhetes do Tesouro (BTs), ObrigaÃ§Ãµes do Tesouro (OTs) e acÃ§Ãµes cotadas.\n\n**CMC (ComissÃ£o do Mercado de Capitais):** Supervisiona o mercado de capitais, protege investidores e regula emissores de valores mobiliÃ¡rios.\n\n**ARSEG (AgÃªncia Reguladora de Seguros):** Supervisiona o sector segurador angolano.\n\n**Como investir:** Necessita de abrir conta num banco autorizado pela BODIVA e solicitar acesso ao mercado secundÃ¡rio.` }], exercicios: ['Pesquise as actuais taxas de BTs em leilÃ£o no BNA.', 'Liste 5 empresas cotadas na BODIVA e os seus sectores.'], quiz: [{ pergunta: 'Qual instituiÃ§Ã£o regula o mercado de capitais em Angola?', opcoes: ['BNA', 'CMC (ComissÃ£o do Mercado de Capitais)', 'BODIVA'], correto: 1, explicacao: 'A CMC Ã© o regulador do mercado de capitais angolano, supervisionando emissores, intermediÃ¡rios e protegendo investidores.' }], leituras: ['Website oficial da BODIVA â€” bodiva.ao', 'Website do BNA â€” bna.ao'] },
     ],
   },
   {
     id: 'F4',
-    nome: 'Faculdade 4 — Análise de Investimentos',
-    icon: '🔭',
+    nome: 'Faculdade 4 â€” AnÃ¡lise de Investimentos',
+    icon: 'ðŸ”¬',
     cor: '#ec4899',
-    desc: 'Análise técnica, análise fundamentalista e gestão de risco profissional.',
+    desc: 'AnÃ¡lise tÃ©cnica, anÃ¡lise fundamentalista e gestÃ£o de risco profissional.',
     bloqueada: false,
     aulas: [
-      { id: 'F4A1', titulo: 'Análise Fundamentalista', duracao: '75 min', nivel: 'Avançado', objetivos: ['Avaliar o valor intrínseco de empresas e títulos', 'Analisar balanços e demonstrações financeiras'], conteudo: [{ tipo: 'intro', titulo: 'O Que É Análise Fundamentalista', texto: `Análise fundamentalista avalia o valor real (intrínseco) de um activo com base nos fundamentos económicos, financeiros e do sector.\n\n**Para acções:** Analisar receita, lucro, dívida, crescimento, gestão e perspectivas de mercado.\n\n**Para BTs/OTs:** Analisar a situação fiscal do Estado, rating soberano, taxa LUIBOR e spread de crédito.\n\n**Indicadores principais:**\n• P/E (Price-to-Earnings): preço da acção ÷ lucro por acção\n• ROE (Return on Equity): lucro ÷ capital próprio × 100\n• Dívida/Patrimônio: indica alavancagem\n• Dividend Yield: dividendo anual ÷ preço da acção × 100` }], exercicios: ['Pesquise o P/E ratio de 3 empresas cotadas na BODIVA.', 'Analise o balanço simplificado de uma empresa angolana conhecida.'], quiz: [{ pergunta: 'O que indica um P/E ratio baixo?', opcoes: ['A empresa está cara', 'A empresa pode estar subvalorizada ou ter perspectivas fracas', 'A empresa não paga dividendos'], correto: 1, explicacao: 'Um P/E baixo pode indicar que a acção está subvalorizada (oportunidade) ou que o mercado antecipa problemas futuros (risco). É necessário analisar o contexto completo.' }], leituras: ['The Intelligent Investor — Benjamin Graham', 'Security Analysis — Graham & Dodd'] },
+      { id: 'F4A1', titulo: 'AnÃ¡lise Fundamentalista', duracao: '75 min', nivel: 'AvanÃ§ado', objetivos: ['Avaliar o valor intrÃ­nseco de empresas e tÃ­tulos', 'Analisar balanÃ§os e demonstraÃ§Ãµes financeiras'], conteudo: [{ tipo: 'intro', titulo: 'O Que Ã‰ AnÃ¡lise Fundamentalista', texto: `AnÃ¡lise fundamentalista avalia o valor real (intrÃ­nseco) de um activo com base nos fundamentos econÃ³micos, financeiros e do sector.\n\n**Para acÃ§Ãµes:** Analisar receita, lucro, dÃ­vida, crescimento, gestÃ£o e perspectivas de mercado.\n\n**Para BTs/OTs:** Analisar a situaÃ§Ã£o fiscal do Estado, rating soberano, taxa LUIBOR e spread de crÃ©dito.\n\n**Indicadores principais:**\nâ€¢ P/E (Price-to-Earnings): preÃ§o da acÃ§Ã£o Ã· lucro por acÃ§Ã£o\nâ€¢ ROE (Return on Equity): lucro Ã· capital prÃ³prio Ã— 100\nâ€¢ DÃ­vida/PatrimÃ´nio: indica alavancagem\nâ€¢ Dividend Yield: dividendo anual Ã· preÃ§o da acÃ§Ã£o Ã— 100` }], exercicios: ['Pesquise o P/E ratio de 3 empresas cotadas na BODIVA.', 'Analise o balanÃ§o simplificado de uma empresa angolana conhecida.'], quiz: [{ pergunta: 'O que indica um P/E ratio baixo?', opcoes: ['A empresa estÃ¡ cara', 'A empresa pode estar subvalorizada ou ter perspectivas fracas', 'A empresa nÃ£o paga dividendos'], correto: 1, explicacao: 'Um P/E baixo pode indicar que a acÃ§Ã£o estÃ¡ subvalorizada (oportunidade) ou que o mercado antecipa problemas futuros (risco). Ã‰ necessÃ¡rio analisar o contexto completo.' }], leituras: ['The Intelligent Investor â€” Benjamin Graham', 'Security Analysis â€” Graham & Dodd'] },
     ],
   },
 ];
 
-// ——— Componente Aula Modal ————————————————————————————————————————————————
+// â”€â”€â”€ Componente Aula Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// AulaModal — suporta aulas estáticas (conteudo[]/exercicios/quiz) e dinâmicas do Supabase (content string)
+// AulaModal para aulas escritas
 function AulaModal({ aula, onClose, onComplete, concluida }) {
   const [step, setStep] = useState('conteudo');
   const [quizStep, setQuizStep] = useState(0);
@@ -398,34 +398,16 @@ function AulaModal({ aula, onClose, onComplete, concluida }) {
   const [quizConcluido, setQuizConcluido] = useState(false);
   const [quizScore, setQuizScore] = useState(0);
 
-  // Detectar formato da aula (estática vs dinâmica)
-  const hasConteudo = aula.conteudo && Array.isArray(aula.conteudo) && aula.conteudo.length > 0;
-
-  const parseArray = (val) => {
-    if (Array.isArray(val)) return val;
-    if (typeof val === 'string') { try { return JSON.parse(val); } catch { return []; } }
-    return [];
-  };
-
-  const exercicios = parseArray(aula.exercicios);
-  const quiz = parseArray(aula.quiz);
-  const hasExercicios = exercicios.length > 0;
-  const hasQuiz = quiz.length > 0;
-  const titulo = aula.titulo || aula.title || '';
-  const nivel = aula.nivel || aula.level || '';
-  const duracao = aula.duracao || aula.duration || '';
-
   const handleQuizResp = (idx) => {
-    if (!hasQuiz) return;
-    const correctas = [...quizResp, idx === quiz[quizStep].correto];
+    const correctas = [...quizResp, idx === aula.quiz[quizStep].correto];
     setQuizResp(correctas);
-    if (quizStep < quiz.length - 1) {
+    if (quizStep < aula.quiz.length - 1) {
       setQuizStep(q => q + 1);
     } else {
       const score = correctas.filter(Boolean).length;
       setQuizScore(score);
       setQuizConcluido(true);
-      if (score >= Math.ceil(quiz.length * 0.75) && !concluida) {
+      if (score >= Math.ceil(aula.quiz.length * 0.75) && !concluida) {
         onComplete(aula.id);
       }
     }
@@ -436,215 +418,73 @@ function AulaModal({ aula, onClose, onComplete, concluida }) {
       <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '760px', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{nivel} · {duracao}</div>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800 }}>{titulo}</h3>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{aula.nivel} Â· {aula.duracao}</div>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800 }}>{aula.titulo}</h3>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
         </div>
 
         <div style={{ display: 'flex', gap: '4px', borderBottom: '1px solid var(--border-color)' }}>
-          <button onClick={() => { setStep('conteudo'); }} style={{
-            background: 'none', border: 'none', cursor: 'pointer', padding: '8px 14px', fontWeight: step === 'conteudo' ? 700 : 400,
-            color: step === 'conteudo' ? 'var(--color-accent)' : 'var(--text-muted)',
-            borderBottom: step === 'conteudo' ? '2px solid var(--color-accent)' : '2px solid transparent', fontSize: '0.82rem'
-          }}>📖 Conteúdo</button>
-          {hasExercicios && (
-            <button onClick={() => setStep('exercicios')} style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: '8px 14px', fontWeight: step === 'exercicios' ? 700 : 400,
-              color: step === 'exercicios' ? 'var(--color-accent)' : 'var(--text-muted)',
-              borderBottom: step === 'exercicios' ? '2px solid var(--color-accent)' : '2px solid transparent', fontSize: '0.82rem'
-            }}>✏️ Exercícios</button>
-          )}
-          {hasQuiz && (
-            <button onClick={() => { setStep('quiz'); setQuizStep(0); setQuizResp([]); setQuizConcluido(false); }} style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: '8px 14px', fontWeight: step === 'quiz' ? 700 : 400,
-              color: step === 'quiz' ? 'var(--color-accent)' : 'var(--text-muted)',
-              borderBottom: step === 'quiz' ? '2px solid var(--color-accent)' : '2px solid transparent', fontSize: '0.82rem'
-            }}>🧪 Quiz</button>
-          )}
-          {concluida && <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', color: '#34d399', fontSize: '0.78rem', fontWeight: 700 }}><CheckCircle size={14} /> Concluída</div>}
-        </div>
-
-        {/* Progress indicator */}
-        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-          <div style={{ flex: 1, height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', borderRadius: '2px', background: step === 'conteudo' ? 'var(--color-accent)' : step === 'exercicios' ? '#f59e0b' : '#34d399', width: step === 'conteudo' ? '40%' : step === 'exercicios' ? '70%' : '100%', transition: 'all 0.4s ease' }} />
-          </div>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{step === 'conteudo' ? 'Conteúdo' : step === 'exercicios' ? 'Exercícios' : 'Quiz'}</span>
+          {['conteudo', 'exercicios', 'quiz'].map(s => (
+            <button key={s} onClick={() => { setStep(s); setQuizStep(0); setQuizResp([]); setQuizConcluido(false); }} style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: '8px 14px', fontWeight: step === s ? 700 : 400,
+              color: step === s ? 'var(--color-accent)' : 'var(--text-muted)',
+              borderBottom: step === s ? '2px solid var(--color-accent)' : '2px solid transparent',
+              fontSize: '0.82rem'
+            }}>
+              {s === 'conteudo' ? 'ðŸ“– ConteÃºdo' : s === 'exercicios' ? 'âœï¸ ExercÃ­cios' : 'ðŸ§ª Quiz'}
+            </button>
+          ))}
+          {concluida && <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', color: '#34d399', fontSize: '0.78rem', fontWeight: 700 }}><CheckCircle size={14} /> ConcluÃ­da</div>}
         </div>
 
         {step === 'conteudo' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '500px', overflowY: 'auto', paddingRight: '4px' }}>
-            {hasConteudo ? (
-              aula.conteudo.map((bloco, i) => {
-                const isIntro = bloco.titulo && (bloco.titulo.toLowerCase().includes('introdu') || bloco.titulo.toLowerCase().includes('conceito') || bloco.titulo.toLowerCase().includes('juros sobre') || bloco.titulo.toLowerCase().includes('taxa'));
-                return (
-                  <div key={i} style={{
-                    padding: '20px',
-                    borderRadius: '14px',
-                    background: isIntro
-                      ? 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))'
-                      : 'rgba(255,255,255,0.03)',
-                    border: isIntro
-                      ? '1px solid rgba(99,102,241,0.2)'
-                      : '1px solid rgba(255,255,255,0.06)',
-                    boxShadow: isIntro ? '0 2px 12px rgba(99,102,241,0.08)' : 'none'
-                  }}>
-                    <div style={{
-                      fontWeight: 800,
-                      fontSize: isIntro ? '1.1rem' : '0.95rem',
-                      marginBottom: '12px',
-                      color: isIntro ? '#818cf8' : 'var(--text-primary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      {isIntro && <div style={{ width: '4px', height: '18px', borderRadius: '2px', background: 'linear-gradient(180deg, #6366f1, #8b5cf6)' }} />}
-                      {bloco.titulo}
-                    </div>
-                    <div style={{
-                      fontSize: '0.88rem',
-                      color: 'var(--text-secondary)',
-                      lineHeight: 1.9,
-                      whiteSpace: 'pre-line'
-                    }}>
-                      {bloco.texto.split('\n').map((line, li) => {
-                        // Bold headers
-                        if (line.match(/^\*\*.*\*\*$/)) {
-                          return <div key={li} style={{ fontWeight: 700, fontSize: '0.92rem', marginTop: '14px', marginBottom: '6px', color: 'var(--text-primary)' }}>{line.replace(/\*\*/g, '')}</div>;
-                        }
-                        // Lines starting with ** (inline bold)
-                        if (line.startsWith('**')) {
-                          const parts = line.split('**');
-                          return (
-                            <div key={li} style={{ marginTop: '4px' }}>
-                              {parts.map((part, pi) => pi % 2 === 1
-                                ? <strong key={pi} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{part}</strong>
-                                : <span key={pi}>{part}</span>
-                              )}
-                            </div>
-                          );
-                        }
-                        // Blockquote-style lines (starting with special chars)
-                        if (line.startsWith('•') || line.startsWith('—') || line.startsWith('→')) {
-                          return <div key={li} style={{ marginLeft: '12px', paddingLeft: '10px', borderLeft: '2px solid rgba(99,102,241,0.3)', marginTop: '4px' }}>{line}</div>;
-                        }
-                        // Formula lines
-                        if (line.match(/^[A-Z]\s*=\s*.+/) || line.includes('=') && line.match(/^\*\*.*\*\*.*=/)) {
-                          return <div key={li} style={{ padding: '8px 14px', borderRadius: '8px', background: 'rgba(99,102,241,0.08)', fontFamily: 'monospace', fontSize: '0.88rem', marginTop: '6px', color: '#a5b4fc' }}>{line.replace(/\*\*/g, '')}</div>;
-                        }
-                        return <div key={li}>{line}</div>;
-                      })}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div style={{ padding: '20px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>
-                  {aula.content || 'Sem conteúdo disponível.'}
-                </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '400px', overflowY: 'auto' }}>
+            {aula.conteudo.map((bloco, i) => (
+              <div key={i} style={{ padding: '16px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '10px' }}>{bloco.titulo}</div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{bloco.texto}</p>
               </div>
-            )}
+            ))}
           </div>
         )}
 
-        {step === 'exercicios' && hasExercicios && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '500px', overflowY: 'auto' }}>
-            {exercicios.map((ex, i) => (
+        {step === 'exercicios' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {aula.exercicios.map((ex, i) => (
               <div key={i} style={{ padding: '14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: '12px' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.78rem', color: '#fff', flexShrink: 0 }}>{i + 1}</div>
-                <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>{ex}</div>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.78rem', color: '#fff', flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{ex}</div>
               </div>
             ))}
           </div>
         )}
 
         {step === 'quiz' && !quizConcluido && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minHeight: '300px' }}>
-            {/* Quiz progress bar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: '3px', background: 'linear-gradient(90deg, #6366f1, #8b5cf6)', width: `${((quizStep + 1) / quiz.length) * 100}%`, transition: 'width 0.3s ease' }} />
-              </div>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>{quizStep + 1}/{quiz.length}</span>
-            </div>
-
-            <h4 style={{ fontWeight: 700, fontSize: '1.05rem', lineHeight: 1.5 }}>{quiz[quizStep].pergunta}</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pergunta {quizStep + 1} de {aula.quiz.length}</span>
+            <h4 style={{ fontWeight: 700 }}>{aula.quiz[quizStep].pergunta}</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {quiz[quizStep].opcoes.map((op, i) => {
-                const answered = quizResp.length > quizStep && quizStep < quizResp.length;
-                const isCorrectAnswer = i === quiz[quizStep].correto;
-                const wasSelected = answered && quizResp[quizStep] === true && i === quiz[quizStep].correto;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => !answered && handleQuizResp(i)}
-                    style={{
-                      padding: '12px 16px',
-                      border: answered && isCorrectAnswer ? '1px solid rgba(52,211,153,0.5)' : '1px solid rgba(255,255,255,0.1)',
-                      background: answered && isCorrectAnswer
-                        ? 'rgba(52,211,153,0.12)'
-                        : answered && quizResp[quizStep] === false && isCorrectAnswer
-                          ? 'rgba(52,211,153,0.06)'
-                          : 'rgba(255,255,255,0.03)',
-                      borderRadius: '10px',
-                      color: answered && isCorrectAnswer ? '#34d399' : 'var(--text-secondary)',
-                      cursor: answered ? 'default' : 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <span style={{ fontWeight: 600, marginRight: '8px' }}>{String.fromCharCode(65 + i)}.</span> {op}
-                  </button>
-                );
-              })}
+              {aula.quiz[quizStep].opcoes.map((op, i) => (
+                <button key={i} onClick={() => handleQuizResp(i)} style={{ padding: '12px 16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left' }}>
+                  {op}
+                </button>
+              ))}
             </div>
-            {quiz[quizStep].explicacao && quizResp.length > quizStep && (
-              <div style={{
-                padding: '12px 16px',
-                borderRadius: '10px',
-                background: quizResp[quizStep] ? 'rgba(52,211,153,0.08)' : 'rgba(239,68,68,0.08)',
-                border: `1px solid ${quizResp[quizStep] ? 'rgba(52,211,153,0.2)' : 'rgba(239,68,68,0.2)'}`,
-                fontSize: '0.84rem',
-                color: 'var(--text-secondary)',
-                lineHeight: 1.7
-              }}>
-                <strong style={{ color: quizResp[quizStep] ? '#34d399' : '#ef4444' }}>{quizResp[quizStep] ? '✓ Correto!' : '✗ Incorreto.'}</strong>{' '}
-                {quiz[quizStep].explicacao}
-              </div>
-            )}
           </div>
         )}
 
         {step === 'quiz' && quizConcluido && (
-          <div style={{ textAlign: 'center', padding: '30px 20px' }}>
-            <div style={{
-              width: '80px', height: '80px', borderRadius: '50%',
-              background: quizScore >= Math.ceil(quiz.length * 0.75)
-                ? 'linear-gradient(135deg, rgba(52,211,153,0.2), rgba(34,197,94,0.1))'
-                : 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(249,115,22,0.1))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 16px', fontSize: '2.2rem',
-              border: `2px solid ${quizScore >= Math.ceil(quiz.length * 0.75) ? 'rgba(52,211,153,0.3)' : 'rgba(245,158,11,0.3)'}`
-            }}>
-              {quizScore >= Math.ceil(quiz.length * 0.75) ? '🎉' : '📖'}
-            </div>
-            <h4 style={{ fontWeight: 800, fontSize: '1.3rem', marginBottom: '8px' }}>{quizScore}/{quiz.length} corretas</h4>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: '16px' }}>
-              {quizScore >= Math.ceil(quiz.length * 0.75) ? 'Excelente! Aula concluída.' : 'Reveja o conteúdo e tente novamente.'}
-            </p>
-            {/* Score bar */}
-            <div style={{ width: '200px', height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', margin: '0 auto', overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: '4px', background: quizScore >= Math.ceil(quiz.length * 0.75) ? 'linear-gradient(90deg, #34d399, #22c55e)' : 'linear-gradient(90deg, #f59e0b, #f97316)', width: `${(quizScore / quiz.length) * 100}%` }} />
-            </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px' }}>{Math.round((quizScore / quiz.length) * 100)}% aproveitamento</div>
+          <div style={{ textAlign: 'center', padding: '24px' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>{quizScore >= Math.ceil(aula.quiz.length * 0.75) ? 'ðŸŽ‰' : 'ðŸ“–'}</div>
+            <h4 style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: '8px' }}>{quizScore}/{aula.quiz.length} corretas</h4>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{quizScore >= Math.ceil(aula.quiz.length * 0.75) ? 'Excelente! Aula concluÃ­da.' : 'Reveja o conteÃºdo e tente novamente.'}</p>
           </div>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
           <button onClick={onClose} className="btn btn-secondary">Fechar</button>
-          {step === 'conteudo' && <button onClick={() => setStep('exercicios')} className="btn btn-primary">Exercícios</button>}
+          {step === 'conteudo' && <button onClick={() => setStep('exercicios')} className="btn btn-primary">ExercÃ­cios</button>}
           {step === 'exercicios' && <button onClick={() => setStep('quiz')} className="btn btn-primary">Fazer Quiz</button>}
         </div>
       </div>
@@ -676,7 +516,7 @@ export default function AcademiaView({ currentUser }) {
   const [editingVideo, setEditingVideo] = useState(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Educação Financeira');
+  const [category, setCategory] = useState('EducaÃ§Ã£o Financeira');
   const [level, setLevel] = useState('Iniciante');
   const [sortOrder, setSortOrder] = useState('0');
   const [duration, setDuration] = useState('0');
@@ -690,8 +530,6 @@ export default function AcademiaView({ currentUser }) {
   const [writtenTitle, setWrittenTitle] = useState('');
   const [writtenDescription, setWrittenDescription] = useState('');
   const [writtenContent, setWrittenContent] = useState('');
-  const [writtenExercicios, setWrittenExercicios] = useState('');
-  const [writtenQuiz, setWrittenQuiz] = useState([]);
   const [writtenCategory, setWrittenCategory] = useState('Educação Financeira');
   const [writtenLevel, setWrittenLevel] = useState('Iniciante');
   const [writtenPlanAllowed, setWrittenPlanAllowed] = useState('Gratuito');
@@ -747,9 +585,6 @@ export default function AcademiaView({ currentUser }) {
 
       setWrittenLessons(data || []);
 
-      console.log("AULAS ESCRITAS SUPABASE:", data);
-
-
     } catch (err) {
       console.error('Erro fetchWrittenLessons:', err);
       setWrittenLessons([]);
@@ -769,7 +604,7 @@ export default function AcademiaView({ currentUser }) {
 
       // If error (e.g. table not created yet), just show empty list
       if (vError) {
-        console.warn('Tabela videos não encontrada ou erro:', vError.message);
+        console.warn('Tabela videos nÃ£o encontrada ou erro:', vError.message);
         setVideos([]);
         setLoadingVideos(false);
         return;
@@ -860,7 +695,7 @@ export default function AcademiaView({ currentUser }) {
   const handleAddVideo = async (e) => {
     e.preventDefault();
     if (!title || !videoFile) {
-      alert('Preencha o título e carregue o ficheiro de vídeo.');
+      alert('Preencha o tÃ­tulo e carregue o ficheiro de vÃ­deo.');
       return;
     }
 
@@ -910,14 +745,14 @@ export default function AcademiaView({ currentUser }) {
 
       if (dbErr) throw dbErr;
 
-      alert('Vídeo adicionado com sucesso!');
+      alert('VÃ­deo adicionado com sucesso!');
       setShowAddForm(false);
       resetForm();
       fetchVideos();
       fetchWrittenLessons();
     } catch (err) {
       console.error('Error adding video:', err);
-      alert('Erro ao carregar vídeo: ' + err.message);
+      alert('Erro ao carregar vÃ­deo: ' + err.message);
     } finally {
       setSubmitting(false);
     }
@@ -932,7 +767,7 @@ export default function AcademiaView({ currentUser }) {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Vídeo removido!');
+      alert('VÃ­deo removido!');
       fetchVideos();
       fetchWrittenLessons();
     } catch (err) {
@@ -940,159 +775,18 @@ export default function AcademiaView({ currentUser }) {
     }
   };
 
-  // Admin: Edit video handler
-  const handleEditVideo = (v) => {
-    setEditingVideo(v);
-    setTitle(v.title || '');
-    setDescription(v.description || '');
-    setCategory(v.category || 'Educação Financeira');
-    setLevel(v.level || 'Iniciante');
-    setSortOrder(String(v.order_index || 0));
-    setDuration(String(v.duration_seconds || v.duration || 0));
-    setPlanAllowed(v.plan_allowed || 'Gratuito');
-    setVideoFile(null);
-    setThumbnailFile(null);
-    setShowAddForm(true);
-  };
-
-  // Admin: Update video handler
-  const handleUpdateVideo = async (e) => {
-    e.preventDefault();
-    if (!title) {
-      alert('Preencha o título da aula.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      let videoUrl = editingVideo.youtube_url || '';
-      let thumbnailUrl = editingVideo.thumbnail_url || '';
-
-      if (videoFile) {
-        const videoExt = videoFile.name.split('.').pop();
-        const videoName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${videoExt}`;
-        const { error: vUploadErr } = await supabase.storage.from('videos').upload(videoName, videoFile);
-        if (vUploadErr) throw vUploadErr;
-        const { data: vUrlData } = supabase.storage.from('videos').getPublicUrl(videoName);
-        videoUrl = vUrlData.publicUrl;
-      }
-
-      if (thumbnailFile) {
-        const thumbExt = thumbnailFile.name.split('.').pop();
-        const thumbName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${thumbExt}`;
-        const { error: tUploadErr } = await supabase.storage.from('thumbnails').upload(thumbName, thumbnailFile);
-        if (tUploadErr) throw tUploadErr;
-        const { data: tUrlData } = supabase.storage.from('thumbnails').getPublicUrl(thumbName);
-        thumbnailUrl = tUrlData.publicUrl;
-      }
-
-      const { error: dbErr } = await supabase
-        .from('videos')
-        .update({
-          title,
-          description,
-          category,
-          level,
-          order_index: parseInt(sortOrder) || 0,
-          duration_seconds: parseInt(duration) || 0,
-          plan_allowed: planAllowed,
-          youtube_url: videoUrl,
-          thumbnail_url: thumbnailUrl
-        })
-        .eq('id', editingVideo.id);
-
-      if (dbErr) throw dbErr;
-      alert('Vídeo atualizado com sucesso!');
-      setEditingVideo(null);
-      setShowAddForm(false);
-      resetForm();
-      fetchVideos();
-    } catch (err) {
-      console.error('Error updating video:', err);
-      alert('Erro ao atualizar vídeo: ' + err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Admin: Delete written lesson
-  const handleDeleteWrittenLesson = async (id) => {
-    if (!window.confirm('Tem a certeza que deseja apagar esta aula escrita?')) return;
-    try {
-      const { error } = await supabase.from('written_lessons').delete().eq('id', id);
-      if (error) throw error;
-      alert('Aula escrita removida!');
-      fetchWrittenLessons();
-    } catch (err) {
-      console.error('Error deleting written lesson:', err);
-    }
-  };
-
-  // Admin: Edit written lesson - populate form and open
-  const handleEditWrittenLesson = (lesson) => {
-    setWrittenTitle(lesson.title || '');
-    setWrittenDescription(lesson.description || '');
-    setWrittenContent(lesson.content || '');
-    setWrittenCategory(lesson.category || 'Educação Financeira');
-    setWrittenLevel(lesson.level || 'Iniciante');
-    setWrittenPlanAllowed(lesson.plan_allowed || 'Gratuito');
-    try {
-      const parsed = JSON.parse(lesson.exercicios || '[]');
-      setWrittenExercicios(Array.isArray(parsed) ? parsed.join('\n') : '');
-    } catch { setWrittenExercicios(''); }
-    try {
-      const parsed = JSON.parse(lesson.quiz || '[]');
-      setWrittenQuiz(Array.isArray(parsed) ? parsed : []);
-    } catch { setWrittenQuiz([]); }
-    setWrittenImageFile(null);
-    setShowWrittenForm(true);
-  };
-
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setCategory('Educação Financeira');
+    setCategory('EducaÃ§Ã£o Financeira');
     setLevel('Iniciante');
     setSortOrder('0');
     setDuration('0');
     setPlanAllowed('Gratuito');
     setVideoFile(null);
     setThumbnailFile(null);
-    setEditingVideo(null);
   };
 
-
-  const addQuizQuestion = () => {
-    setWrittenQuiz(prev => [...prev, { pergunta: '', opcoes: ['', '', ''], correto: 0, explicacao: '' }]);
-  };
-
-  const removeQuizQuestion = (idx) => {
-    setWrittenQuiz(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  const updateQuizQuestion = (idx, field, value) => {
-    setWrittenQuiz(prev => prev.map((q, i) => i === idx ? { ...q, [field]: value } : q));
-  };
-
-  const updateQuizOption = (qIdx, oIdx, value) => {
-    setWrittenQuiz(prev => prev.map((q, i) => {
-      if (i !== qIdx) return q;
-      const opcoes = [...q.opcoes];
-      opcoes[oIdx] = value;
-      return { ...q, opcoes };
-    }));
-  };
-
-  const resetWrittenForm = () => {
-    setWrittenTitle('');
-    setWrittenDescription('');
-    setWrittenContent('');
-    setWrittenExercicios('');
-    setWrittenQuiz([]);
-    setWrittenCategory('Educação Financeira');
-    setWrittenLevel('Iniciante');
-    setWrittenPlanAllowed('Gratuito');
-    setWrittenImageFile(null);
-  };
 
   // Admin: Create written lesson
   const handleAddWrittenLesson = async (e) => {
@@ -1125,26 +819,16 @@ export default function AcademiaView({ currentUser }) {
         imageUrl = data.publicUrl;
       }
 
-      const exerciciosArray = writtenExercicios
-        .split('\n')
-        .map(s => s.trim())
-        .filter(Boolean);
-
-      const quizArray = writtenQuiz.filter(q => q.pergunta.trim());
-
       const { error } = await supabase
         .from('written_lessons')
         .insert([{
           title: writtenTitle,
           description: writtenDescription,
           content: writtenContent,
-          exercicios: JSON.stringify(exerciciosArray),
-          quiz: JSON.stringify(quizArray),
           image_url: imageUrl,
           category: writtenCategory,
           level: writtenLevel,
           plan_allowed: writtenPlanAllowed,
-          is_published: true,
           created_by: currentUser.id
         }]);
 
@@ -1192,21 +876,21 @@ export default function AcademiaView({ currentUser }) {
           </div>
           <div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Academia Financeira</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Evolua a sua literacia financeira com aulas escritas e vídeos interativos</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Evolua a sua literacia financeira com aulas escritas e vÃ­deos interativos</p>
           </div>
         </div>
 
         {/* Sub-tabs menu */}
         <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-          <button onClick={() => setActiveModule('videos')} style={{ background: activeModule === 'videos' ? 'var(--color-accent)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>🎬 Aulas em Vídeo</button>
-          <button onClick={() => setActiveModule('escrito')} style={{ background: activeModule === 'escrito' ? 'var(--color-accent)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>📖 Formação Escrita</button>
+          <button onClick={() => setActiveModule('videos')} style={{ background: activeModule === 'videos' ? 'var(--color-accent)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>ðŸŽ¥ Aulas em VÃ­deo</button>
+          <button onClick={() => setActiveModule('escrito')} style={{ background: activeModule === 'escrito' ? 'var(--color-accent)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>ðŸ“– FormaÃ§Ã£o Escrita</button>
           {isAdmin && (
-            <button onClick={() => setActiveModule('admin')} style={{ background: activeModule === 'admin' ? 'rgba(245,158,11,0.2)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#f59e0b', fontSize: '0.82rem', fontWeight: 600 }}>⚙️ Painel Admin</button>
+            <button onClick={() => setActiveModule('admin')} style={{ background: activeModule === 'admin' ? 'rgba(245,158,11,0.2)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#f59e0b', fontSize: '0.82rem', fontWeight: 600 }}>âš™ï¸ Painel Admin</button>
           )}
         </div>
       </div>
 
-      {/* MODULO 1: VÍDEOS */}
+      {/* â”€â”€â”€ MODULO 1: VÃDEOS â”€â”€â”€ */}
       {activeModule === 'videos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {selectedVideo ? (
@@ -1230,9 +914,9 @@ export default function AcademiaView({ currentUser }) {
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedVideo.title}</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '6px', lineHeight: 1.6 }}>{selectedVideo.description}</p>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  <span>📋 Categoria: {selectedVideo.category}</span>
-                  <span>📊 Nível: {selectedVideo.level}</span>
-                  <span>⏱ Duração: {Math.round(selectedVideo.duration / 60)} min</span>
+                  <span>ðŸ·ï¸ Categoria: {selectedVideo.category}</span>
+                  <span>ðŸ“Š NÃ­vel: {selectedVideo.level}</span>
+                  <span>â± DuraÃ§Ã£o: {Math.round(selectedVideo.duration / 60)} min</span>
                 </div>
               </div>
             </div>
@@ -1240,7 +924,7 @@ export default function AcademiaView({ currentUser }) {
             <>
               {/* Category filters */}
               <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-                {['all', 'Educação Financeira', 'Investimentos', 'Empresas', 'Impostos', 'Poupar Dinheiro', 'Planeamento Financeiro', 'Dívidas', 'Orçamento', 'Academia'].map(cat => (
+                {['all', 'EducaÃ§Ã£o Financeira', 'Investimentos', 'Empresas', 'Impostos', 'Poupar Dinheiro', 'Planeamento Financeiro', 'DÃ­vidas', 'OrÃ§amento', 'Academia'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setVideoCategory(cat)}
@@ -1258,7 +942,7 @@ export default function AcademiaView({ currentUser }) {
               {loadingVideos ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><Loader2 className="animate-spin" size={24} /></div>
               ) : filteredVideos.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Sem vídeos disponíveis nesta categoria.</div>
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Sem vÃ­deos disponÃ­veis nesta categoria.</div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                   {filteredVideos.map(v => {
@@ -1273,7 +957,7 @@ export default function AcademiaView({ currentUser }) {
                         className="glass-panel"
                         onClick={() => {
                           if (isLocked) {
-                            alert('Esta aula em vídeo é exclusiva para utilizadores Pro.');
+                            alert('Esta aula em vÃ­deo Ã© exclusiva para utilizadores Pro.');
                             return;
                           }
                           setSelectedVideo(v);
@@ -1319,7 +1003,7 @@ export default function AcademiaView({ currentUser }) {
                           </div>
                           <h4 style={{ fontSize: '0.88rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h4>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                            <span>⏱ Duração: {Math.round(v.duration / 60)} min</span>
+                            <span>â± DuraÃ§Ã£o: {Math.round(v.duration / 60)} min</span>
                             <span>{v.level}</span>
                           </div>
 
@@ -1503,18 +1187,18 @@ export default function AcademiaView({ currentUser }) {
         </div>
       )}
 
-      {/* MODULO 3: ADMIN PANEL */}
+      {/* â”€â”€â”€ MODULO 3: ADMIN PANEL (VIDEOS UPLOAD) â”€â”€â”€ */}
       {activeModule === 'admin' && isAdmin && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
           {/* Quick Metrics */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Visualizações Totais</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>VisualizaÃ§Ãµes Totais</span>
               <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-accent)' }}>{adminStats.totalViews}</span>
             </div>
             <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Vídeos Concluídos</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>VÃ­deos ConcluÃ­dos</span>
               <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-success)' }}>{adminStats.completed}</span>
             </div>
             <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -1524,7 +1208,7 @@ export default function AcademiaView({ currentUser }) {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Aulas em Vídeo Publicadas</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Aulas em VÃ­deo Publicadas</h3>
             <button onClick={() => { resetForm(); setShowAddForm(!showAddForm); }} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Plus size={16} /> Adicionar Nova Aula
             </button>
@@ -1535,33 +1219,33 @@ export default function AcademiaView({ currentUser }) {
           </div>
 
           {showAddForm && (
-            <form onSubmit={editingVideo ? handleUpdateVideo : handleAddVideo} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <h4 style={{ fontWeight: 800 }}>{editingVideo ? 'Editar Vídeo' : 'Novo Vídeo para a Academia'}</h4>
+            <form onSubmit={handleAddVideo} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <h4 style={{ fontWeight: 800 }}>Novo VÃ­deo para a Academia</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Título da Aula</label>
+                  <label className="form-label">TÃ­tulo da Aula</label>
                   <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="form-input" required />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">Categoria</label>
                   <select value={category} onChange={e => setCategory(e.target.value)} className="form-input">
-                    {['Educação Financeira', 'Investimentos', 'Empresas', 'Impostos', 'Poupar Dinheiro', 'Planeamento Financeiro', 'Dívidas', 'Orçamento', 'Academia'].map(c => (
+                    {['EducaÃ§Ã£o Financeira', 'Investimentos', 'Empresas', 'Impostos', 'Poupar Dinheiro', 'Planeamento Financeiro', 'DÃ­vidas', 'OrÃ§amento', 'Academia'].map(c => (
                       <option key={c}>{c}</option>
                     ))}
                   </select>
                 </div>
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Descrição / Objetivos</label>
+                <label className="form-label">DescriÃ§Ã£o / Objetivos</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} className="form-input" rows="3" />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Nível</label>
+                  <label className="form-label">NÃ­vel</label>
                   <select value={level} onChange={e => setLevel(e.target.value)} className="form-input">
                     <option>Iniciante</option>
-                    <option>Intermédio</option>
-                    <option>Avançado</option>
+                    <option>IntermÃ©dio</option>
+                    <option>AvanÃ§ado</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -1572,13 +1256,13 @@ export default function AcademiaView({ currentUser }) {
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Duração (em segundos)</label>
+                  <label className="form-label">DuraÃ§Ã£o (em segundos)</label>
                   <input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="form-input" />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Ficheiro de Vídeo</label>
+                  <label className="form-label">Ficheiro de VÃ­deo</label>
                   <input type="file" accept="video/*" onChange={e => setVideoFile(e.target.files[0])} className="form-input" required />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -1597,174 +1281,128 @@ export default function AcademiaView({ currentUser }) {
           )}
           {showWrittenForm && (
             <form onSubmit={handleAddWrittenLesson} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h4 style={{ fontWeight: 800 }}>Nova Aula Escrita</h4>
-                <button type="button" onClick={resetWrittenForm} className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Limpar</button>
-              </div>
+              <h4 style={{ fontWeight: 800 }}>Nova Aula Escrita</h4>
 
               <div className="form-group">
                 <label className="form-label">Título</label>
-                <input type="text" value={writtenTitle} onChange={e => setWrittenTitle(e.target.value)} className="form-input" required />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Descrição</label>
-                <textarea value={writtenDescription} onChange={e => setWrittenDescription(e.target.value)} className="form-input" rows="3" />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Conteúdo da Aula</label>
-                <textarea value={writtenContent} onChange={e => setWrittenContent(e.target.value)} className="form-input" rows="10" required />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Exercícios (um por linha)</label>
-                <textarea
-                  value={writtenExercicios}
-                  onChange={e => setWrittenExercicios(e.target.value)}
+                <input
+                  type="text"
+                  value={writtenTitle}
+                  onChange={e => setWrittenTitle(e.target.value)}
                   className="form-input"
-                  rows="4"
-                  placeholder="Explique por que o escambo é ineficiente.&#10;Liste as 5 características de um bom dinheiro.&#10;Explique a diferença entre dinheiro e riqueza."
+                  required
                 />
               </div>
 
               <div className="form-group">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label className="form-label" style={{ marginBottom: 0 }}>Quiz (Perguntas de múltipla escolha)</label>
-                  <button type="button" onClick={addQuizQuestion} className="btn btn-primary" style={{ padding: '4px 10px', fontSize: '0.78rem' }}>
-                    <Plus size={14} /> Adicionar Pergunta
-                  </button>
-                </div>
-                {writtenQuiz.length === 0 && (
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', padding: '8px' }}>Nenhuma pergunta adicionada. Clique em "Adicionar Pergunta".</p>
-                )}
-                {writtenQuiz.map((q, qi) => (
-                  <div key={qi} style={{ marginBottom: '12px', padding: '12px', border: '1px solid var(--border-color)', borderRadius: '10px', background: 'rgba(255,255,255,0.02)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Pergunta #{qi + 1}</span>
-                      <button type="button" onClick={() => removeQuizQuestion(qi)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', fontSize: '0.78rem' }}>
-                        <Trash2 size={14} /> Remover
-                      </button>
-                    </div>
-                    <input
-                      type="text" placeholder="Digite a pergunta..."
-                      value={q.pergunta} onChange={e => updateQuizQuestion(qi, 'pergunta', e.target.value)}
-                      className="form-input" style={{ marginBottom: '8px', width: '100%' }}
-                    />
-                    {q.opcoes.map((op, oi) => (
-                      <div key={oi} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <input
-                          type="radio" name={`quiz-correct-${qi}`} checked={q.correto === oi}
-                          onChange={() => updateQuizQuestion(qi, 'correto', oi)}
-                        />
-                        <input
-                          type="text" placeholder={`Opção ${oi + 1}`}
-                          value={op} onChange={e => updateQuizOption(qi, oi, e.target.value)}
-                          className="form-input" style={{ flex: 1, padding: '6px 10px', fontSize: '0.82rem' }}
-                        />
-                      </div>
-                    ))}
-                    <input
-                      type="text" placeholder="Explicação da resposta correta (opcional)"
-                      value={q.explicacao} onChange={e => updateQuizQuestion(qi, 'explicacao', e.target.value)}
-                      className="form-input" style={{ marginTop: '6px', width: '100%', fontSize: '0.82rem' }}
-                    />
-                  </div>
-                ))}
+                <label className="form-label">Descrição</label>
+                <textarea
+                  value={writtenDescription}
+                  onChange={e => setWrittenDescription(e.target.value)}
+                  className="form-input"
+                  rows="3"
+                />
+              </div>
+
+
+              <div className="form-group">
+                <label className="form-label">Conteúdo da Aula</label>
+                <textarea
+                  value={writtenContent}
+                  onChange={e => setWrittenContent(e.target.value)}
+                  className="form-input"
+                  rows="10"
+                  required
+                />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                <select value={writtenCategory} onChange={e => setWrittenCategory(e.target.value)} className="form-input">
+
+                <select
+                  value={writtenCategory}
+                  onChange={e => setWrittenCategory(e.target.value)}
+                  className="form-input"
+                >
                   <option>Educação Financeira</option>
                   <option>Investimentos</option>
                   <option>Empresas</option>
                   <option>Impostos</option>
-                  <option>Poupar Dinheiro</option>
-                  <option>Planeamento Financeiro</option>
-                  <option>Dívidas</option>
-                  <option>Orçamento</option>
-                  <option>Academia</option>
                 </select>
-                <select value={writtenLevel} onChange={e => setWrittenLevel(e.target.value)} className="form-input">
+
+                <select
+                  value={writtenLevel}
+                  onChange={e => setWrittenLevel(e.target.value)}
+                  className="form-input"
+                >
                   <option>Iniciante</option>
                   <option>Intermédio</option>
                   <option>Avançado</option>
                 </select>
-                <select value={writtenPlanAllowed} onChange={e => setWrittenPlanAllowed(e.target.value)} className="form-input">
+
+                <select
+                  value={writtenPlanAllowed}
+                  onChange={e => setWrittenPlanAllowed(e.target.value)}
+                  className="form-input"
+                >
                   <option>Gratuito</option>
                   <option>Pro</option>
                 </select>
+
               </div>
+
 
               <div className="form-group">
                 <label className="form-label">Imagem da Aula</label>
-                <input type="file" accept="image/*" onChange={e => setWrittenImageFile(e.target.files[0])} className="form-input" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => setWrittenImageFile(e.target.files[0])}
+                  className="form-input"
+                />
               </div>
 
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button type="button" onClick={() => { setShowWrittenForm(false); resetWrittenForm(); }} className="btn btn-secondary">Cancelar</button>
-                <button type="submit" disabled={submitting} className="btn btn-primary">
+                <button
+                  type="button"
+                  onClick={() => setShowWrittenForm(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn btn-primary"
+                >
                   {submitting ? 'A publicar...' : 'Publicar Aula Escrita'}
                 </button>
               </div>
+
             </form>
           )}
 
 
 /* Videos Grid with actions */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '8px' }}>Aulas em Vídeo</h4>
             {videos.map(v => (
               <div key={v.id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px' }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{v.title}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '10px', marginTop: '4px' }}>
-                    <span>📂 {v.category}</span>
-                    <span>📊 {v.level}</span>
-                    <span>🔑 Acesso: {v.plan_allowed}</span>
+                    <span>ðŸ“‚ {v.category}</span>
+                    <span>ðŸ“Š {v.level}</span>
+                    <span>ðŸ”‘ Acesso: {v.plan_allowed}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => handleEditVideo(v)} className="btn btn-secondary" style={{ padding: '6px', color: 'var(--color-accent)' }}>
-                    <Edit2 size={16} />
-                  </button>
                   <button onClick={() => handleDeleteVideo(v.id)} className="btn btn-secondary" style={{ padding: '6px', color: 'var(--color-error)' }}>
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
             ))}
-            {videos.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Nenhum vídeo publicado.</div>
-            )}
-          </div>
-
-          {/* Written Lessons Management */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: '8px' }}>Aulas Escritas</h4>
-            {writtenLessons.map(wl => (
-              <div key={wl.id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{wl.title}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '10px', marginTop: '4px' }}>
-                    <span>📂 {wl.category}</span>
-                    <span>📊 {wl.level}</span>
-                    <span>🔑 Acesso: {wl.plan_allowed}</span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button onClick={() => handleEditWrittenLesson(wl)} className="btn btn-secondary" style={{ padding: '6px', color: 'var(--color-accent)' }}>
-                    <Edit2 size={16} />
-                  </button>
-                  <button onClick={() => handleDeleteWrittenLesson(wl.id)} className="btn btn-secondary" style={{ padding: '6px', color: 'var(--color-error)' }}>
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-            {writtenLessons.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Nenhuma aula escrita publicada.</div>
-            )}
           </div>
         </div>
       )}

@@ -4,7 +4,7 @@ import {
   Monitor, Smartphone, Apple, User, Mail, Phone, Lock, Eye, EyeOff,
   Save, Globe, CheckCircle, Cloud, CloudOff, Database, ExternalLink,
   AlertTriangle, ShieldCheck, TestTube, BookOpen, MessageSquare, Send,
-  CheckCheck, Check, Loader2
+  CheckCheck, Check, Loader2, Users, Copy, RefreshCw
 } from 'lucide-react';
 
 import GuiaAppView from './GuiaAppView';
@@ -27,6 +27,7 @@ export default function ConfiguracoesView({
   const [editNome, setEditNome] = useState(currentUser?.Nome || '');
   const [editTelefone, setEditTelefone] = useState(currentUser?.Telefone || '');
   const [editPais, setEditPais] = useState(currentUser?.Pais || 'Angola');
+  const [familyCode, setFamilyCode] = useState(currentUser?.family_code || '');
   const [editSenhaAtual, setEditSenhaAtual] = useState('');
   const [editSenhaNova, setEditSenhaNova] = useState('');
   const [editSenhaConfirm, setEditSenhaConfirm] = useState('');
@@ -34,6 +35,31 @@ export default function ConfiguracoesView({
   const [profileSaved, setProfileSaved] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [showGuia, setShowGuia] = useState(false);
+  const [familyCodeCopied, setFamilyCodeCopied] = useState(false);
+
+  // Sync profile state when currentUser updates
+  useEffect(() => {
+    if (currentUser) {
+      setEditNome(currentUser.Nome || '');
+      setEditTelefone(currentUser.Telefone || '');
+      setEditPais(currentUser.Pais || 'Angola');
+      setFamilyCode(currentUser.family_code || '');
+    }
+  }, [currentUser]);
+
+  // Generate a unique family code (e.g. FAM-A3X9K2)
+  const generateFamilyCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const code = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    setFamilyCode('FAM-' + code);
+  };
+
+  const copyFamilyCode = () => {
+    if (!familyCode) return;
+    navigator.clipboard?.writeText(familyCode).catch(() => {});
+    setFamilyCodeCopied(true);
+    setTimeout(() => setFamilyCodeCopied(false), 2000);
+  };
 
   // Cloud Sync state
   const [sbUrl, setSbUrl] = useState(() => localStorage.getItem('financas_supabase_url') || '');
@@ -117,6 +143,7 @@ export default function ConfiguracoesView({
           full_name: editNome.trim(),
           phone: editTelefone.trim(),
           country: editPais,
+          family_code: familyCode.trim() || null,
         };
 
         const { error } = await supabase
@@ -145,7 +172,7 @@ export default function ConfiguracoesView({
         // Local fallback
         setUsers(prev => prev.map(u => {
           if (u.Email !== userEmail) return u;
-          return { ...u, Nome: editNome.trim(), Telefone: editTelefone.trim(), Pais: editPais };
+          return { ...u, Nome: editNome.trim(), Telefone: editTelefone.trim(), Pais: editPais, family_code: familyCode.trim() || null };
         }));
       }
 
@@ -369,6 +396,48 @@ export default function ConfiguracoesView({
                   </select>
                 </div>
               </div>
+            </div>
+
+            {/* Family Code */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Users size={13} style={{ color: 'var(--color-accent)' }} />
+                Código de Família
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 400, marginLeft: '4px' }}>(partilhe com membros da família)</span>
+              </label>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                  <Users size={14} style={{ position: 'absolute', left: '12px', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    value={familyCode}
+                    onChange={e => setFamilyCode(e.target.value.toUpperCase())}
+                    placeholder="Gere ou insira um código (ex: FAM-AB3X9K)"
+                    className="form-input"
+                    style={{ paddingLeft: '34px', fontFamily: 'monospace', letterSpacing: '1px', fontSize: '0.88rem' }}
+                    maxLength={12}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={generateFamilyCode}
+                  title="Gerar novo código"
+                  style={{ padding: '10px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', color: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                >
+                  <RefreshCw size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={copyFamilyCode}
+                  title="Copiar código"
+                  style={{ padding: '10px', borderRadius: '8px', background: familyCodeCopied ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${familyCodeCopied ? 'rgba(16,185,129,0.4)' : 'var(--border-color)'}`, cursor: 'pointer', color: familyCodeCopied ? 'var(--color-success)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                >
+                  {familyCodeCopied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                </button>
+              </div>
+              <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: '5px', lineHeight: 1.5 }}>
+                Membros da família com este código terão acesso de <strong>leitura</strong> aos seus dados. Guarde e não partilhe com desconhecidos.
+              </p>
             </div>
           </div>
 

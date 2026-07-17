@@ -1,0 +1,105 @@
+﻿
+          {showWrittenForm && (
+            <form onSubmit={handleAddWrittenLesson} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <h4 style={{ fontWeight: 800 }}>Nova Aula Escrita</h4>
+
+              <div className="form-group">
+                <label className="form-label">Título</label>
+                <input
+                  type="text"
+                  value={writtenTitle}
+                  onChange={e => setWrittenTitle(e.target.value)}
+                  className="form-input"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Descrição</label>
+                <textarea
+                  value={writtenDescription}
+                  onChange={e => setWrittenDescription(e.target.value)}
+                  className="form-input"
+                  rows="3"
+                />
+              </div>
+
+
+              <div className="form-group">
+                <label className="form-label">Conteúdo da Aula</label>
+                <textarea
+                  value={writtenContent}
+                  onChange={e => setWrittenContent(e.target.value)}
+                  className="form-input"
+                  rows="10"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+
+                <select
+                  value={writtenCategory}
+                  onChange={e => setWrittenCategory(e.target.value)}
+                  className="form-input"
+                >
+                  <option>Educação Financeira</option>
+                  <option>Investimentos</option>
+                  <option>Empresas</option>
+                  <option>Impostos</option>
+                </select>
+
+                <select
+                  value={writtenLevel}
+                  onChange={e => setWrittenLevel(e.target.value)}
+                  className="form-input"
+                >
+                  <option>Iniciante</option>
+                  <option>Intermédio</option>
+                  <option>Avançado</option>
+                </select>
+
+                <select
+                  value={writtenPlanAllowed}
+                  onChange={e => setWrittenPlanAllowed(e.target.value)}
+                  className="form-input"
+                >
+                  <option>Gratuito</option>
+                  <option>Pro</option>
+                </select>
+
+              </div>
+
+
+              <div className="form-group">
+                <label className="form-label">Imagem da Aula</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => setWrittenImageFile(e.target.files[0])}
+                  className="form-input"
+                />
+              </div>
+
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowWrittenForm(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn btn-primary"
+                >
+                  {submitting ? 'A publicar...' : 'Publicar Aula Escrita'}
+                </button>
+              </div>
+
+            </form>
+          )}
+

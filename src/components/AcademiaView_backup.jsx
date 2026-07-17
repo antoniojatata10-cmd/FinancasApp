@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   GraduationCap, BookOpen, ChevronRight, ChevronDown, CheckCircle,
   Lock, Star, Play, Award, BarChart2, Brain, TrendingUp, DollarSign,
@@ -7,67 +7,67 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
-// ─── CURSO COMPLETO (Formação Escrita) ──────────────────────────────────────────
+// â”€â”€â”€ CURSO COMPLETO (FormaÃ§Ã£o Escrita) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const FACULDADES = [
   {
     id: 'F1',
-    nome: 'Faculdade 1 — Fundamentos da Educação Financeira',
-    icon: '📚',
+    nome: 'Faculdade 1 â€” Fundamentos da EducaÃ§Ã£o Financeira',
+    icon: 'ðŸ“š',
     cor: '#6366f1',
-    desc: 'Base teórica essencial sobre dinheiro, mentalidade e psicologia financeira.',
+    desc: 'Base teÃ³rica essencial sobre dinheiro, mentalidade e psicologia financeira.',
     aulas: [
       {
         id: 'F1A1',
-        titulo: 'O Que É Dinheiro',
+        titulo: 'O Que Ã‰ Dinheiro',
         duracao: '45 min',
         nivel: 'Iniciante',
         objetivos: [
           'Compreender o conceito de dinheiro',
-          'Entender a evolução histórica do dinheiro',
-          'Conhecer as características que tornam algo um dinheiro',
-          'Compreender a diferença entre riqueza e dinheiro',
+          'Entender a evoluÃ§Ã£o histÃ³rica do dinheiro',
+          'Conhecer as caracterÃ­sticas que tornam algo um dinheiro',
+          'Compreender a diferenÃ§a entre riqueza e dinheiro',
         ],
         conteudo: [
           {
             tipo: 'intro',
-            titulo: 'Introdução',
-            texto: `Imagine que amanhã todo o dinheiro desaparecesse. Sem notas. Sem moedas. Sem cartões. Sem transferências.\n\nComo compraria comida? Como pagaria a internet? Como compraria combustível?\n\nA resposta mostra a importância do dinheiro na sociedade moderna.\n\n**Dinheiro é qualquer coisa aceite por uma comunidade como meio de troca para aquisição de bens e serviços.** Em termos simples: Dinheiro é uma ferramenta que facilita trocas.`,
+            titulo: 'IntroduÃ§Ã£o',
+            texto: `Imagine que amanhÃ£ todo o dinheiro desaparecesse. Sem notas. Sem moedas. Sem cartÃµes. Sem transferÃªncias.\n\nComo compraria comida? Como pagaria a internet? Como compraria combustÃ­vel?\n\nA resposta mostra a importÃ¢ncia do dinheiro na sociedade moderna.\n\n**Dinheiro Ã© qualquer coisa aceite por uma comunidade como meio de troca para aquisiÃ§Ã£o de bens e serviÃ§os.** Em termos simples: Dinheiro Ã© uma ferramenta que facilita trocas.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 1 — A História do Dinheiro',
-            texto: `**FASE 1 – ESCAMBO**\nAntes do dinheiro, as pessoas utilizavam o escambo — troca directa. Exemplo: João troca 10 kg de milho por 2 galinhas de Pedro. Problema: E se Pedro não quiser milho? Este problema chama-se **Dupla Coincidência de Necessidades**.\n\n**FASE 2 – DINHEIRO-MERCADORIA**\nCivilizações começaram a usar sal, gado, conchas, chá e tabaco como dinheiro. 💡 Curiosidade: A palavra "salário" vem do latim "salarium" — os soldados romanos recebiam parte do pagamento em sal!\n\n**FASE 3 – METAIS PRECIOSOS**\nOuro e prata tornaram-se padrão porque possuem: Escassez, Durabilidade, Divisibilidade, Transportabilidade e Aceitação universal.\n\n**FASE 4 – PAPEL-MOEDA**\nTransportar grandes quantidades de ouro era perigoso. Os bancos passaram a guardar o ouro e emitir recibos que circulavam como dinheiro.\n\n**FASE 5 – SISTEMA BANCÁRIO MODERNO**\nHoje a maior parte do dinheiro existe digitalmente. O seu saldo bancário de 100.000 Kz raramente existe fisicamente — é apenas um registo electrónico.`,
+            titulo: 'CapÃ­tulo 1 â€” A HistÃ³ria do Dinheiro',
+            texto: `**FASE 1 â€“ ESCAMBO**\nAntes do dinheiro, as pessoas utilizavam o escambo â€” troca directa. Exemplo: JoÃ£o troca 10 kg de milho por 2 galinhas de Pedro. Problema: E se Pedro nÃ£o quiser milho? Este problema chama-se **Dupla CoincidÃªncia de Necessidades**.\n\n**FASE 2 â€“ DINHEIRO-MERCADORIA**\nCivilizaÃ§Ãµes comeÃ§aram a usar sal, gado, conchas, chÃ¡ e tabaco como dinheiro. ðŸ’¡ Curiosidade: A palavra "salÃ¡rio" vem do latim "salarium" â€” os soldados romanos recebiam parte do pagamento em sal!\n\n**FASE 3 â€“ METAIS PRECIOSOS**\nOuro e prata tornaram-se padrÃ£o porque possuem: Escassez, Durabilidade, Divisibilidade, Transportabilidade e AceitaÃ§Ã£o universal.\n\n**FASE 4 â€“ PAPEL-MOEDA**\nTransportar grandes quantidades de ouro era perigoso. Os bancos passaram a guardar o ouro e emitir recibos que circulavam como dinheiro.\n\n**FASE 5 â€“ SISTEMA BANCÃRIO MODERNO**\nHoje a maior parte do dinheiro existe digitalmente. O seu saldo bancÃ¡rio de 100.000 Kz raramente existe fisicamente â€” Ã© apenas um registo electrÃ³nico.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 2 — As 3 Funções do Dinheiro',
-            texto: `**1. Meio de Troca** — Serve para comprar bens e serviços: pão, combustível, roupa.\n\n**2. Unidade de Conta** — Permite medir valor: Pão = 500 Kz | Gasolina = 700 Kz | Telemóvel = 300.000 Kz.\n\n**3. Reserva de Valor** — Permite guardar riqueza para uso futuro. Exemplo: guardar dinheiro hoje para comprar uma casa daqui a 5 anos.`,
+            titulo: 'CapÃ­tulo 2 â€” As 3 FunÃ§Ãµes do Dinheiro',
+            texto: `**1. Meio de Troca** â€” Serve para comprar bens e serviÃ§os: pÃ£o, combustÃ­vel, roupa.\n\n**2. Unidade de Conta** â€” Permite medir valor: PÃ£o = 500 Kz | Gasolina = 700 Kz | TelemÃ³vel = 300.000 Kz.\n\n**3. Reserva de Valor** â€” Permite guardar riqueza para uso futuro. Exemplo: guardar dinheiro hoje para comprar uma casa daqui a 5 anos.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 3 — As 5 Características do Bom Dinheiro',
-            texto: `✅ **Escassez** — Não pode ser criado facilmente. O ouro é escasso; areia não é.\n\n✅ **Durabilidade** — Precisa resistir ao tempo. O ouro dura séculos; bananas não.\n\n✅ **Divisibilidade** — Pode ser dividido: 1.000 Kz → 500 Kz → 100 Kz.\n\n✅ **Portabilidade** — Deve ser fácil de transportar.\n\n✅ **Aceitabilidade** — As pessoas precisam de o aceitar.`,
+            titulo: 'CapÃ­tulo 3 â€” As 5 CaracterÃ­sticas do Bom Dinheiro',
+            texto: `âœ… **Escassez** â€” NÃ£o pode ser criado facilmente. O ouro Ã© escasso; areia nÃ£o Ã©.\n\nâœ… **Durabilidade** â€” Precisa resistir ao tempo. O ouro dura sÃ©culos; bananas nÃ£o.\n\nâœ… **Divisibilidade** â€” Pode ser dividido: 1.000 Kz â†’ 500 Kz â†’ 100 Kz.\n\nâœ… **Portabilidade** â€” Deve ser fÃ¡cil de transportar.\n\nâœ… **Aceitabilidade** â€” As pessoas precisam de o aceitar.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 4 — Dinheiro vs Riqueza',
-            texto: `Muitas pessoas confundem os dois. Não são a mesma coisa!\n\n**Dinheiro** = Ferramenta de troca.\n**Riqueza** = Conjunto de activos que geram valor: empresas, imóveis, terrenos, acções, direitos autorais.\n\n**Exemplo:**\nPessoa A: possui 20 milhões Kz na conta.\nPessoa B: possui 5 apartamentos alugados.\nQuem é mais rico? Normalmente Pessoa B — tem activos geradores de renda.\n\n**Estudo de caso:**\nJoão ganha 500.000 Kz/mês e gasta 500.000 Kz. Património: 0 Kz.\nPedro ganha 300.000 Kz e investe 100.000 Kz durante 20 anos. Quem ficará mais rico? **Pedro.** Porque acumula activos.`,
+            titulo: 'CapÃ­tulo 4 â€” Dinheiro vs Riqueza',
+            texto: `Muitas pessoas confundem os dois. NÃ£o sÃ£o a mesma coisa!\n\n**Dinheiro** = Ferramenta de troca.\n**Riqueza** = Conjunto de activos que geram valor: empresas, imÃ³veis, terrenos, acÃ§Ãµes, direitos autorais.\n\n**Exemplo:**\nPessoa A: possui 20 milhÃµes Kz na conta.\nPessoa B: possui 5 apartamentos alugados.\nQuem Ã© mais rico? Normalmente Pessoa B â€” tem activos geradores de renda.\n\n**Estudo de caso:**\nJoÃ£o ganha 500.000 Kz/mÃªs e gasta 500.000 Kz. PatrimÃ³nio: 0 Kz.\nPedro ganha 300.000 Kz e investe 100.000 Kz durante 20 anos. Quem ficarÃ¡ mais rico? **Pedro.** Porque acumula activos.`,
           },
         ],
         exercicios: [
-          'Explique por que o escambo é ineficiente.',
-          'Liste as 5 características de um bom dinheiro.',
-          'Explique a diferença entre dinheiro e riqueza.',
-          'Uma comunidade utiliza bananas como dinheiro. Que problemas surgirão?',
+          'Explique por que o escambo Ã© ineficiente.',
+          'Liste as 5 caracterÃ­sticas de um bom dinheiro.',
+          'Explique a diferenÃ§a entre dinheiro e riqueza.',
+          'Uma comunidade utiliza bananas como dinheiro. Que problemas surgirÃ£o?',
           'Se um governo imprimir dinheiro excessivamente, o que pode acontecer?',
         ],
         quiz: [
-          { pergunta: 'O que é escambo?', opcoes: ['Troca directa de bens sem dinheiro', 'Uma moeda medieval', 'Um tipo de investimento'], correto: 0, explicacao: 'Escambo é a troca directa de bens ou serviços sem utilização de dinheiro como intermediário.' },
-          { pergunta: 'Qual das seguintes é uma função do dinheiro?', opcoes: ['Decoração', 'Reserva de Valor', 'Meio de produção'], correto: 1, explicacao: 'O dinheiro serve como Meio de Troca, Unidade de Conta e Reserva de Valor.' },
-          { pergunta: 'Por que o ouro foi historicamente usado como dinheiro?', opcoes: ['Porque é bonito', 'Porque é escasso, durável e divisível', 'Porque os governos decidiram'], correto: 1, explicacao: 'O ouro reúne as características essenciais do bom dinheiro: escassez, durabilidade, divisibilidade e portabilidade.' },
-          { pergunta: 'Qual a diferença entre riqueza e dinheiro?', opcoes: ['São a mesma coisa', 'Riqueza são activos geradores de valor; dinheiro é ferramenta de troca', 'Dinheiro é mais valioso'], correto: 1, explicacao: 'Riqueza é o conjunto de activos que geram valor continuamente, enquanto dinheiro é apenas um meio de troca.' },
+          { pergunta: 'O que Ã© escambo?', opcoes: ['Troca directa de bens sem dinheiro', 'Uma moeda medieval', 'Um tipo de investimento'], correto: 0, explicacao: 'Escambo Ã© a troca directa de bens ou serviÃ§os sem utilizaÃ§Ã£o de dinheiro como intermediÃ¡rio.' },
+          { pergunta: 'Qual das seguintes Ã© uma funÃ§Ã£o do dinheiro?', opcoes: ['DecoraÃ§Ã£o', 'Reserva de Valor', 'Meio de produÃ§Ã£o'], correto: 1, explicacao: 'O dinheiro serve como Meio de Troca, Unidade de Conta e Reserva de Valor.' },
+          { pergunta: 'Por que o ouro foi historicamente usado como dinheiro?', opcoes: ['Porque Ã© bonito', 'Porque Ã© escasso, durÃ¡vel e divisÃ­vel', 'Porque os governos decidiram'], correto: 1, explicacao: 'O ouro reÃºne as caracterÃ­sticas essenciais do bom dinheiro: escassez, durabilidade, divisibilidade e portabilidade.' },
+          { pergunta: 'Qual a diferenÃ§a entre riqueza e dinheiro?', opcoes: ['SÃ£o a mesma coisa', 'Riqueza sÃ£o activos geradores de valor; dinheiro Ã© ferramenta de troca', 'Dinheiro Ã© mais valioso'], correto: 1, explicacao: 'Riqueza Ã© o conjunto de activos que geram valor continuamente, enquanto dinheiro Ã© apenas um meio de troca.' },
         ],
-        leituras: ['The Psychology of Money — Morgan Housel', 'Pai Rico, Pai Pobre — Robert Kiyosaki', 'The Bitcoin Standard — Saifedean Ammous'],
+        leituras: ['The Psychology of Money â€” Morgan Housel', 'Pai Rico, Pai Pobre â€” Robert Kiyosaki', 'The Bitcoin Standard â€” Saifedean Ammous'],
       },
       {
         id: 'F1A2',
@@ -75,8 +75,8 @@ const FACULDADES = [
         duracao: '60 min',
         nivel: 'Iniciante',
         objetivos: [
-          'Compreender as diferenças entre pessoas ricas e pobres na forma de pensar',
-          'Identificar crenças limitantes sobre dinheiro',
+          'Compreender as diferenÃ§as entre pessoas ricas e pobres na forma de pensar',
+          'Identificar crenÃ§as limitantes sobre dinheiro',
           'Entender como os ricos utilizam o dinheiro',
           'Diferenciar rendimento activo de rendimento passivo',
           'Compreender o Quadrante do Fluxo de Caixa',
@@ -84,54 +84,54 @@ const FACULDADES = [
         conteudo: [
           {
             tipo: 'intro',
-            titulo: 'Introdução',
-            texto: `Muitas pessoas acreditam que a riqueza depende apenas de sorte, herança ou salário elevado.\n\nMas a realidade mostra algo diferente. Existem pessoas que ganham muito e permanecem pobres; e outras que ganham pouco e tornam-se milionárias.\n\nA diferença geralmente está na **mentalidade**.`,
+            titulo: 'IntroduÃ§Ã£o',
+            texto: `Muitas pessoas acreditam que a riqueza depende apenas de sorte, heranÃ§a ou salÃ¡rio elevado.\n\nMas a realidade mostra algo diferente. Existem pessoas que ganham muito e permanecem pobres; e outras que ganham pouco e tornam-se milionÃ¡rias.\n\nA diferenÃ§a geralmente estÃ¡ na **mentalidade**.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 1 — O Que É Mentalidade Financeira',
-            texto: `Mentalidade financeira é o conjunto de crenças, hábitos e decisões relacionadas ao dinheiro. Ela influencia como ganha, gasta e investe dinheiro.\n\n**Exemplo:** Duas pessoas recebem 500.000 Kz.\n\nPessoa A: Compra roupas, telemóvel, festas → Após 1 ano: Saldo = 0\nPessoa B: Investe 30%, compra activos, estuda finanças → Após 1 ano: Património crescente\n\nMesmo rendimento. Resultados completamente diferentes.`,
+            titulo: 'CapÃ­tulo 1 â€” O Que Ã‰ Mentalidade Financeira',
+            texto: `Mentalidade financeira Ã© o conjunto de crenÃ§as, hÃ¡bitos e decisÃµes relacionadas ao dinheiro. Ela influencia como ganha, gasta e investe dinheiro.\n\n**Exemplo:** Duas pessoas recebem 500.000 Kz.\n\nPessoa A: Compra roupas, telemÃ³vel, festas â†’ ApÃ³s 1 ano: Saldo = 0\nPessoa B: Investe 30%, compra activos, estuda finanÃ§as â†’ ApÃ³s 1 ano: PatrimÃ³nio crescente\n\nMesmo rendimento. Resultados completamente diferentes.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 2 — Crenças Limitantes',
-            texto: `Muitas pessoas cresceram a ouvir:\n• "Dinheiro é a raiz de todo o mal"\n• "Rico é ladrão"\n• "Quem nasce pobre morre pobre"\n• "Dinheiro não traz felicidade"\n• "Investir é perigoso"\n\nEstas crenças influenciam negativamente as decisões financeiras. Para criar riqueza, é necessário identificar e eliminar estas crenças limitantes.\n\n**Exercício de reflexão:** O que os seus pais diziam sobre dinheiro? O que acredita sobre pessoas ricas?`,
+            titulo: 'CapÃ­tulo 2 â€” CrenÃ§as Limitantes',
+            texto: `Muitas pessoas cresceram a ouvir:\nâ€¢ "Dinheiro Ã© a raiz de todo o mal"\nâ€¢ "Rico Ã© ladrÃ£o"\nâ€¢ "Quem nasce pobre morre pobre"\nâ€¢ "Dinheiro nÃ£o traz felicidade"\nâ€¢ "Investir Ã© perigoso"\n\nEstas crenÃ§as influenciam negativamente as decisÃµes financeiras. Para criar riqueza, Ã© necessÃ¡rio identificar e eliminar estas crenÃ§as limitantes.\n\n**ExercÃ­cio de reflexÃ£o:** O que os seus pais diziam sobre dinheiro? O que acredita sobre pessoas ricas?`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 3 — Pobres, Classe Média e Ricos',
-            texto: `**POBRES:** Recebem → Gastam tudo → Precisam trabalhar novamente\nFluxo: Salário → Despesas\n\n**CLASSE MÉDIA:** Recebem → Compram passivos → Criam mais despesas\nFluxo: Salário → Carro financiado → Casa financiada → Dívidas\n\n**RICOS:** Recebem → Compram activos → Activos geram renda → Compram mais activos\nFluxo: Dinheiro → Activos → Mais dinheiro`,
+            titulo: 'CapÃ­tulo 3 â€” Pobres, Classe MÃ©dia e Ricos',
+            texto: `**POBRES:** Recebem â†’ Gastam tudo â†’ Precisam trabalhar novamente\nFluxo: SalÃ¡rio â†’ Despesas\n\n**CLASSE MÃ‰DIA:** Recebem â†’ Compram passivos â†’ Criam mais despesas\nFluxo: SalÃ¡rio â†’ Carro financiado â†’ Casa financiada â†’ DÃ­vidas\n\n**RICOS:** Recebem â†’ Compram activos â†’ Activos geram renda â†’ Compram mais activos\nFluxo: Dinheiro â†’ Activos â†’ Mais dinheiro`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 4 — Activos vs Passivos',
-            texto: `**ACTIVO** = algo que coloca dinheiro no seu bolso:\n• Imóveis alugados\n• Dividendos\n• Empresas\n• Acções\n• Direitos autorais\n• Negócios digitais\n\n**PASSIVO** = algo que retira dinheiro do seu bolso:\n• Dívidas\n• Empréstimos\n• Carros financiados\n• Cartões de crédito\n\n**Exemplo:** Carro particular (combustível + seguro + manutenção) = Passivo. Táxi/Uber próprio que gera renda = pode ser Activo.`,
+            titulo: 'CapÃ­tulo 4 â€” Activos vs Passivos',
+            texto: `**ACTIVO** = algo que coloca dinheiro no seu bolso:\nâ€¢ ImÃ³veis alugados\nâ€¢ Dividendos\nâ€¢ Empresas\nâ€¢ AcÃ§Ãµes\nâ€¢ Direitos autorais\nâ€¢ NegÃ³cios digitais\n\n**PASSIVO** = algo que retira dinheiro do seu bolso:\nâ€¢ DÃ­vidas\nâ€¢ EmprÃ©stimos\nâ€¢ Carros financiados\nâ€¢ CartÃµes de crÃ©dito\n\n**Exemplo:** Carro particular (combustÃ­vel + seguro + manutenÃ§Ã£o) = Passivo. TÃ¡xi/Uber prÃ³prio que gera renda = pode ser Activo.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 5 — O Quadrante do Fluxo de Caixa (Kiyosaki)',
-            texto: `**E – Empregado:** Troca tempo por dinheiro. Estabilidade mas limite de rendimento.\nExemplos: professor, médico contratado, funcionário público.\n\n**A – Autónomo:** Trabalha por conta própria. Se parar de trabalhar, deixa de ganhar.\nExemplos: mecânico, advogado independente, freelancer.\n\n**D – Dono de Negócio:** Possui sistemas e pessoas a trabalhar. Escalabilidade mas maior responsabilidade.\n\n**I – Investidor:** Dinheiro trabalha para ele. Liberdade financeira quase ilimitada.\n\n**Exemplo:** João (empregado) recebe 500.000 Kz apenas se trabalhar. Pedro (investidor) com 10 apartamentos recebe 2.000.000 Kz mesmo dormindo. Quem tem mais liberdade? **Pedro.**`,
+            titulo: 'CapÃ­tulo 5 â€” O Quadrante do Fluxo de Caixa (Kiyosaki)',
+            texto: `**E â€“ Empregado:** Troca tempo por dinheiro. Estabilidade mas limite de rendimento.\nExemplos: professor, mÃ©dico contratado, funcionÃ¡rio pÃºblico.\n\n**A â€“ AutÃ³nomo:** Trabalha por conta prÃ³pria. Se parar de trabalhar, deixa de ganhar.\nExemplos: mecÃ¢nico, advogado independente, freelancer.\n\n**D â€“ Dono de NegÃ³cio:** Possui sistemas e pessoas a trabalhar. Escalabilidade mas maior responsabilidade.\n\n**I â€“ Investidor:** Dinheiro trabalha para ele. Liberdade financeira quase ilimitada.\n\n**Exemplo:** JoÃ£o (empregado) recebe 500.000 Kz apenas se trabalhar. Pedro (investidor) com 10 apartamentos recebe 2.000.000 Kz mesmo dormindo. Quem tem mais liberdade? **Pedro.**`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Capítulo 6 — O Poder dos Juros Compostos',
-            texto: `Albert Einstein está frequentemente associado à frase: *"Os juros compostos são a oitava maravilha do mundo."*\n\n**Exemplo:** Investindo 100.000 Kz/mês com rentabilidade de 10% ao ano durante 30 anos → acumula dezenas de milhões de Kz.\n\n**O tempo é o maior aliado do investidor.** Quem começa cedo normalmente vence, mesmo com menos capital.`,
+            titulo: 'CapÃ­tulo 6 â€” O Poder dos Juros Compostos',
+            texto: `Albert Einstein estÃ¡ frequentemente associado Ã  frase: *"Os juros compostos sÃ£o a oitava maravilha do mundo."*\n\n**Exemplo:** Investindo 100.000 Kz/mÃªs com rentabilidade de 10% ao ano durante 30 anos â†’ acumula dezenas de milhÃµes de Kz.\n\n**O tempo Ã© o maior aliado do investidor.** Quem comeÃ§a cedo normalmente vence, mesmo com menos capital.`,
           },
         ],
         exercicios: [
-          'Explique a diferença entre activo e passivo com exemplos da sua vida.',
-          'Em qual quadrante (E, A, D, I) está actualmente? Justifique.',
-          'Liste 5 crenças sobre dinheiro que ouviu durante a infância.',
-          'Identifique 3 activos que poderia adquirir nos próximos 5 anos.',
+          'Explique a diferenÃ§a entre activo e passivo com exemplos da sua vida.',
+          'Em qual quadrante (E, A, D, I) estÃ¡ actualmente? Justifique.',
+          'Liste 5 crenÃ§as sobre dinheiro que ouviu durante a infÃ¢ncia.',
+          'Identifique 3 activos que poderia adquirir nos prÃ³ximos 5 anos.',
           'Por que os ricos priorizam activos antes de luxos?',
         ],
         quiz: [
-          { pergunta: 'O que é um activo segundo Kiyosaki?', opcoes: ['Algo que você possui', 'Algo que coloca dinheiro no seu bolso', 'O seu carro particular'], correto: 1, explicacao: 'Um activo é qualquer coisa que gera rendimento ou coloca dinheiro no bolso do proprietário.' },
-          { pergunta: 'No Quadrante do Fluxo de Caixa, quem representa o maior nível de liberdade financeira?', opcoes: ['E (Empregado)', 'A (Autónomo)', 'I (Investidor)'], correto: 2, explicacao: 'O Investidor tem o dinheiro a trabalhar por ele, permitindo liberdade financeira máxima.' },
-          { pergunta: 'Qual é o fluxo financeiro dos ricos?', opcoes: ['Salário → Despesas', 'Dinheiro → Activos → Mais dinheiro', 'Salário → Luxos → Poupança'], correto: 1, explicacao: 'Os ricos focam-se em adquirir activos que geram renda passiva, criando um ciclo de acumulação de riqueza.' },
-          { pergunta: 'O que é uma crença limitante?', opcoes: ['Uma meta financeira', 'Uma crença que bloqueia o crescimento financeiro', 'Um tipo de investimento'], correto: 1, explicacao: 'Crenças limitantes são pensamentos negativos sobre dinheiro que bloqueiam o crescimento financeiro e as decisões inteligentes.' },
+          { pergunta: 'O que Ã© um activo segundo Kiyosaki?', opcoes: ['Algo que vocÃª possui', 'Algo que coloca dinheiro no seu bolso', 'O seu carro particular'], correto: 1, explicacao: 'Um activo Ã© qualquer coisa que gera rendimento ou coloca dinheiro no bolso do proprietÃ¡rio.' },
+          { pergunta: 'No Quadrante do Fluxo de Caixa, quem representa o maior nÃ­vel de liberdade financeira?', opcoes: ['E (Empregado)', 'A (AutÃ³nomo)', 'I (Investidor)'], correto: 2, explicacao: 'O Investidor tem o dinheiro a trabalhar por ele, permitindo liberdade financeira mÃ¡xima.' },
+          { pergunta: 'Qual Ã© o fluxo financeiro dos ricos?', opcoes: ['SalÃ¡rio â†’ Despesas', 'Dinheiro â†’ Activos â†’ Mais dinheiro', 'SalÃ¡rio â†’ Luxos â†’ PoupanÃ§a'], correto: 1, explicacao: 'Os ricos focam-se em adquirir activos que geram renda passiva, criando um ciclo de acumulaÃ§Ã£o de riqueza.' },
+          { pergunta: 'O que Ã© uma crenÃ§a limitante?', opcoes: ['Uma meta financeira', 'Uma crenÃ§a que bloqueia o crescimento financeiro', 'Um tipo de investimento'], correto: 1, explicacao: 'CrenÃ§as limitantes sÃ£o pensamentos negativos sobre dinheiro que bloqueiam o crescimento financeiro e as decisÃµes inteligentes.' },
         ],
-        leituras: ['Pai Rico, Pai Pobre — Robert Kiyosaki', 'O Homem Mais Rico da Babilônia — George S. Clason', 'The Psychology of Money — Morgan Housel'],
+        leituras: ['Pai Rico, Pai Pobre â€” Robert Kiyosaki', 'O Homem Mais Rico da BabilÃ´nia â€” George S. Clason', 'The Psychology of Money â€” Morgan Housel'],
       },
       {
         id: 'F1A3',
@@ -139,52 +139,52 @@ const FACULDADES = [
         duracao: '75 min',
         nivel: 'Iniciante',
         objetivos: [
-          'Compreender como o cérebro toma decisões financeiras',
-          'Identificar emoções que afectam investimentos',
+          'Compreender como o cÃ©rebro toma decisÃµes financeiras',
+          'Identificar emoÃ§Ãµes que afectam investimentos',
           'Reconhecer os principais vieses cognitivos',
           'Controlar impulsos financeiros e desenvolver disciplina',
         ],
         conteudo: [
           {
             tipo: 'intro',
-            titulo: 'Introdução',
-            texto: `Imagine dois investidores. O primeiro conhece análise técnica, análise fundamentalista e gestão de risco — mas perde dinheiro constantemente. O segundo tem menos conhecimento técnico mas mantém disciplina e controla emoções — e ganha consistentemente.\n\nPor quê? Porque o mercado financeiro é, acima de tudo, um **jogo psicológico**. Muitos investidores não perdem por falta de conhecimento, mas por não controlarem as suas emoções.`,
+            titulo: 'IntroduÃ§Ã£o',
+            texto: `Imagine dois investidores. O primeiro conhece anÃ¡lise tÃ©cnica, anÃ¡lise fundamentalista e gestÃ£o de risco â€” mas perde dinheiro constantemente. O segundo tem menos conhecimento tÃ©cnico mas mantÃ©m disciplina e controla emoÃ§Ãµes â€” e ganha consistentemente.\n\nPor quÃª? Porque o mercado financeiro Ã©, acima de tudo, um **jogo psicolÃ³gico**. Muitos investidores nÃ£o perdem por falta de conhecimento, mas por nÃ£o controlarem as suas emoÃ§Ãµes.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Os Dois Sistemas do Cérebro',
-            texto: `**Sistema 1 – Emocional:** Rápido, automático, instintivo, impulsivo. Quando vê "GANHE 500% EM 30 DIAS" sente entusiasmo imediato.\n\n**Sistema 2 – Racional:** Lento, analítico, lógico, disciplinado. Antes de investir analisa: riscos, retorno, histórico, probabilidade.\n\n**Regra de Ouro:** Investidores ricos usam o Sistema 2. Investidores emocionais usam o Sistema 1.`,
+            titulo: 'Os Dois Sistemas do CÃ©rebro',
+            texto: `**Sistema 1 â€“ Emocional:** RÃ¡pido, automÃ¡tico, instintivo, impulsivo. Quando vÃª "GANHE 500% EM 30 DIAS" sente entusiasmo imediato.\n\n**Sistema 2 â€“ Racional:** Lento, analÃ­tico, lÃ³gico, disciplinado. Antes de investir analisa: riscos, retorno, histÃ³rico, probabilidade.\n\n**Regra de Ouro:** Investidores ricos usam o Sistema 2. Investidores emocionais usam o Sistema 1.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Medo e Ganância',
-            texto: `**MEDO** aparece quando o mercado cai, quando perde dinheiro, quando há incerteza.\nSintomas: fechar posições cedo, não entrar em boas oportunidades, vender no pior momento.\n\nExemplo: Compra uma acção a 100 → cai para 95 → você vende (medo) → dias depois sobe para 130. O medo expulsou-o do mercado.\n\n**GANÂNCIA** aparece quando ganha dinheiro rapidamente.\nSintomas: operar demais, assumir riscos excessivos, ignorar gestão de risco.\n\nExemplo: Ganhou 50.000 Kz → quer 500.000 → aumenta o lote sem critério → perde tudo.`,
+            titulo: 'Medo e GanÃ¢ncia',
+            texto: `**MEDO** aparece quando o mercado cai, quando perde dinheiro, quando hÃ¡ incerteza.\nSintomas: fechar posiÃ§Ãµes cedo, nÃ£o entrar em boas oportunidades, vender no pior momento.\n\nExemplo: Compra uma acÃ§Ã£o a 100 â†’ cai para 95 â†’ vocÃª vende (medo) â†’ dias depois sobe para 130. O medo expulsou-o do mercado.\n\n**GANÃ‚NCIA** aparece quando ganha dinheiro rapidamente.\nSintomas: operar demais, assumir riscos excessivos, ignorar gestÃ£o de risco.\n\nExemplo: Ganhou 50.000 Kz â†’ quer 500.000 â†’ aumenta o lote sem critÃ©rio â†’ perde tudo.`,
           },
           {
             tipo: 'capitulo',
             titulo: 'Os Principais Vieses Cognitivos',
-            texto: `**🐑 Efeito Manada:** Tendência de seguir a maioria mesmo quando está errada. Durante a bolha imobiliária de 2008, todos compravam imóveis porque todos compravam. Resultado: colapso global.\n\n**🔍 Viés de Confirmação:** Procurar apenas informações que confirmam o que já acreditamos. Solução: Para cada argumento favorável, liste 1 argumento contrário.\n\n**💪 Excesso de Confiança:** Acreditar que sabe mais do que realmente sabe. Após 10 operações vencedoras, o trader pensa "sou invencível" → aumenta o risco → perde metade da conta. O mercado castiga a arrogância.\n\n**😰 Aversão à Perda:** Uma perda de 100 dólares causa mais dor do que um ganho de 100 dólares gera felicidade. Consequência: segurar prejuízos e vender lucros cedo — exactamente o oposto do correcto.\n\n**📱 FOMO (Fear Of Missing Out):** Bitcoin sobe 30%, todos falam → você compra no topo → mercado corrige. Antídoto: "Eu compraria isto se ninguém estivesse a falar disso?"\n\n**💢 Vingança Contra o Mercado:** Perde 50.000 Kz → fica irritado → abre nova operação emocional → perde novamente. Regra: após perdas, PARE, analise, respire, retorne apenas quando estiver racional.`,
+            texto: `**ðŸ‘ Efeito Manada:** TendÃªncia de seguir a maioria mesmo quando estÃ¡ errada. Durante a bolha imobiliÃ¡ria de 2008, todos compravam imÃ³veis porque todos compravam. Resultado: colapso global.\n\n**ðŸ” ViÃ©s de ConfirmaÃ§Ã£o:** Procurar apenas informaÃ§Ãµes que confirmam o que jÃ¡ acreditamos. SoluÃ§Ã£o: Para cada argumento favorÃ¡vel, liste 1 argumento contrÃ¡rio.\n\n**ðŸ’ª Excesso de ConfianÃ§a:** Acreditar que sabe mais do que realmente sabe. ApÃ³s 10 operaÃ§Ãµes vencedoras, o trader pensa "sou invencÃ­vel" â†’ aumenta o risco â†’ perde metade da conta. O mercado castiga a arrogÃ¢ncia.\n\n**ðŸ˜° AversÃ£o Ã  Perda:** Uma perda de 100 dÃ³lares causa mais dor do que um ganho de 100 dÃ³lares gera felicidade. ConsequÃªncia: segurar prejuÃ­zos e vender lucros cedo â€” exactamente o oposto do correcto.\n\n**ðŸ“± FOMO (Fear Of Missing Out):** Bitcoin sobe 30%, todos falam â†’ vocÃª compra no topo â†’ mercado corrige. AntÃ­doto: "Eu compraria isto se ninguÃ©m estivesse a falar disso?"\n\n**ðŸ’¢ VinganÃ§a Contra o Mercado:** Perde 50.000 Kz â†’ fica irritado â†’ abre nova operaÃ§Ã£o emocional â†’ perde novamente. Regra: apÃ³s perdas, PARE, analise, respire, retorne apenas quando estiver racional.`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'O Diário Emocional',
-            texto: `Ferramenta usada por traders profissionais. Após cada operação registe:\n\n• Data:\n• Activo:\n• Resultado:\n• Emoção antes da operação:\n• Emoção durante:\n• Emoção depois:\n• Lição aprendida:\n\n**Exemplo real:**\nData: 10/06 | Activo: NASDAQ | Resultado: -15.000 Kz | Emoção: Ansiedade | Erro: Entrei antes do sinal | Lição: Esperar confirmação.\n\n**Fórmula do sucesso:** Conhecimento + Psicologia + Disciplina = Resultados Consistentes`,
+            titulo: 'O DiÃ¡rio Emocional',
+            texto: `Ferramenta usada por traders profissionais. ApÃ³s cada operaÃ§Ã£o registe:\n\nâ€¢ Data:\nâ€¢ Activo:\nâ€¢ Resultado:\nâ€¢ EmoÃ§Ã£o antes da operaÃ§Ã£o:\nâ€¢ EmoÃ§Ã£o durante:\nâ€¢ EmoÃ§Ã£o depois:\nâ€¢ LiÃ§Ã£o aprendida:\n\n**Exemplo real:**\nData: 10/06 | Activo: NASDAQ | Resultado: -15.000 Kz | EmoÃ§Ã£o: Ansiedade | Erro: Entrei antes do sinal | LiÃ§Ã£o: Esperar confirmaÃ§Ã£o.\n\n**FÃ³rmula do sucesso:** Conhecimento + Psicologia + Disciplina = Resultados Consistentes`,
           },
         ],
         exercicios: [
-          'Explique a diferença entre Sistema 1 e Sistema 2 no contexto financeiro.',
-          'Descreva um exemplo pessoal de FOMO em finanças.',
+          'Explique a diferenÃ§a entre Sistema 1 e Sistema 2 no contexto financeiro.',
+          'Descreva um exemplo pessoal de FOMO em finanÃ§as.',
           'Explique o efeito manada com um exemplo real.',
-          'Qual viés psicológico mais te afecta? Justifique.',
-          'Crie o seu Diário Emocional para as próximas 2 semanas.',
+          'Qual viÃ©s psicolÃ³gico mais te afecta? Justifique.',
+          'Crie o seu DiÃ¡rio Emocional para as prÃ³ximas 2 semanas.',
         ],
         quiz: [
-          { pergunta: 'O que é FOMO no contexto financeiro?', opcoes: ['Uma estratégia de investimento', 'O medo de ficar de fora de uma oportunidade', 'Uma técnica de análise técnica'], correto: 1, explicacao: 'FOMO (Fear Of Missing Out) é o medo de perder uma oportunidade, levando a decisões impulsivas como comprar no topo de mercado.' },
-          { pergunta: 'O que é o viés de confirmação?', opcoes: ['Confirmar uma operação no mercado', 'Procurar apenas informações que confirmam o que já acreditamos', 'Analisar ambos os lados de um investimento'], correto: 1, explicacao: 'O viés de confirmação faz-nos ignorar informações contrárias às nossas crenças, criando uma visão distorcida da realidade.' },
-          { pergunta: 'Qual é a regra após uma perda emocional no mercado?', opcoes: ['Operar mais para recuperar o prejuízo', 'Parar, analisar, respirar e retornar apenas racional', 'Aumentar o tamanho das posições'], correto: 1, explicacao: 'Após perdas, a "vingança contra o mercado" é um dos erros mais destrutivos. A disciplina exige paragem e reflexão antes de continuar.' },
-          { pergunta: 'Qual sistema do cérebro deve dominar as decisões financeiras?', opcoes: ['Sistema 1 — rápido e instintivo', 'Sistema 2 — racional e analítico', 'Ambos em igual proporção'], correto: 1, explicacao: 'O Sistema 2 (lento, analítico, lógico) é o que leva a decisões financeiras consistentes e bem fundamentadas.' },
+          { pergunta: 'O que Ã© FOMO no contexto financeiro?', opcoes: ['Uma estratÃ©gia de investimento', 'O medo de ficar de fora de uma oportunidade', 'Uma tÃ©cnica de anÃ¡lise tÃ©cnica'], correto: 1, explicacao: 'FOMO (Fear Of Missing Out) Ã© o medo de perder uma oportunidade, levando a decisÃµes impulsivas como comprar no topo de mercado.' },
+          { pergunta: 'O que Ã© o viÃ©s de confirmaÃ§Ã£o?', opcoes: ['Confirmar uma operaÃ§Ã£o no mercado', 'Procurar apenas informaÃ§Ãµes que confirmam o que jÃ¡ acreditamos', 'Analisar ambos os lados de um investimento'], correto: 1, explicacao: 'O viÃ©s de confirmaÃ§Ã£o faz-nos ignorar informaÃ§Ãµes contrÃ¡rias Ã s nossas crenÃ§as, criando uma visÃ£o distorcida da realidade.' },
+          { pergunta: 'Qual Ã© a regra apÃ³s uma perda emocional no mercado?', opcoes: ['Operar mais para recuperar o prejuÃ­zo', 'Parar, analisar, respirar e retornar apenas racional', 'Aumentar o tamanho das posiÃ§Ãµes'], correto: 1, explicacao: 'ApÃ³s perdas, a "vinganÃ§a contra o mercado" Ã© um dos erros mais destrutivos. A disciplina exige paragem e reflexÃ£o antes de continuar.' },
+          { pergunta: 'Qual sistema do cÃ©rebro deve dominar as decisÃµes financeiras?', opcoes: ['Sistema 1 â€” rÃ¡pido e instintivo', 'Sistema 2 â€” racional e analÃ­tico', 'Ambos em igual proporÃ§Ã£o'], correto: 1, explicacao: 'O Sistema 2 (lento, analÃ­tico, lÃ³gico) Ã© o que leva a decisÃµes financeiras consistentes e bem fundamentadas.' },
         ],
-        leituras: ['The Psychology of Money — Morgan Housel', 'Thinking, Fast and Slow — Daniel Kahneman', 'Trading in the Zone — Mark Douglas', 'Atomic Habits — James Clear'],
+        leituras: ['The Psychology of Money â€” Morgan Housel', 'Thinking, Fast and Slow â€” Daniel Kahneman', 'Trading in the Zone â€” Mark Douglas', 'Atomic Habits â€” James Clear'],
       },
       {
         id: 'F1A4',
@@ -196,199 +196,199 @@ const FACULDADES = [
           {
             tipo: 'intro',
             titulo: 'Conceito Principal',
-            texto: `A maioria das pessoas sabe quanto ganha. Pouquíssimas sabem exactamente quanto gastam.\n\n**Fluxo de Caixa = Entradas – Saídas**\n\nExemplo prático:\nSalário: 500.000 Kz + Renda Extra: 100.000 Kz = **Total Entradas: 600.000 Kz**\n\nCasa: 150.000 | Transporte: 50.000 | Alimentação: 100.000 | Internet: 20.000 | Lazer: 80.000 | Outros: 50.000 = **Total Saídas: 450.000 Kz**\n\n**Fluxo de Caixa = 600.000 – 450.000 = 150.000 Kz positivo**`,
+            texto: `A maioria das pessoas sabe quanto ganha. PouquÃ­ssimas sabem exactamente quanto gastam.\n\n**Fluxo de Caixa = Entradas â€“ SaÃ­das**\n\nExemplo prÃ¡tico:\nSalÃ¡rio: 500.000 Kz + Renda Extra: 100.000 Kz = **Total Entradas: 600.000 Kz**\n\nCasa: 150.000 | Transporte: 50.000 | AlimentaÃ§Ã£o: 100.000 | Internet: 20.000 | Lazer: 80.000 | Outros: 50.000 = **Total SaÃ­das: 450.000 Kz**\n\n**Fluxo de Caixa = 600.000 â€“ 450.000 = 150.000 Kz positivo**`,
           },
           {
             tipo: 'capitulo',
             titulo: 'Os 4 Tipos de Gastos',
-            texto: `**🔴 Necessários:** Água, luz, alimentação, habitação. Não pode eliminar.\n\n**🟡 Importantes:** Educação, saúde, poupança. Deve manter.\n\n**🟢 Supérfluos:** Luxos, compras por impulso, assinaturas não utilizadas. Analise criticamente.\n\n**🔵 Investimentos:** Acções, ETFs, imóveis, negócios. Maximize esta categoria!\n\n**Exercício prático:** Liste todos os gastos dos últimos 30 dias e classifique cada um nestas 4 categorias. Provavelmente vai surpreender-se com o que descobre.`,
+            texto: `**ðŸ”´ NecessÃ¡rios:** Ãgua, luz, alimentaÃ§Ã£o, habitaÃ§Ã£o. NÃ£o pode eliminar.\n\n**ðŸŸ¡ Importantes:** EducaÃ§Ã£o, saÃºde, poupanÃ§a. Deve manter.\n\n**ðŸŸ¢ SupÃ©rfluos:** Luxos, compras por impulso, assinaturas nÃ£o utilizadas. Analise criticamente.\n\n**ðŸ”µ Investimentos:** AcÃ§Ãµes, ETFs, imÃ³veis, negÃ³cios. Maximize esta categoria!\n\n**ExercÃ­cio prÃ¡tico:** Liste todos os gastos dos Ãºltimos 30 dias e classifique cada um nestas 4 categorias. Provavelmente vai surpreender-se com o que descobre.`,
           },
         ],
         exercicios: [
-          'Liste todos os gastos dos últimos 30 dias e classifique cada um.',
+          'Liste todos os gastos dos Ãºltimos 30 dias e classifique cada um.',
           'Calcule o seu fluxo de caixa mensal actual.',
           'Identifique os 3 maiores "vazamentos financeiros" nos seus gastos.',
           'Crie uma planilha completa de fluxo de caixa.',
         ],
         quiz: [
-          { pergunta: 'Qual é a fórmula do Fluxo de Caixa?', opcoes: ['Entradas × Saídas', 'Entradas – Saídas', 'Entradas + Poupança'], correto: 1, explicacao: 'Fluxo de Caixa = Entradas – Saídas. Um resultado positivo significa que está a viver dentro das suas possibilidades.' },
-          { pergunta: 'Qual tipo de gasto deve ser maximizado?', opcoes: ['Supérfluos', 'Necessários', 'Investimentos'], correto: 2, explicacao: 'Os Investimentos são o único tipo de gasto que geram retorno futuro e constroem riqueza ao longo do tempo.' },
-          { pergunta: 'O que são "vazamentos financeiros"?', opcoes: ['Dívidas bancárias', 'Gastos desnecessários que drenam o seu dinheiro sem valor percebido', 'Impostos pagos ao Estado'], correto: 1, explicacao: 'Vazamentos financeiros são gastos pequenos e invisíveis (assinaturas não usadas, café diário, compras impulsivas) que somados representam montantes significativos.' },
+          { pergunta: 'Qual Ã© a fÃ³rmula do Fluxo de Caixa?', opcoes: ['Entradas Ã— SaÃ­das', 'Entradas â€“ SaÃ­das', 'Entradas + PoupanÃ§a'], correto: 1, explicacao: 'Fluxo de Caixa = Entradas â€“ SaÃ­das. Um resultado positivo significa que estÃ¡ a viver dentro das suas possibilidades.' },
+          { pergunta: 'Qual tipo de gasto deve ser maximizado?', opcoes: ['SupÃ©rfluos', 'NecessÃ¡rios', 'Investimentos'], correto: 2, explicacao: 'Os Investimentos sÃ£o o Ãºnico tipo de gasto que geram retorno futuro e constroem riqueza ao longo do tempo.' },
+          { pergunta: 'O que sÃ£o "vazamentos financeiros"?', opcoes: ['DÃ­vidas bancÃ¡rias', 'Gastos desnecessÃ¡rios que drenam o seu dinheiro sem valor percebido', 'Impostos pagos ao Estado'], correto: 1, explicacao: 'Vazamentos financeiros sÃ£o gastos pequenos e invisÃ­veis (assinaturas nÃ£o usadas, cafÃ© diÃ¡rio, compras impulsivas) que somados representam montantes significativos.' },
         ],
-        leituras: ['I Will Teach You to Be Rich — Ramit Sethi', 'The Total Money Makeover — Dave Ramsey'],
+        leituras: ['I Will Teach You to Be Rich â€” Ramit Sethi', 'The Total Money Makeover â€” Dave Ramsey'],
       },
       {
         id: 'F1A5',
-        titulo: 'Orçamento Profissional',
+        titulo: 'OrÃ§amento Profissional',
         duracao: '55 min',
         nivel: 'Iniciante',
-        objetivos: ['Criar um orçamento que funcione', 'Aplicar a Regra 50-30-20', 'Evitar os erros comuns de orçamento'],
+        objetivos: ['Criar um orÃ§amento que funcione', 'Aplicar a Regra 50-30-20', 'Evitar os erros comuns de orÃ§amento'],
         conteudo: [
           {
             tipo: 'intro',
-            titulo: 'O Que É um Orçamento',
-            texto: `Um orçamento é um plano que determina **para onde o seu dinheiro irá antes de recebê-lo**.\n\nSem orçamento, o dinheiro simplesmente "some" no fim do mês e você não sabe para onde foi.`,
+            titulo: 'O Que Ã‰ um OrÃ§amento',
+            texto: `Um orÃ§amento Ã© um plano que determina **para onde o seu dinheiro irÃ¡ antes de recebÃª-lo**.\n\nSem orÃ§amento, o dinheiro simplesmente "some" no fim do mÃªs e vocÃª nÃ£o sabe para onde foi.`,
           },
           {
             tipo: 'capitulo',
             titulo: 'A Regra 50-30-20',
-            texto: `**50% — Necessidades:** Habitação, alimentação, transporte, serviços essenciais.\nExemplo com 500.000 Kz: 250.000 Kz\n\n**30% — Desejos:** Lazer, restaurantes, roupas, entretenimento.\nExemplo: 150.000 Kz\n\n**20% — Investimentos/Poupança:** Obrigatório. Pague-se a si próprio primeiro.\nExemplo: 100.000 Kz\n\n**Método Militar:** 70% Custos | 20% Investimentos | 10% Reserva de emergência`,
+            texto: `**50% â€” Necessidades:** HabitaÃ§Ã£o, alimentaÃ§Ã£o, transporte, serviÃ§os essenciais.\nExemplo com 500.000 Kz: 250.000 Kz\n\n**30% â€” Desejos:** Lazer, restaurantes, roupas, entretenimento.\nExemplo: 150.000 Kz\n\n**20% â€” Investimentos/PoupanÃ§a:** ObrigatÃ³rio. Pague-se a si prÃ³prio primeiro.\nExemplo: 100.000 Kz\n\n**MÃ©todo Militar:** 70% Custos | 20% Investimentos | 10% Reserva de emergÃªncia`,
           },
           {
             tipo: 'capitulo',
-            titulo: 'Os 4 Erros Fatais de Orçamento',
-            texto: `❌ **Gastar antes de planejar** — O dinheiro desaparece antes de chegar ao fim do mês.\n❌ **Não investir nada** — Trabalha-se para sobreviver, não para prosperar.\n❌ **Não registar despesas** — Impossível controlar o que não se mede.\n❌ **Comprar por emoção** — As compras por impulso destroem qualquer orçamento.`,
+            titulo: 'Os 4 Erros Fatais de OrÃ§amento',
+            texto: `âŒ **Gastar antes de planejar** â€” O dinheiro desaparece antes de chegar ao fim do mÃªs.\nâŒ **NÃ£o investir nada** â€” Trabalha-se para sobreviver, nÃ£o para prosperar.\nâŒ **NÃ£o registar despesas** â€” ImpossÃ­vel controlar o que nÃ£o se mede.\nâŒ **Comprar por emoÃ§Ã£o** â€” As compras por impulso destroem qualquer orÃ§amento.`,
           },
         ],
         exercicios: [
-          'Crie o seu orçamento mensal usando a Regra 50-30-20.',
-          'Identifique onde a sua distribuição actual se desvia da regra ideal.',
-          'Crie um plano de orçamento para os próximos 12 meses.',
+          'Crie o seu orÃ§amento mensal usando a Regra 50-30-20.',
+          'Identifique onde a sua distribuiÃ§Ã£o actual se desvia da regra ideal.',
+          'Crie um plano de orÃ§amento para os prÃ³ximos 12 meses.',
         ],
         quiz: [
-          { pergunta: 'Na Regra 50-30-20, qual percentagem é destinada a investimentos?', opcoes: ['50%', '30%', '20%'], correto: 2, explicacao: '20% do rendimento deve ser destinado a poupança e investimentos. Este é o "salário que paga a si próprio".' },
-          { pergunta: 'O que significa "pagar-se a si próprio primeiro"?', opcoes: ['Gastar no lazer antes das contas', 'Transferir a poupança antes de qualquer gasto', 'Pagar as dívidas primeiro'], correto: 1, explicacao: 'Transferir a poupança/investimento logo ao receber o salário garante que este dinheiro não seja gasto por impulso.' },
+          { pergunta: 'Na Regra 50-30-20, qual percentagem Ã© destinada a investimentos?', opcoes: ['50%', '30%', '20%'], correto: 2, explicacao: '20% do rendimento deve ser destinado a poupanÃ§a e investimentos. Este Ã© o "salÃ¡rio que paga a si prÃ³prio".' },
+          { pergunta: 'O que significa "pagar-se a si prÃ³prio primeiro"?', opcoes: ['Gastar no lazer antes das contas', 'Transferir a poupanÃ§a antes de qualquer gasto', 'Pagar as dÃ­vidas primeiro'], correto: 1, explicacao: 'Transferir a poupanÃ§a/investimento logo ao receber o salÃ¡rio garante que este dinheiro nÃ£o seja gasto por impulso.' },
         ],
-        leituras: ['The Automatic Millionaire — David Bach', 'I Will Teach You to Be Rich — Ramit Sethi'],
+        leituras: ['The Automatic Millionaire â€” David Bach', 'I Will Teach You to Be Rich â€” Ramit Sethi'],
       },
       {
         id: 'F1A6',
         titulo: 'Juros Simples',
         duracao: '40 min',
-        nivel: 'Intermediário',
-        objetivos: ['Compreender o conceito de juros', 'Aplicar a fórmula dos juros simples', 'Resolver problemas práticos'],
+        nivel: 'IntermediÃ¡rio',
+        objetivos: ['Compreender o conceito de juros', 'Aplicar a fÃ³rmula dos juros simples', 'Resolver problemas prÃ¡ticos'],
         conteudo: [
           {
             tipo: 'intro',
-            titulo: 'O Que São Juros',
-            texto: `Juros são o **preço do dinheiro no tempo**. Quando empresta dinheiro, cobra juros. Quando pede emprestado, paga juros.\n\n**Fórmula dos Juros Simples:**\n\n**J = C × i × t**\n\nOnde: J = Juros | C = Capital | i = Taxa | t = Tempo`,
+            titulo: 'O Que SÃ£o Juros',
+            texto: `Juros sÃ£o o **preÃ§o do dinheiro no tempo**. Quando empresta dinheiro, cobra juros. Quando pede emprestado, paga juros.\n\n**FÃ³rmula dos Juros Simples:**\n\n**J = C Ã— i Ã— t**\n\nOnde: J = Juros | C = Capital | i = Taxa | t = Tempo`,
           },
           {
             tipo: 'capitulo',
             titulo: 'Exemplos Resolvidos',
-            texto: `**Exemplo 1:**\nCapital: 100.000 Kz | Taxa: 10% ao ano | Prazo: 2 anos\nJ = 100.000 × 0,10 × 2 = **20.000 Kz**\nMontante Final = 100.000 + 20.000 = **120.000 Kz**\n\n**Exemplo 2:**\nCapital: 200.000 Kz | Taxa: 5% ao ano | Prazo: 3 anos\nJ = 200.000 × 0,05 × 3 = **30.000 Kz**\nMontante Final = **230.000 Kz**\n\n**Aplicações práticas:** Empréstimos pessoais, financiamentos básicos, operações comerciais de curto prazo.`,
+            texto: `**Exemplo 1:**\nCapital: 100.000 Kz | Taxa: 10% ao ano | Prazo: 2 anos\nJ = 100.000 Ã— 0,10 Ã— 2 = **20.000 Kz**\nMontante Final = 100.000 + 20.000 = **120.000 Kz**\n\n**Exemplo 2:**\nCapital: 200.000 Kz | Taxa: 5% ao ano | Prazo: 3 anos\nJ = 200.000 Ã— 0,05 Ã— 3 = **30.000 Kz**\nMontante Final = **230.000 Kz**\n\n**AplicaÃ§Ãµes prÃ¡ticas:** EmprÃ©stimos pessoais, financiamentos bÃ¡sicos, operaÃ§Ãµes comerciais de curto prazo.`,
           },
         ],
         exercicios: [
           'Calcule os juros simples: C=500.000, i=8%, t=2 anos.',
-          'Um banco cobra 15% ao ano em juros simples. Num empréstimo de 1.000.000 Kz por 18 meses, qual o total a pagar?',
-          'Calcule 10 problemas de juros simples com diferentes cenários.',
+          'Um banco cobra 15% ao ano em juros simples. Num emprÃ©stimo de 1.000.000 Kz por 18 meses, qual o total a pagar?',
+          'Calcule 10 problemas de juros simples com diferentes cenÃ¡rios.',
         ],
         quiz: [
-          { pergunta: 'Na fórmula J = C × i × t, o que representa "i"?', opcoes: ['Investimento', 'Taxa de juro', 'Tempo'], correto: 1, explicacao: '"i" representa a taxa de juro aplicada sobre o capital.' },
-          { pergunta: 'Capital de 100.000 Kz a 10% ao ano por 1 ano em juros simples resulta em:', opcoes: ['10.000 Kz de juros', '100.000 Kz de juros', '110.000 Kz de juros'], correto: 0, explicacao: 'J = 100.000 × 0,10 × 1 = 10.000 Kz de juros. O montante final é 110.000 Kz.' },
+          { pergunta: 'Na fÃ³rmula J = C Ã— i Ã— t, o que representa "i"?', opcoes: ['Investimento', 'Taxa de juro', 'Tempo'], correto: 1, explicacao: '"i" representa a taxa de juro aplicada sobre o capital.' },
+          { pergunta: 'Capital de 100.000 Kz a 10% ao ano por 1 ano em juros simples resulta em:', opcoes: ['10.000 Kz de juros', '100.000 Kz de juros', '110.000 Kz de juros'], correto: 0, explicacao: 'J = 100.000 Ã— 0,10 Ã— 1 = 10.000 Kz de juros. O montante final Ã© 110.000 Kz.' },
         ],
-        leituras: ['Matemática Financeira — Ion Ionescu', 'Finanças Pessoais para Dummies'],
+        leituras: ['MatemÃ¡tica Financeira â€” Ion Ionescu', 'FinanÃ§as Pessoais para Dummies'],
       },
       {
         id: 'F1A7',
-        titulo: 'Juros Compostos — A 8ª Maravilha do Mundo',
+        titulo: 'Juros Compostos â€” A 8Âª Maravilha do Mundo',
         duracao: '60 min',
-        nivel: 'Intermediário',
-        objetivos: ['Compreender os juros compostos', 'Aplicar a fórmula M = C(1+i)^n', 'Simular cenários de longo prazo', 'Compreender o poder do tempo nos investimentos'],
+        nivel: 'IntermediÃ¡rio',
+        objetivos: ['Compreender os juros compostos', 'Aplicar a fÃ³rmula M = C(1+i)^n', 'Simular cenÃ¡rios de longo prazo', 'Compreender o poder do tempo nos investimentos'],
         conteudo: [
           {
             tipo: 'intro',
             titulo: 'Juros sobre Juros',
-            texto: `Nos juros compostos, os **juros de cada período são adicionados ao capital** e passam a gerar mais juros no período seguinte. É o "efeito bola de neve".\n\n**Fórmula:** M = C(1+i)^n\nOnde: M = Montante Final | C = Capital Inicial | i = Taxa por período | n = Número de períodos`,
+            texto: `Nos juros compostos, os **juros de cada perÃ­odo sÃ£o adicionados ao capital** e passam a gerar mais juros no perÃ­odo seguinte. Ã‰ o "efeito bola de neve".\n\n**FÃ³rmula:** M = C(1+i)^n\nOnde: M = Montante Final | C = Capital Inicial | i = Taxa por perÃ­odo | n = NÃºmero de perÃ­odos`,
           },
           {
             tipo: 'capitulo',
             titulo: 'Exemplos Comparativos',
-            texto: `**Capital:** 100.000 Kz | **Taxa:** 10%/ano | **Prazo:** 3 anos\n\nJuros Simples:\nAno 1: 110.000 | Ano 2: 120.000 | Ano 3: 130.000 Kz\n\nJuros Compostos:\nAno 1: 110.000 | Ano 2: 121.000 | Ano 3: 133.100 Kz\n\nDiferença: 3.100 Kz — e esta diferença cresce exponencialmente com o tempo!\n\n**Longo prazo:** 100.000 Kz a 10% durante 30 anos = **≈ 1.744.940 Kz**\n\n**A Regra dos Investidores: Tempo > Capital**\nQuem começa 10 anos antes, mesmo com menos capital, normalmente acaba com mais.`,
+            texto: `**Capital:** 100.000 Kz | **Taxa:** 10%/ano | **Prazo:** 3 anos\n\nJuros Simples:\nAno 1: 110.000 | Ano 2: 120.000 | Ano 3: 130.000 Kz\n\nJuros Compostos:\nAno 1: 110.000 | Ano 2: 121.000 | Ano 3: 133.100 Kz\n\nDiferenÃ§a: 3.100 Kz â€” e esta diferenÃ§a cresce exponencialmente com o tempo!\n\n**Longo prazo:** 100.000 Kz a 10% durante 30 anos = **â‰ˆ 1.744.940 Kz**\n\n**A Regra dos Investidores: Tempo > Capital**\nQuem comeÃ§a 10 anos antes, mesmo com menos capital, normalmente acaba com mais.`,
           },
           {
             tipo: 'capitulo',
             titulo: 'A Regra dos 72',
-            texto: `A Regra dos 72 diz quanto tempo leva para dobrar o capital:\n\n**Anos para dobrar = 72 ÷ Taxa de juros**\n\nExemplos:\n• Taxa 10%: 72 ÷ 10 = 7,2 anos para dobrar\n• Taxa 14,5% (BTs Angola): 72 ÷ 14,5 = ≈ 5 anos para dobrar\n• Taxa 17% (OTs Angola): 72 ÷ 17 = ≈ 4,2 anos para dobrar\n\nIsso significa que investindo em OTs angolanas, o seu capital dobra a cada ≈ 4 anos!`,
+            texto: `A Regra dos 72 diz quanto tempo leva para dobrar o capital:\n\n**Anos para dobrar = 72 Ã· Taxa de juros**\n\nExemplos:\nâ€¢ Taxa 10%: 72 Ã· 10 = 7,2 anos para dobrar\nâ€¢ Taxa 14,5% (BTs Angola): 72 Ã· 14,5 = â‰ˆ 5 anos para dobrar\nâ€¢ Taxa 17% (OTs Angola): 72 Ã· 17 = â‰ˆ 4,2 anos para dobrar\n\nIsso significa que investindo em OTs angolanas, o seu capital dobra a cada â‰ˆ 4 anos!`,
           },
         ],
         exercicios: [
           'Calcule M = C(1+i)^n para: C=500.000, i=17%, n=5 anos.',
-          'Compare juros simples vs compostos para o mesmo cenário durante 20 anos.',
+          'Compare juros simples vs compostos para o mesmo cenÃ¡rio durante 20 anos.',
           'Use a Regra dos 72 para calcular quando o seu capital dobra com as taxas actuais da BODIVA.',
-          'Simule investir 50.000 Kz/mês por 10, 20 e 30 anos com taxa de 17%.',
+          'Simule investir 50.000 Kz/mÃªs por 10, 20 e 30 anos com taxa de 17%.',
         ],
         quiz: [
-          { pergunta: 'Qual é a diferença fundamental entre juros simples e compostos?', opcoes: ['O tempo de aplicação', 'Nos compostos, os juros se somam ao capital e geram mais juros', 'A taxa de juro aplicada'], correto: 1, explicacao: 'Nos juros compostos, o rendimento de cada período é reinvestido, criando o efeito exponencial que multiplica o capital ao longo do tempo.' },
-          { pergunta: 'Pela Regra dos 72, com taxa de 12% ao ano, quanto tempo leva para dobrar o capital?', opcoes: ['6 anos', '8 anos', 'Exactamente 12 anos'], correto: 0, explicacao: '72 ÷ 12 = 6 anos. Num prazo de 6 anos com taxa de 12% compostos, o capital dobra.' },
-          { pergunta: 'O que é mais importante nos juros compostos?', opcoes: ['A taxa de juro', 'O capital inicial', 'O tempo de investimento'], correto: 2, explicacao: 'O tempo é o factor mais poderoso nos juros compostos. Quem começa cedo, mesmo com menos capital, normalmente termina com mais.' },
+          { pergunta: 'Qual Ã© a diferenÃ§a fundamental entre juros simples e compostos?', opcoes: ['O tempo de aplicaÃ§Ã£o', 'Nos compostos, os juros se somam ao capital e geram mais juros', 'A taxa de juro aplicada'], correto: 1, explicacao: 'Nos juros compostos, o rendimento de cada perÃ­odo Ã© reinvestido, criando o efeito exponencial que multiplica o capital ao longo do tempo.' },
+          { pergunta: 'Pela Regra dos 72, com taxa de 12% ao ano, quanto tempo leva para dobrar o capital?', opcoes: ['6 anos', '8 anos', 'Exactamente 12 anos'], correto: 0, explicacao: '72 Ã· 12 = 6 anos. Num prazo de 6 anos com taxa de 12% compostos, o capital dobra.' },
+          { pergunta: 'O que Ã© mais importante nos juros compostos?', opcoes: ['A taxa de juro', 'O capital inicial', 'O tempo de investimento'], correto: 2, explicacao: 'O tempo Ã© o factor mais poderoso nos juros compostos. Quem comeÃ§a cedo, mesmo com menos capital, normalmente termina com mais.' },
         ],
-        leituras: ['The Compound Effect — Darren Hardy', 'Pai Rico, Pai Pobre — Robert Kiyosaki'],
+        leituras: ['The Compound Effect â€” Darren Hardy', 'Pai Rico, Pai Pobre â€” Robert Kiyosaki'],
       },
       {
         id: 'F1A8',
         titulo: 'Valor Presente e Valor Futuro',
         duracao: '55 min',
-        nivel: 'Intermediário',
-        objetivos: ['Compreender o valor do dinheiro no tempo', 'Calcular Valor Futuro (VF)', 'Calcular Valor Presente (VP)', 'Aplicar conceitos em decisões reais'],
+        nivel: 'IntermediÃ¡rio',
+        objetivos: ['Compreender o valor do dinheiro no tempo', 'Calcular Valor Futuro (VF)', 'Calcular Valor Presente (VP)', 'Aplicar conceitos em decisÃµes reais'],
         conteudo: [
           {
             tipo: 'intro',
             titulo: 'O Dinheiro Muda de Valor no Tempo',
-            texto: `**100.000 Kz hoje NÃO têm o mesmo valor que 100.000 Kz daqui a 10 anos.**\n\nPorquê? Porque 100.000 Kz hoje podem ser investidos e crescer. A inflação também reduz o poder de compra.\n\nPor isso, precisamos de ferramentas para comparar dinheiro em diferentes momentos do tempo.`,
+            texto: `**100.000 Kz hoje NÃƒO tÃªm o mesmo valor que 100.000 Kz daqui a 10 anos.**\n\nPorquÃª? Porque 100.000 Kz hoje podem ser investidos e crescer. A inflaÃ§Ã£o tambÃ©m reduz o poder de compra.\n\nPor isso, precisamos de ferramentas para comparar dinheiro em diferentes momentos do tempo.`,
           },
           {
             tipo: 'capitulo',
             titulo: 'Valor Futuro (VF)',
-            texto: `Quanto valerá o seu dinheiro no futuro?\n\n**Fórmula:** VF = VP × (1+i)^n\n\nExemplo:\nVP = 100.000 Kz | Taxa = 10%/ano | Prazo = 5 anos\nVF = 100.000 × (1,10)^5 = **161.051 Kz**\n\nInvestindo 100.000 Kz hoje a 10%, terá 161.051 Kz daqui a 5 anos.`,
+            texto: `Quanto valerÃ¡ o seu dinheiro no futuro?\n\n**FÃ³rmula:** VF = VP Ã— (1+i)^n\n\nExemplo:\nVP = 100.000 Kz | Taxa = 10%/ano | Prazo = 5 anos\nVF = 100.000 Ã— (1,10)^5 = **161.051 Kz**\n\nInvestindo 100.000 Kz hoje a 10%, terÃ¡ 161.051 Kz daqui a 5 anos.`,
           },
           {
             tipo: 'capitulo',
             titulo: 'Valor Presente (VP)',
-            texto: `Quanto vale hoje um valor que receberá no futuro?\n\n**Fórmula:** VP = VF ÷ (1+i)^n\n\nExemplo:\nVF = 200.000 Kz (a receber daqui a 5 anos) | Taxa = 10%\nVP = 200.000 ÷ (1,10)^5 = **124.184 Kz**\n\nIsso significa que 200.000 Kz daqui a 5 anos equivalem apenas a 124.184 Kz hoje!\n\n**Decisão prática:** Opção A: Receber 1 milhão hoje. Opção B: Receber 1 milhão daqui a 10 anos. Qual é melhor? **Opção A!** — porque pode investir o dinheiro hoje.`,
+            texto: `Quanto vale hoje um valor que receberÃ¡ no futuro?\n\n**FÃ³rmula:** VP = VF Ã· (1+i)^n\n\nExemplo:\nVF = 200.000 Kz (a receber daqui a 5 anos) | Taxa = 10%\nVP = 200.000 Ã· (1,10)^5 = **124.184 Kz**\n\nIsso significa que 200.000 Kz daqui a 5 anos equivalem apenas a 124.184 Kz hoje!\n\n**DecisÃ£o prÃ¡tica:** OpÃ§Ã£o A: Receber 1 milhÃ£o hoje. OpÃ§Ã£o B: Receber 1 milhÃ£o daqui a 10 anos. Qual Ã© melhor? **OpÃ§Ã£o A!** â€” porque pode investir o dinheiro hoje.`,
           },
         ],
         exercicios: [
           'Calcule o VF de 500.000 Kz a 17% por 10 anos.',
           'Calcule o VP de 2.000.000 Kz a receber em 15 anos com taxa de 10%.',
-          'Compare: receber 500.000 Kz hoje vs 800.000 Kz daqui a 3 anos (taxa 15%). O que é mais vantajoso?',
+          'Compare: receber 500.000 Kz hoje vs 800.000 Kz daqui a 3 anos (taxa 15%). O que Ã© mais vantajoso?',
         ],
         quiz: [
-          { pergunta: 'Qual é a fórmula do Valor Futuro?', opcoes: ['VF = VP ÷ (1+i)^n', 'VF = VP × (1+i)^n', 'VF = VP × i × n'], correto: 1, explicacao: 'VF = VP × (1+i)^n — aplica-se a taxa composta durante n períodos sobre o capital presente.' },
-          { pergunta: '100.000 Kz hoje são mais valiosos do que 100.000 Kz daqui a 10 anos?', opcoes: ['Falso — o valor é igual', 'Verdadeiro — o dinheiro de hoje pode ser investido', 'Depende da inflação apenas'], correto: 1, explicacao: 'Verdadeiro. 100.000 Kz hoje podem ser investidos e crescer. Além disso, a inflação corrói o poder de compra do dinheiro futuro.' },
+          { pergunta: 'Qual Ã© a fÃ³rmula do Valor Futuro?', opcoes: ['VF = VP Ã· (1+i)^n', 'VF = VP Ã— (1+i)^n', 'VF = VP Ã— i Ã— n'], correto: 1, explicacao: 'VF = VP Ã— (1+i)^n â€” aplica-se a taxa composta durante n perÃ­odos sobre o capital presente.' },
+          { pergunta: '100.000 Kz hoje sÃ£o mais valiosos do que 100.000 Kz daqui a 10 anos?', opcoes: ['Falso â€” o valor Ã© igual', 'Verdadeiro â€” o dinheiro de hoje pode ser investido', 'Depende da inflaÃ§Ã£o apenas'], correto: 1, explicacao: 'Verdadeiro. 100.000 Kz hoje podem ser investidos e crescer. AlÃ©m disso, a inflaÃ§Ã£o corrÃ³i o poder de compra do dinheiro futuro.' },
         ],
-        leituras: ['Finanças para Empreendedores', 'Corporate Finance — Brealey, Myers & Allen'],
+        leituras: ['FinanÃ§as para Empreendedores', 'Corporate Finance â€” Brealey, Myers & Allen'],
       },
     ],
   },
   {
     id: 'F2',
-    nome: 'Faculdade 2 — Gestão Financeira Avançada',
-    icon: '📊',
+    nome: 'Faculdade 2 â€” GestÃ£o Financeira AvanÃ§ada',
+    icon: 'ðŸ“Š',
     cor: '#34d399',
-    desc: 'Estratégias avançadas de gestão, planeamento e construção de patrimônio.',
+    desc: 'EstratÃ©gias avanÃ§adas de gestÃ£o, planeamento e construÃ§Ã£o de patrimÃ´nio.',
     bloqueada: false,
     aulas: [
-      { id: 'F2A1', titulo: 'Taxas Equivalentes e Taxa Real', duracao: '45 min', nivel: 'Avançado', objetivos: ['Converter taxas entre diferentes períodos', 'Calcular taxa real de retorno descontando inflação'], conteudo: [{ tipo: 'intro', titulo: 'Taxas Equivalentes', texto: `Uma taxa mensal de 1% é equivalente a quanto ao ano? NÃO é simplesmente 12%!\n\nTaxa Anual Equivalente = (1 + taxa mensal)^12 - 1\n= (1,01)^12 - 1 = 12,68%\n\n**Taxa Real de Retorno:**\nTaxa Real ≈ Taxa Nominal – Inflação\nSe um investimento rende 17% ao ano mas a inflação é 7%, o retorno real é ≈ 10%.\n\nIsto é crucial para avaliar se um investimento está realmente a gerar riqueza ou apenas a preservar o poder de compra.` }], exercicios: ['Converta: 2% ao mês para taxa anual efectiva.', 'Um investimento rende 14,5%. Com inflação de 6%, qual é o retorno real?'], quiz: [{ pergunta: 'Como calcular a taxa anual equivalente a 1% ao mês?', opcoes: ['1% × 12 = 12%', '(1,01)^12 - 1 ≈ 12,68%', '1% × 365'], correto: 1, explicacao: 'A conversão de taxas usa a fórmula da capitalização composta: (1 + taxa)^n - 1.' }], leituras: ['Matemática Financeira — Gilberto Assaf Neto'] },
-      { id: 'F2A2', titulo: 'Inflação e Poder de Compra', duracao: '50 min', nivel: 'Avançado', objetivos: ['Compreender a inflação angolana', 'Proteger o poder de compra'], conteudo: [{ tipo: 'intro', titulo: 'O Que É Inflação', texto: `Inflação é o aumento geral dos preços ao longo do tempo. Em Angola, medida pelo Índice de Preços ao Consumidor (IPC) pelo INE.\n\nSe a inflação é 10% ao ano, 100.000 Kz compram hoje o que 90.909 Kz comprariam no ano passado.\n\n**Como proteger o poder de compra:**\n• Invista em activos reais (imóveis, ouro)\n• Use instrumentos indexados à inflação\n• Invista em divisas fortes (USD, EUR)\n• Diversifique geograficamente` }], exercicios: ['Se a inflação é 8% e o salário não aumenta, quanto poder de compra perde em 5 anos?'], quiz: [{ pergunta: 'Como a inflação afecta o dinheiro guardado "debaixo do colchão"?', opcoes: ['Não afecta', 'Aumenta o valor', 'Destrói o poder de compra gradualmente'], correto: 2, explicacao: 'Dinheiro parado perde poder de compra em proporção à inflação. Num ambiente de 10% de inflação, perde 10% do poder de compra por ano.' }], leituras: ['A Riqueza das Nações — Adam Smith'] },
+      { id: 'F2A1', titulo: 'Taxas Equivalentes e Taxa Real', duracao: '45 min', nivel: 'AvanÃ§ado', objetivos: ['Converter taxas entre diferentes perÃ­odos', 'Calcular taxa real de retorno descontando inflaÃ§Ã£o'], conteudo: [{ tipo: 'intro', titulo: 'Taxas Equivalentes', texto: `Uma taxa mensal de 1% Ã© equivalente a quanto ao ano? NÃƒO Ã© simplesmente 12%!\n\nTaxa Anual Equivalente = (1 + taxa mensal)^12 - 1\n= (1,01)^12 - 1 = 12,68%\n\n**Taxa Real de Retorno:**\nTaxa Real â‰ˆ Taxa Nominal â€“ InflaÃ§Ã£o\nSe um investimento rende 17% ao ano mas a inflaÃ§Ã£o Ã© 7%, o retorno real Ã© â‰ˆ 10%.\n\nIsto Ã© crucial para avaliar se um investimento estÃ¡ realmente a gerar riqueza ou apenas a preservar o poder de compra.` }], exercicios: ['Converta: 2% ao mÃªs para taxa anual efectiva.', 'Um investimento rende 14,5%. Com inflaÃ§Ã£o de 6%, qual Ã© o retorno real?'], quiz: [{ pergunta: 'Como calcular a taxa anual equivalente a 1% ao mÃªs?', opcoes: ['1% Ã— 12 = 12%', '(1,01)^12 - 1 â‰ˆ 12,68%', '1% Ã— 365'], correto: 1, explicacao: 'A conversÃ£o de taxas usa a fÃ³rmula da capitalizaÃ§Ã£o composta: (1 + taxa)^n - 1.' }], leituras: ['MatemÃ¡tica Financeira â€” Gilberto Assaf Neto'] },
+      { id: 'F2A2', titulo: 'InflaÃ§Ã£o e Poder de Compra', duracao: '50 min', nivel: 'AvanÃ§ado', objetivos: ['Compreender a inflaÃ§Ã£o angolana', 'Proteger o poder de compra'], conteudo: [{ tipo: 'intro', titulo: 'O Que Ã‰ InflaÃ§Ã£o', texto: `InflaÃ§Ã£o Ã© o aumento geral dos preÃ§os ao longo do tempo. Em Angola, medida pelo Ãndice de PreÃ§os ao Consumidor (IPC) pelo INE.\n\nSe a inflaÃ§Ã£o Ã© 10% ao ano, 100.000 Kz compram hoje o que 90.909 Kz comprariam no ano passado.\n\n**Como proteger o poder de compra:**\nâ€¢ Invista em activos reais (imÃ³veis, ouro)\nâ€¢ Use instrumentos indexados Ã  inflaÃ§Ã£o\nâ€¢ Invista em divisas fortes (USD, EUR)\nâ€¢ Diversifique geograficamente` }], exercicios: ['Se a inflaÃ§Ã£o Ã© 8% e o salÃ¡rio nÃ£o aumenta, quanto poder de compra perde em 5 anos?'], quiz: [{ pergunta: 'Como a inflaÃ§Ã£o afecta o dinheiro guardado "debaixo do colchÃ£o"?', opcoes: ['NÃ£o afecta', 'Aumenta o valor', 'DestrÃ³i o poder de compra gradualmente'], correto: 2, explicacao: 'Dinheiro parado perde poder de compra em proporÃ§Ã£o Ã  inflaÃ§Ã£o. Num ambiente de 10% de inflaÃ§Ã£o, perde 10% do poder de compra por ano.' }], leituras: ['A Riqueza das NaÃ§Ãµes â€” Adam Smith'] },
     ],
   },
   {
     id: 'F3',
-    nome: 'Faculdade 3 — Mercado de Capitais e BODIVA',
-    icon: '📈',
+    nome: 'Faculdade 3 â€” Mercado de Capitais e BODIVA',
+    icon: 'ðŸ“ˆ',
     cor: '#f59e0b',
-    desc: 'Formação específica sobre o mercado angolano, BODIVA, BNA e instrumentos financeiros locais.',
+    desc: 'FormaÃ§Ã£o especÃ­fica sobre o mercado angolano, BODIVA, BNA e instrumentos financeiros locais.',
     bloqueada: false,
     aulas: [
-      { id: 'F3A1', titulo: 'Estrutura do Mercado Financeiro Angolano', duracao: '60 min', nivel: 'Avançado', objetivos: ['Conhecer os reguladores angolanos', 'Entender BNA, BODIVA, ARSEG e CMC'], conteudo: [{ tipo: 'intro', titulo: 'O Sistema Financeiro Angolano', texto: `**BNA (Banco Nacional de Angola):** Banco central. Regula a política monetária, define a taxa de referência (BNA Rate), emite moeda e supervisiona o sistema bancário.\n\n**BODIVA (Bolsa de Dívida e Valores de Angola):** Bolsa de valores angolana. Negociação de Bilhetes do Tesouro (BTs), Obrigações do Tesouro (OTs) e acções cotadas.\n\n**CMC (Comissão do Mercado de Capitais):** Supervisiona o mercado de capitais, protege investidores e regula emissores de valores mobiliários.\n\n**ARSEG (Agência Reguladora de Seguros):** Supervisiona o sector segurador angolano.\n\n**Como investir:** Necessita de abrir conta num banco autorizado pela BODIVA e solicitar acesso ao mercado secundário.` }], exercicios: ['Pesquise as actuais taxas de BTs em leilão no BNA.', 'Liste 5 empresas cotadas na BODIVA e os seus sectores.'], quiz: [{ pergunta: 'Qual instituição regula o mercado de capitais em Angola?', opcoes: ['BNA', 'CMC (Comissão do Mercado de Capitais)', 'BODIVA'], correto: 1, explicacao: 'A CMC é o regulador do mercado de capitais angolano, supervisionando emissores, intermediários e protegendo investidores.' }], leituras: ['Website oficial da BODIVA — bodiva.ao', 'Website do BNA — bna.ao'] },
+      { id: 'F3A1', titulo: 'Estrutura do Mercado Financeiro Angolano', duracao: '60 min', nivel: 'AvanÃ§ado', objetivos: ['Conhecer os reguladores angolanos', 'Entender BNA, BODIVA, ARSEG e CMC'], conteudo: [{ tipo: 'intro', titulo: 'O Sistema Financeiro Angolano', texto: `**BNA (Banco Nacional de Angola):** Banco central. Regula a polÃ­tica monetÃ¡ria, define a taxa de referÃªncia (BNA Rate), emite moeda e supervisiona o sistema bancÃ¡rio.\n\n**BODIVA (Bolsa de DÃ­vida e Valores de Angola):** Bolsa de valores angolana. NegociaÃ§Ã£o de Bilhetes do Tesouro (BTs), ObrigaÃ§Ãµes do Tesouro (OTs) e acÃ§Ãµes cotadas.\n\n**CMC (ComissÃ£o do Mercado de Capitais):** Supervisiona o mercado de capitais, protege investidores e regula emissores de valores mobiliÃ¡rios.\n\n**ARSEG (AgÃªncia Reguladora de Seguros):** Supervisiona o sector segurador angolano.\n\n**Como investir:** Necessita de abrir conta num banco autorizado pela BODIVA e solicitar acesso ao mercado secundÃ¡rio.` }], exercicios: ['Pesquise as actuais taxas de BTs em leilÃ£o no BNA.', 'Liste 5 empresas cotadas na BODIVA e os seus sectores.'], quiz: [{ pergunta: 'Qual instituiÃ§Ã£o regula o mercado de capitais em Angola?', opcoes: ['BNA', 'CMC (ComissÃ£o do Mercado de Capitais)', 'BODIVA'], correto: 1, explicacao: 'A CMC Ã© o regulador do mercado de capitais angolano, supervisionando emissores, intermediÃ¡rios e protegendo investidores.' }], leituras: ['Website oficial da BODIVA â€” bodiva.ao', 'Website do BNA â€” bna.ao'] },
     ],
   },
   {
     id: 'F4',
-    nome: 'Faculdade 4 — Análise de Investimentos',
-    icon: '🔬',
+    nome: 'Faculdade 4 â€” AnÃ¡lise de Investimentos',
+    icon: 'ðŸ”¬',
     cor: '#ec4899',
-    desc: 'Análise técnica, análise fundamentalista e gestão de risco profissional.',
+    desc: 'AnÃ¡lise tÃ©cnica, anÃ¡lise fundamentalista e gestÃ£o de risco profissional.',
     bloqueada: false,
     aulas: [
-      { id: 'F4A1', titulo: 'Análise Fundamentalista', duracao: '75 min', nivel: 'Avançado', objetivos: ['Avaliar o valor intrínseco de empresas e títulos', 'Analisar balanços e demonstrações financeiras'], conteudo: [{ tipo: 'intro', titulo: 'O Que É Análise Fundamentalista', texto: `Análise fundamentalista avalia o valor real (intrínseco) de um activo com base nos fundamentos económicos, financeiros e do sector.\n\n**Para acções:** Analisar receita, lucro, dívida, crescimento, gestão e perspectivas de mercado.\n\n**Para BTs/OTs:** Analisar a situação fiscal do Estado, rating soberano, taxa LUIBOR e spread de crédito.\n\n**Indicadores principais:**\n• P/E (Price-to-Earnings): preço da acção ÷ lucro por acção\n• ROE (Return on Equity): lucro ÷ capital próprio × 100\n• Dívida/Patrimônio: indica alavancagem\n• Dividend Yield: dividendo anual ÷ preço da acção × 100` }], exercicios: ['Pesquise o P/E ratio de 3 empresas cotadas na BODIVA.', 'Analise o balanço simplificado de uma empresa angolana conhecida.'], quiz: [{ pergunta: 'O que indica um P/E ratio baixo?', opcoes: ['A empresa está cara', 'A empresa pode estar subvalorizada ou ter perspectivas fracas', 'A empresa não paga dividendos'], correto: 1, explicacao: 'Um P/E baixo pode indicar que a acção está subvalorizada (oportunidade) ou que o mercado antecipa problemas futuros (risco). É necessário analisar o contexto completo.' }], leituras: ['The Intelligent Investor — Benjamin Graham', 'Security Analysis — Graham & Dodd'] },
+      { id: 'F4A1', titulo: 'AnÃ¡lise Fundamentalista', duracao: '75 min', nivel: 'AvanÃ§ado', objetivos: ['Avaliar o valor intrÃ­nseco de empresas e tÃ­tulos', 'Analisar balanÃ§os e demonstraÃ§Ãµes financeiras'], conteudo: [{ tipo: 'intro', titulo: 'O Que Ã‰ AnÃ¡lise Fundamentalista', texto: `AnÃ¡lise fundamentalista avalia o valor real (intrÃ­nseco) de um activo com base nos fundamentos econÃ³micos, financeiros e do sector.\n\n**Para acÃ§Ãµes:** Analisar receita, lucro, dÃ­vida, crescimento, gestÃ£o e perspectivas de mercado.\n\n**Para BTs/OTs:** Analisar a situaÃ§Ã£o fiscal do Estado, rating soberano, taxa LUIBOR e spread de crÃ©dito.\n\n**Indicadores principais:**\nâ€¢ P/E (Price-to-Earnings): preÃ§o da acÃ§Ã£o Ã· lucro por acÃ§Ã£o\nâ€¢ ROE (Return on Equity): lucro Ã· capital prÃ³prio Ã— 100\nâ€¢ DÃ­vida/PatrimÃ´nio: indica alavancagem\nâ€¢ Dividend Yield: dividendo anual Ã· preÃ§o da acÃ§Ã£o Ã— 100` }], exercicios: ['Pesquise o P/E ratio de 3 empresas cotadas na BODIVA.', 'Analise o balanÃ§o simplificado de uma empresa angolana conhecida.'], quiz: [{ pergunta: 'O que indica um P/E ratio baixo?', opcoes: ['A empresa estÃ¡ cara', 'A empresa pode estar subvalorizada ou ter perspectivas fracas', 'A empresa nÃ£o paga dividendos'], correto: 1, explicacao: 'Um P/E baixo pode indicar que a acÃ§Ã£o estÃ¡ subvalorizada (oportunidade) ou que o mercado antecipa problemas futuros (risco). Ã‰ necessÃ¡rio analisar o contexto completo.' }], leituras: ['The Intelligent Investor â€” Benjamin Graham', 'Security Analysis â€” Graham & Dodd'] },
     ],
   },
 ];
 
-// ─── Componente Aula Modal ─────────────────────────────────────────────────────
+// â”€â”€â”€ Componente Aula Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // AulaModal para aulas escritas
 function AulaModal({ aula, onClose, onComplete, concluida }) {
@@ -418,7 +418,7 @@ function AulaModal({ aula, onClose, onComplete, concluida }) {
       <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '760px', padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{aula.nivel} · {aula.duracao}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{aula.nivel} Â· {aula.duracao}</div>
             <h3 style={{ fontSize: '1.3rem', fontWeight: 800 }}>{aula.titulo}</h3>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
@@ -432,10 +432,10 @@ function AulaModal({ aula, onClose, onComplete, concluida }) {
               borderBottom: step === s ? '2px solid var(--color-accent)' : '2px solid transparent',
               fontSize: '0.82rem'
             }}>
-              {s === 'conteudo' ? '📖 Conteúdo' : s === 'exercicios' ? '✏️ Exercícios' : '🧪 Quiz'}
+              {s === 'conteudo' ? 'ðŸ“– ConteÃºdo' : s === 'exercicios' ? 'âœï¸ ExercÃ­cios' : 'ðŸ§ª Quiz'}
             </button>
           ))}
-          {concluida && <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', color: '#34d399', fontSize: '0.78rem', fontWeight: 700 }}><CheckCircle size={14} /> Concluída</div>}
+          {concluida && <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', color: '#34d399', fontSize: '0.78rem', fontWeight: 700 }}><CheckCircle size={14} /> ConcluÃ­da</div>}
         </div>
 
         {step === 'conteudo' && (
@@ -476,15 +476,15 @@ function AulaModal({ aula, onClose, onComplete, concluida }) {
 
         {step === 'quiz' && quizConcluido && (
           <div style={{ textAlign: 'center', padding: '24px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>{quizScore >= Math.ceil(aula.quiz.length * 0.75) ? '🎉' : '📖'}</div>
+            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>{quizScore >= Math.ceil(aula.quiz.length * 0.75) ? 'ðŸŽ‰' : 'ðŸ“–'}</div>
             <h4 style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: '8px' }}>{quizScore}/{aula.quiz.length} corretas</h4>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{quizScore >= Math.ceil(aula.quiz.length * 0.75) ? 'Excelente! Aula concluída.' : 'Reveja o conteúdo e tente novamente.'}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{quizScore >= Math.ceil(aula.quiz.length * 0.75) ? 'Excelente! Aula concluÃ­da.' : 'Reveja o conteÃºdo e tente novamente.'}</p>
           </div>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
           <button onClick={onClose} className="btn btn-secondary">Fechar</button>
-          {step === 'conteudo' && <button onClick={() => setStep('exercicios')} className="btn btn-primary">Exercícios</button>}
+          {step === 'conteudo' && <button onClick={() => setStep('exercicios')} className="btn btn-primary">ExercÃ­cios</button>}
           {step === 'exercicios' && <button onClick={() => setStep('quiz')} className="btn btn-primary">Fazer Quiz</button>}
         </div>
       </div>
@@ -516,7 +516,7 @@ export default function AcademiaView({ currentUser }) {
   const [editingVideo, setEditingVideo] = useState(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Educação Financeira');
+  const [category, setCategory] = useState('EducaÃ§Ã£o Financeira');
   const [level, setLevel] = useState('Iniciante');
   const [sortOrder, setSortOrder] = useState('0');
   const [duration, setDuration] = useState('0');
@@ -525,6 +525,19 @@ export default function AcademiaView({ currentUser }) {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+// Written Lessons Admin state
+const [showWrittenForm, setShowWrittenForm] = useState(false);
+const [writtenTitle, setWrittenTitle] = useState('');
+const [writtenDescription, setWrittenDescription] = useState('');
+const [writtenContent, setWrittenContent] = useState('');
+const [writtenCategory, setWrittenCategory] = useState('Educação Financeira');
+const [writtenLevel, setWrittenLevel] = useState('Iniciante');
+const [writtenPlanAllowed, setWrittenPlanAllowed] = useState('Gratuito');
+const [writtenImageFile, setWrittenImageFile] = useState(null);
+const [writtenLessons, setWrittenLessons] = useState([]);
+
+
+
   const videoPlayerRef = useRef(null);
   const isAdmin = currentUser?.Role === 'admin' || currentUser?.Role === 'superadmin';
   const isProUser = currentUser?.Plano === 'Pro' || isAdmin;
@@ -532,6 +545,7 @@ export default function AcademiaView({ currentUser }) {
   useEffect(() => {
     fetchWrittenConcluidas();
     fetchVideos();
+    fetchWrittenLessons();
     if (isAdmin) fetchAdminStats();
   }, []);
 
@@ -553,6 +567,31 @@ export default function AcademiaView({ currentUser }) {
     });
   };
 
+  
+  // Fetch written lessons from database
+  const fetchWrittenLessons = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('written_lessons')
+        .select('*')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Erro ao carregar aulas escritas:', error.message);
+        setWrittenLessons([]);
+        return;
+      }
+
+      setWrittenLessons(data || []);
+
+    } catch (err) {
+      console.error('Erro fetchWrittenLessons:', err);
+      setWrittenLessons([]);
+    }
+  };
+
+
   // Fetch videos from database
   const fetchVideos = async () => {
     setLoadingVideos(true);
@@ -561,11 +600,11 @@ export default function AcademiaView({ currentUser }) {
       const { data: vData, error: vError } = await supabase
         .from('videos')
         .select('*')
-        .order('sort_order', { ascending: true });
+        .order('order_index', { ascending: true });
 
       // If error (e.g. table not created yet), just show empty list
       if (vError) {
-        console.warn('Tabela videos não encontrada ou erro:', vError.message);
+        console.warn('Tabela videos nÃ£o encontrada ou erro:', vError.message);
         setVideos([]);
         setLoadingVideos(false);
         return;
@@ -656,7 +695,7 @@ export default function AcademiaView({ currentUser }) {
   const handleAddVideo = async (e) => {
     e.preventDefault();
     if (!title || !videoFile) {
-      alert('Preencha o título e carregue o ficheiro de vídeo.');
+      alert('Preencha o tÃ­tulo e carregue o ficheiro de vÃ­deo.');
       return;
     }
 
@@ -697,22 +736,23 @@ export default function AcademiaView({ currentUser }) {
           description,
           category,
           level,
-          sort_order: parseInt(sortOrder) || 0,
-          duration: parseInt(duration) || 0,
+          order_index: parseInt(sortOrder) || 0,
+          duration_seconds: parseInt(duration) || 0,
           plan_allowed: planAllowed,
-          video_url: videoUrl,
+          youtube_url: videoUrl,
           thumbnail_url: thumbnailUrl
         }]);
 
       if (dbErr) throw dbErr;
 
-      alert('Vídeo adicionado com sucesso!');
+      alert('VÃ­deo adicionado com sucesso!');
       setShowAddForm(false);
       resetForm();
       fetchVideos();
+    fetchWrittenLessons();
     } catch (err) {
       console.error('Error adding video:', err);
-      alert('Erro ao carregar vídeo: ' + err.message);
+      alert('Erro ao carregar vÃ­deo: ' + err.message);
     } finally {
       setSubmitting(false);
     }
@@ -727,8 +767,9 @@ export default function AcademiaView({ currentUser }) {
         .eq('id', id);
 
       if (error) throw error;
-      alert('Vídeo removido!');
+      alert('VÃ­deo removido!');
       fetchVideos();
+    fetchWrittenLessons();
     } catch (err) {
       console.error('Error deleting video:', err);
     }
@@ -737,7 +778,7 @@ export default function AcademiaView({ currentUser }) {
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setCategory('Educação Financeira');
+    setCategory('EducaÃ§Ã£o Financeira');
     setLevel('Iniciante');
     setSortOrder('0');
     setDuration('0');
@@ -745,6 +786,69 @@ export default function AcademiaView({ currentUser }) {
     setVideoFile(null);
     setThumbnailFile(null);
   };
+
+  
+  // Admin: Create written lesson
+  const handleAddWrittenLesson = async (e) => {
+    e.preventDefault();
+
+    if (!writtenTitle || !writtenContent) {
+      alert('Preencha o título e o conteúdo da aula.');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      let imageUrl = '';
+
+      if (writtenImageFile) {
+        const ext = writtenImageFile.name.split('.').pop();
+        const fileName = Math.random().toString(36).substring(2,15) + '_' + Date.now() + '.' + ext;
+
+        const { error: uploadError } = await supabase.storage
+          .from('lesson-images')
+          .upload(fileName, writtenImageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from('lesson-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = data.publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('written_lessons')
+        .insert([{
+          title: writtenTitle,
+          description: writtenDescription,
+          content: writtenContent,
+          image_url: imageUrl,
+          category: writtenCategory,
+          level: writtenLevel,
+          plan_allowed: writtenPlanAllowed,
+          created_by: currentUser.id
+        }]);
+
+      if (error) throw error;
+
+      alert('Aula escrita criada com sucesso!');
+
+      setShowWrittenForm(false);
+      fetchWrittenLessons();
+
+    } catch (err) {
+      console.error('Erro ao criar aula escrita:', err);
+      alert(err.message);
+
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+
 
   const filteredVideos = videos.filter(v => {
     if (videoCategory === 'all') return true;
@@ -772,21 +876,21 @@ export default function AcademiaView({ currentUser }) {
           </div>
           <div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800 }}>Academia Financeira</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Evolua a sua literacia financeira com aulas escritas e vídeos interativos</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Evolua a sua literacia financeira com aulas escritas e vÃ­deos interativos</p>
           </div>
         </div>
 
         {/* Sub-tabs menu */}
         <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-          <button onClick={() => setActiveModule('videos')} style={{ background: activeModule === 'videos' ? 'var(--color-accent)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>🎥 Aulas em Vídeo</button>
-          <button onClick={() => setActiveModule('escrito')} style={{ background: activeModule === 'escrito' ? 'var(--color-accent)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>📖 Formação Escrita</button>
+          <button onClick={() => setActiveModule('videos')} style={{ background: activeModule === 'videos' ? 'var(--color-accent)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>ðŸŽ¥ Aulas em VÃ­deo</button>
+          <button onClick={() => setActiveModule('escrito')} style={{ background: activeModule === 'escrito' ? 'var(--color-accent)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#fff', fontSize: '0.82rem', fontWeight: 600 }}>ðŸ“– FormaÃ§Ã£o Escrita</button>
           {isAdmin && (
-            <button onClick={() => setActiveModule('admin')} style={{ background: activeModule === 'admin' ? 'rgba(245,158,11,0.2)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#f59e0b', fontSize: '0.82rem', fontWeight: 600 }}>⚙️ Painel Admin</button>
+            <button onClick={() => setActiveModule('admin')} style={{ background: activeModule === 'admin' ? 'rgba(245,158,11,0.2)' : 'none', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: '#f59e0b', fontSize: '0.82rem', fontWeight: 600 }}>âš™ï¸ Painel Admin</button>
           )}
         </div>
       </div>
 
-      {/* ─── MODULO 1: VÍDEOS ─── */}
+      {/* â”€â”€â”€ MODULO 1: VÃDEOS â”€â”€â”€ */}
       {activeModule === 'videos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {selectedVideo ? (
@@ -799,7 +903,7 @@ export default function AcademiaView({ currentUser }) {
                 {/* HTML5 video player configured to disable download buttons and allow streaming */}
                 <video
                   ref={videoPlayerRef}
-                  src={selectedVideo.video_url}
+                  src={selectedVideo.youtube_url}
                   controls
                   controlsList="nodownload"
                   onTimeUpdate={handleTimeUpdate}
@@ -810,9 +914,9 @@ export default function AcademiaView({ currentUser }) {
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedVideo.title}</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '6px', lineHeight: 1.6 }}>{selectedVideo.description}</p>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  <span>🏷️ Categoria: {selectedVideo.category}</span>
-                  <span>📊 Nível: {selectedVideo.level}</span>
-                  <span>⏱ Duração: {Math.round(selectedVideo.duration / 60)} min</span>
+                  <span>ðŸ·ï¸ Categoria: {selectedVideo.category}</span>
+                  <span>ðŸ“Š NÃ­vel: {selectedVideo.level}</span>
+                  <span>â± DuraÃ§Ã£o: {Math.round(selectedVideo.duration / 60)} min</span>
                 </div>
               </div>
             </div>
@@ -820,7 +924,7 @@ export default function AcademiaView({ currentUser }) {
             <>
               {/* Category filters */}
               <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-                {['all', 'Educação Financeira', 'Investimentos', 'Empresas', 'Impostos', 'Poupar Dinheiro', 'Planeamento Financeiro', 'Dívidas', 'Orçamento', 'Academia'].map(cat => (
+                {['all', 'EducaÃ§Ã£o Financeira', 'Investimentos', 'Empresas', 'Impostos', 'Poupar Dinheiro', 'Planeamento Financeiro', 'DÃ­vidas', 'OrÃ§amento', 'Academia'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => setVideoCategory(cat)}
@@ -838,7 +942,7 @@ export default function AcademiaView({ currentUser }) {
               {loadingVideos ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><Loader2 className="animate-spin" size={24} /></div>
               ) : filteredVideos.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Sem vídeos disponíveis nesta categoria.</div>
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Sem vÃ­deos disponÃ­veis nesta categoria.</div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                   {filteredVideos.map(v => {
@@ -853,7 +957,7 @@ export default function AcademiaView({ currentUser }) {
                         className="glass-panel"
                         onClick={() => {
                           if (isLocked) {
-                            alert('Esta aula em vídeo é exclusiva para utilizadores Pro.');
+                            alert('Esta aula em vÃ­deo Ã© exclusiva para utilizadores Pro.');
                             return;
                           }
                           setSelectedVideo(v);
@@ -895,11 +999,11 @@ export default function AcademiaView({ currentUser }) {
                         <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                             <span style={{ fontSize: '0.68rem', color: 'var(--color-accent)', fontWeight: 700 }}>{v.category}</span>
-                            {isCompleted && <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '8px', background: 'rgba(52,211,153,0.1)', color: '#34d399', fontWeight: 700 }}>Concluído</span>}
+                            {isCompleted && <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: '8px', background: 'rgba(52,211,153,0.1)', color: '#34d399', fontWeight: 700 }}>ConcluÃ­do</span>}
                           </div>
                           <h4 style={{ fontSize: '0.88rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.title}</h4>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                            <span>⏱ Duração: {Math.round(v.duration / 60)} min</span>
+                            <span>â± DuraÃ§Ã£o: {Math.round(v.duration / 60)} min</span>
                             <span>{v.level}</span>
                           </div>
 
@@ -920,7 +1024,7 @@ export default function AcademiaView({ currentUser }) {
         </div>
       )}
 
-      {/* ─── MODULO 2: ESCRITO ─── */}
+      {/* â”€â”€â”€ MODULO 2: ESCRITO â”€â”€â”€ */}
       {activeModule === 'escrito' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {FACULDADES.map(fac => {
@@ -947,7 +1051,7 @@ export default function AcademiaView({ currentUser }) {
                       <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden', flex: 1, maxWidth: '200px' }}>
                         <div style={{ height: '100%', width: `${pctF}%`, background: fac.cor, borderRadius: '4px' }} />
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: fac.cor, fontWeight: 700 }}>{concluidasF}/{aulasF} concluídas</span>
+                      <span style={{ fontSize: '0.72rem', color: fac.cor, fontWeight: 700 }}>{concluidasF}/{aulasF} concluÃ­das</span>
                     </div>
                   </div>
                   {aberta ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
@@ -977,7 +1081,7 @@ export default function AcademiaView({ currentUser }) {
                           </div>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{aula.titulo}</div>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>⏱ {aula.duracao} · 📊 {aula.nivel}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>â± {aula.duracao} Â· ðŸ“Š {aula.nivel}</div>
                           </div>
                           <ChevronRight size={16} />
                         </div>
@@ -991,18 +1095,18 @@ export default function AcademiaView({ currentUser }) {
         </div>
       )}
 
-      {/* ─── MODULO 3: ADMIN PANEL (VIDEOS UPLOAD) ─── */}
+      {/* â”€â”€â”€ MODULO 3: ADMIN PANEL (VIDEOS UPLOAD) â”€â”€â”€ */}
       {activeModule === 'admin' && isAdmin && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Quick Metrics */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Visualizações Totais</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>VisualizaÃ§Ãµes Totais</span>
               <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-accent)' }}>{adminStats.totalViews}</span>
             </div>
             <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Vídeos Concluídos</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>VÃ­deos ConcluÃ­dos</span>
               <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-success)' }}>{adminStats.completed}</span>
             </div>
             <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -1012,40 +1116,44 @@ export default function AcademiaView({ currentUser }) {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Aulas em Vídeo Publicadas</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Aulas em VÃ­deo Publicadas</h3>
             <button onClick={() => { resetForm(); setShowAddForm(!showAddForm); }} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Plus size={16} /> Adicionar Nova Aula
+            </button>
+            <button onClick={() => setShowWrittenForm(!showWrittenForm)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Plus size={16} /> Adicionar Aula Escrita
+
             </button>
           </div>
 
           {showAddForm && (
             <form onSubmit={handleAddVideo} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <h4 style={{ fontWeight: 800 }}>Novo Vídeo para a Academia</h4>
+              <h4 style={{ fontWeight: 800 }}>Novo VÃ­deo para a Academia</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Título da Aula</label>
+                  <label className="form-label">TÃ­tulo da Aula</label>
                   <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="form-input" required />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">Categoria</label>
                   <select value={category} onChange={e => setCategory(e.target.value)} className="form-input">
-                    {['Educação Financeira', 'Investimentos', 'Empresas', 'Impostos', 'Poupar Dinheiro', 'Planeamento Financeiro', 'Dívidas', 'Orçamento', 'Academia'].map(c => (
+                    {['EducaÃ§Ã£o Financeira', 'Investimentos', 'Empresas', 'Impostos', 'Poupar Dinheiro', 'Planeamento Financeiro', 'DÃ­vidas', 'OrÃ§amento', 'Academia'].map(c => (
                       <option key={c}>{c}</option>
                     ))}
                   </select>
                 </div>
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Descrição / Objetivos</label>
+                <label className="form-label">DescriÃ§Ã£o / Objetivos</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)} className="form-input" rows="3" />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Nível</label>
+                  <label className="form-label">NÃ­vel</label>
                   <select value={level} onChange={e => setLevel(e.target.value)} className="form-input">
                     <option>Iniciante</option>
-                    <option>Intermédio</option>
-                    <option>Avançado</option>
+                    <option>IntermÃ©dio</option>
+                    <option>AvanÃ§ado</option>
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -1056,13 +1164,13 @@ export default function AcademiaView({ currentUser }) {
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Duração (em segundos)</label>
+                  <label className="form-label">DuraÃ§Ã£o (em segundos)</label>
                   <input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="form-input" />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Ficheiro de Vídeo</label>
+                  <label className="form-label">Ficheiro de VÃ­deo</label>
                   <input type="file" accept="video/*" onChange={e => setVideoFile(e.target.files[0])} className="form-input" required />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -1079,17 +1187,121 @@ export default function AcademiaView({ currentUser }) {
               </div>
             </form>
           )}
+          {showWrittenForm && (
+            <form onSubmit={handleAddWrittenLesson} className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <h4 style={{ fontWeight: 800 }}>Nova Aula Escrita</h4>
 
-          {/* Videos Grid with actions */}
+              <div className="form-group">
+                <label className="form-label">Título</label>
+                <input
+                  type="text"
+                  value={writtenTitle}
+                  onChange={e => setWrittenTitle(e.target.value)}
+                  className="form-input"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Descrição</label>
+                <textarea
+                  value={writtenDescription}
+                  onChange={e => setWrittenDescription(e.target.value)}
+                  className="form-input"
+                  rows="3"
+                />
+              </div>
+
+
+              <div className="form-group">
+                <label className="form-label">Conteúdo da Aula</label>
+                <textarea
+                  value={writtenContent}
+                  onChange={e => setWrittenContent(e.target.value)}
+                  className="form-input"
+                  rows="10"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+
+                <select
+                  value={writtenCategory}
+                  onChange={e => setWrittenCategory(e.target.value)}
+                  className="form-input"
+                >
+                  <option>Educação Financeira</option>
+                  <option>Investimentos</option>
+                  <option>Empresas</option>
+                  <option>Impostos</option>
+                </select>
+
+                <select
+                  value={writtenLevel}
+                  onChange={e => setWrittenLevel(e.target.value)}
+                  className="form-input"
+                >
+                  <option>Iniciante</option>
+                  <option>Intermédio</option>
+                  <option>Avançado</option>
+                </select>
+
+                <select
+                  value={writtenPlanAllowed}
+                  onChange={e => setWrittenPlanAllowed(e.target.value)}
+                  className="form-input"
+                >
+                  <option>Gratuito</option>
+                  <option>Pro</option>
+                </select>
+
+              </div>
+
+
+              <div className="form-group">
+                <label className="form-label">Imagem da Aula</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => setWrittenImageFile(e.target.files[0])}
+                  className="form-input"
+                />
+              </div>
+
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowWrittenForm(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn btn-primary"
+                >
+                  {submitting ? 'A publicar...' : 'Publicar Aula Escrita'}
+                </button>
+              </div>
+
+            </form>
+          )}
+
+
+/* Videos Grid with actions */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {videos.map(v => (
               <div key={v.id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px' }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{v.title}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '10px', marginTop: '4px' }}>
-                    <span>📂 {v.category}</span>
-                    <span>📊 {v.level}</span>
-                    <span>🔑 Acesso: {v.plan_allowed}</span>
+                    <span>ðŸ“‚ {v.category}</span>
+                    <span>ðŸ“Š {v.level}</span>
+                    <span>ðŸ”‘ Acesso: {v.plan_allowed}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
@@ -1105,3 +1317,13 @@ export default function AcademiaView({ currentUser }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+

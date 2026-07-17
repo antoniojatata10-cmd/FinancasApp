@@ -58,6 +58,12 @@ export default function AuthView({ users, onLogin, onRegister }) {
       return;
     }
 
+    if (profile && profile.is_active === false) {
+      await supabase.auth.signOut();
+      setLoginError('A sua conta foi bloqueada pelo administrador.');
+      return;
+    }
+
     const user = {
       id: data.user.id,
       Email: data.user.email,
@@ -91,7 +97,17 @@ export default function AuthView({ users, onLogin, onRegister }) {
     const emailClean = regEmail.trim().toLowerCase();
 
     // Check if email already exists via Supabase auth
-    const { data: existing, error: existingErr } = await supabase.auth.signUp({ email: emailClean, password: regPassword }, { redirectTo: '' });
+    const { data: existing, error: existingErr } = await supabase.auth.signUp({
+      email: emailClean,
+      password: regPassword,
+      options: {
+        data: {
+          full_name: regNome.trim(),
+          phone: regTelefone.trim(),
+          country: regPais
+        }
+      }
+    });
     if (existingErr && existingErr.message.includes('User already registered')) {
       setRegError('Este e-mail já está cadastrado. Tente fazer login.');
       return;
@@ -101,23 +117,21 @@ export default function AuthView({ users, onLogin, onRegister }) {
       return;
     }
 
-    // Create profile record
+    // Create/update profile record
     const userId = existing?.user?.id;
     if (!userId) {
       setRegError('Falha ao obter ID do usuário recém-criado.');
       return;
     }
-    const { error: profileErr } = await supabase.from('profiles').insert([
-      {
-        id: userId,
-        full_name: regNome.trim(),
-        phone: regTelefone.trim(),
-        country: regPais,
-        role: 'user',
-        plan: 'Gratuito',
-        is_active: true
-      }
-    ]);
+    const { error: profileErr } = await supabase.from('profiles').upsert({
+      id: userId,
+      full_name: regNome.trim(),
+      phone: regTelefone.trim(),
+      country: regPais,
+      role: 'user',
+      plan: 'Gratuito',
+      is_active: true
+    });
     if (profileErr) {
       setRegError('Erro ao salvar perfil: ' + profileErr.message);
       return;

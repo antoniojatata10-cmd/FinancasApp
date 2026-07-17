@@ -1,0 +1,12 @@
+﻿
+// Written Lessons Admin state
+const [showWrittenForm, setShowWrittenForm] = useState(false);
+const [writtenTitle, setWrittenTitle] = useState('');
+const [writtenDescription, setWrittenDescription] = useState('');
+const [writtenContent, setWrittenContent] = useState('');
+const [writtenCategory, setWrittenCategory] = useState('Educação Financeira');
+const [writtenLevel, setWrittenLevel] = useState('Iniciante');
+const [writtenPlanAllowed, setWrittenPlanAllowed] = useState('Gratuito');
+const [writtenImageFile, setWrittenImageFile] = useState(null);
+const [writtenLessons, setWrittenLessons] = useState([]);
+

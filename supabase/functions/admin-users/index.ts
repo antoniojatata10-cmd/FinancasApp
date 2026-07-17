@@ -17,73 +17,36 @@ Deno.serve(async (req) => {
 
     if (!action || !user_id) {
       return new Response(
-        JSON.stringify({
-          error: "action e user_id são obrigatórios",
-        }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
+        JSON.stringify({ error: "action e user_id são obrigatórios" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const authHeader = req.headers.get("Authorization");
-
     if (!authHeader) {
       return new Response(
-        JSON.stringify({
-          error: "Não autorizado",
-        }),
-        {
-          status: 401,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
+        JSON.stringify({ error: "Não autorizado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
 
-    const supabaseAdmin = createClient(
-      supabaseUrl,
-      serviceRoleKey
-    );
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    // Cliente normal para descobrir quem chamou
+    // Verificar quem chamou
     const supabaseUser = createClient(
       supabaseUrl,
       Deno.env.get("SUPABASE_ANON_KEY")!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
-    const {
-      data: { user: adminUser },
-    } = await supabaseUser.auth.getUser();
-
+    const { data: { user: adminUser } } = await supabaseUser.auth.getUser();
     if (!adminUser) {
       return new Response(
-        JSON.stringify({
-          error: "Sessão inválida",
-        }),
-        {
-          status: 401,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
+        JSON.stringify({ error: "Sessão inválida" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -93,101 +56,79 @@ Deno.serve(async (req) => {
       .eq("id", adminUser.id)
       .single();
 
-    if (!adminProfile || adminProfile.role !== "admin") {
+    if (!adminProfile || !["admin", "superadmin"].includes(adminProfile.role?.toLowerCase())) {
       return new Response(
-        JSON.stringify({
-          error: "Apenas administradores podem executar esta ação",
-        }),
-        {
-          status: 403,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        }
+        JSON.stringify({ error: "Apenas administradores podem executar esta ação" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // BLOQUEAR UTILIZADOR
+    // ── BLOQUEAR UTILIZADOR ──────────────────────────────────────────────────────
+    // Bloqueia no Auth (impede login) e marca is_active=false no perfil
     if (action === "block") {
-      const { error } = await supabaseAdmin
-        .from("profiles")
-        .update({
-          is_active: false,
-        })
-        .eq("id", user_id);
+      // 1. Banir no Supabase Auth — duração de ~100 anos
+      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
+        ban_duration: "876000h",
+      });
+      if (banError) throw banError;
 
-      if (error) throw error;
+      // 2. Marcar is_active=false no perfil
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .update({ is_active: false })
+        .eq("id", user_id);
+      if (profileError) throw profileError;
 
       return Response.json(
-        {
-          success: true,
-          message: "Utilizador bloqueado",
-        },
+        { success: true, message: "Utilizador bloqueado. O login foi desativado." },
         { headers: corsHeaders }
       );
     }
 
-    // DESBLOQUEAR UTILIZADOR
+    // ── DESBLOQUEAR UTILIZADOR ───────────────────────────────────────────────────
+    // Remove o ban do Auth e restaura is_active=true no perfil
     if (action === "unblock") {
-      const { error } = await supabaseAdmin
-        .from("profiles")
-        .update({
-          is_active: true,
-        })
-        .eq("id", user_id);
+      // 1. Remover ban no Supabase Auth
+      const { error: unbanError } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
+        ban_duration: "none",
+      });
+      if (unbanError) throw unbanError;
 
-      if (error) throw error;
+      // 2. Restaurar is_active=true no perfil
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .update({ is_active: true })
+        .eq("id", user_id);
+      if (profileError) throw profileError;
 
       return Response.json(
-        {
-          success: true,
-          message: "Utilizador desbloqueado",
-        },
+        { success: true, message: "Utilizador desbloqueado. O acesso foi restaurado." },
         { headers: corsHeaders }
       );
     }
 
-    // ELIMINAR UTILIZADOR COMPLETAMENTE
+    // ── ELIMINAR UTILIZADOR COMPLETAMENTE ────────────────────────────────────────
+    // Todas as tabelas têm ON DELETE CASCADE a partir de profiles(id) → auth.users(id)
+    // Basta eliminar de auth.users e o Supabase cascade-apaga tudo.
     if (action === "delete") {
-      const { error } =
-        await supabaseAdmin.auth.admin.deleteUser(user_id);
-
-      if (error) throw error;
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user_id);
+      if (deleteError) throw deleteError;
 
       return Response.json(
-        {
-          success: true,
-          message: "Utilizador eliminado definitivamente",
-        },
+        { success: true, message: "Utilizador e todos os seus dados foram eliminados definitivamente." },
         { headers: corsHeaders }
       );
     }
 
     return new Response(
-      JSON.stringify({
-        error: "Ação desconhecida",
-      }),
-      {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-      }
+      JSON.stringify({ error: "Ação desconhecida" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     return new Response(
-      JSON.stringify({
-        error: error.message,
-      }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-      }
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
