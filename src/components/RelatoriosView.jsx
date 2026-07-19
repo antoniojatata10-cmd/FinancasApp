@@ -1,7 +1,7 @@
 import React from 'react';
 import { Calendar, Download, TrendingUp, TrendingDown, RefreshCw, Layers, Award, ShieldAlert } from 'lucide-react';
 
-export default function RelatoriosView({ launches, categories, role, userEmail, userId }) {
+export default function RelatoriosView({ launches, categories, cards, role, userEmail, userId }) {
   // FIX: CriadoPor stores user_id (UUID), not email
   const filteredLaunches = launches.filter(l => 
     role === 'admin' || l.CriadoPor === userId
@@ -246,6 +246,80 @@ export default function RelatoriosView({ launches, categories, role, userEmail, 
         }}>
           <Download size={18} /> Baixar Planilha Template
         </a>
+      </div>
+
+      {/* Excel Export: Consolidated Table */}
+      <div className="glass-panel" style={{
+        padding: '24px',
+        background: 'linear-gradient(135deg, var(--bg-card) 0%, rgba(99,102,241,0.05) 100%)',
+        display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center', justifyContent: 'space-between',
+        border: '1px solid rgba(99,102,241,0.2)'
+      }}>
+        <div style={{ display: 'flex', gap: '16px', flex: '1 1 400px' }}>
+          <div style={{
+            background: 'rgba(99,102,241,0.1)', color: 'var(--color-accent)',
+            width: '48px', height: '48px', borderRadius: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+          }}>
+            <Download size={24} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '6px' }}>Exportar Tabela Consolidada</h4>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Exportar Excel com Cartão, Categoria, Tipo, Descrição, Data, Valor, Saldo da Categoria, Saldo Disponível e Saldo Contabilístico do Cartão.
+            </p>
+          </div>
+        </div>
+
+        <button onClick={() => {
+          const userFiltered = filteredLaunches;
+          const rows = [['Cartão', 'Categoria', 'Tipo', 'Descrição', 'Data', 'Valor', 'Saldo Categoria', 'Saldo Disponível Cartão', 'Saldo Contabilístico Cartão']];
+          userFiltered.forEach(l => {
+            const cat = categories.find(c => c.CategoriaID === l.CategoriaID);
+            const card = (cards || []).find(c => c.id === cat?.card_id);
+            let catSaldo = 0, cardDisp = 0, cardCont = 0;
+            if (cat) {
+              const catLancs = userFiltered.filter(fl => fl.CategoriaID === cat.CategoriaID);
+              const ce = catLancs.filter(fl => fl.Tipo === 'Entrada').reduce((s, fl) => s + Number(fl.Valor), 0);
+              const cs = catLancs.filter(fl => fl.Tipo === 'Saida').reduce((s, fl) => s + Number(fl.Valor), 0);
+              catSaldo = ce - cs;
+            }
+            if (card) {
+              const cardCats = categories.filter(c => c.card_id === card.id);
+              const cardCatIds = cardCats.map(c => c.CategoriaID);
+              const cardLancs = userFiltered.filter(fl => cardCatIds.includes(fl.CategoriaID));
+              const ce = cardLancs.filter(fl => fl.Tipo === 'Entrada').reduce((s, fl) => s + Number(fl.Valor), 0);
+              const cs = cardLancs.filter(fl => fl.Tipo === 'Saida').reduce((s, fl) => s + Number(fl.Valor), 0);
+              const catBal = cardCats.map(cc => {
+                const cce = cardLancs.filter(fl => fl.CategoriaID === cc.CategoriaID && fl.Tipo === 'Entrada').reduce((s, fl) => s + Number(fl.Valor), 0);
+                const ccs = cardLancs.filter(fl => fl.CategoriaID === cc.CategoriaID && fl.Tipo === 'Saida').reduce((s, fl) => s + Number(fl.Valor), 0);
+                return cce - ccs;
+              }).reduce((s, v) => s + v, 0);
+              cardDisp = ce - cs - catBal;
+              cardCont = ce - cs;
+            }
+            rows.push([
+              card ? card.name : 'Sem cartão',
+              cat ? cat.Nome : 'Sem categoria',
+              l.Tipo === 'Entrada' ? 'Entrada' : 'Saída',
+              l.Descricao || '',
+              l.Data,
+              Number(l.Valor),
+              catSaldo,
+              cardDisp,
+              cardCont
+            ]);
+          });
+          const csvContent = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join('\t')).join('\n');
+          const blob = new Blob(['\ufeff' + csvContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = `relatorio_consolidado_${new Date().toISOString().slice(0, 10)}.xls`;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 24px' }}>
+          <Download size={18} /> Exportar Excel
+        </button>
       </div>
 
     </div>

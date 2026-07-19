@@ -5,6 +5,7 @@ console.log("LancamentosView CARREGOU");
 export default function LancamentosView({
   launches,
   categories,
+  cards,
   role,
   userEmail,
   userId,
@@ -15,6 +16,7 @@ export default function LancamentosView({
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCard, setSelectedCard] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('all'); // all, month, year
   const [viewMode, setViewMode] = useState('table'); // table, cards
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -23,6 +25,7 @@ export default function LancamentosView({
   // Form State
   const [formData, setFormData] = useState({
     Data: new Date().toISOString().substring(0, 10),
+    card_id: cards?.length > 0 ? cards[0].id : '',
     CategoriaID: '',
     Tipo: 'Entrada',
     Valor: '',
@@ -32,6 +35,12 @@ export default function LancamentosView({
     Status: 'confirmado'
   });
   const [formError, setFormError] = useState('');
+  const [savingItemIndex, setSavingItemIndex] = useState(null);
+
+  const handleItemSaved = () => {
+    setSavingItemIndex(null);
+    setIsFormOpen(false);
+  };
 
   const filteredLaunches = launches.filter(l =>
     role === 'admin' || l.CriadoPor === userId
@@ -45,6 +54,10 @@ export default function LancamentosView({
 
     const matchesCategory = selectedCategory === 'all' || l.CategoriaID === selectedCategory;
 
+    // Card filter
+    const cat = categories.find(c => c.CategoriaID === l.CategoriaID);
+    const matchesCard = selectedCard === 'all' || l.card_id === selectedCard || (cat && cat.card_id === selectedCard);
+
     let matchesPeriod = true;
     if (selectedPeriod !== 'all') {
       const launchDate = new Date(l.Data);
@@ -56,7 +69,7 @@ export default function LancamentosView({
       }
     }
 
-    return matchesSearch && matchesCategory && matchesPeriod;
+    return matchesSearch && matchesCategory && matchesCard && matchesPeriod && !l.CategoriaID;
   }).sort((a, b) => new Date(b.Data) - new Date(a.Data));
 
   // Handle Form Input Change
@@ -97,6 +110,7 @@ export default function LancamentosView({
     setEditingLaunch(null);
     setFormData({
       Data: new Date().toISOString().substring(0, 10),
+      card_id: cards?.length > 0 ? cards[0].id : '',
       CategoriaID: categories.length > 0 ? categories[0].CategoriaID : '',
       Tipo: 'Entrada',
       Valor: '',
@@ -116,6 +130,7 @@ export default function LancamentosView({
     setEditingLaunch(launch);
     setFormData({
       Data: launch.Data,
+      card_id: launch.card_id || (cards?.length > 0 ? cards[0].id : ''),
       CategoriaID: launch.CategoriaID,
       Tipo: launch.Tipo,
       Valor: launch.Valor,
@@ -139,33 +154,73 @@ export default function LancamentosView({
       return;
     }
 
-    const selectedCat = categories.find(c => c.CategoriaID === formData.CategoriaID);
-    if (!selectedCat) return;
+    // Validar cartão obrigatório
+    if (!formData.card_id) {
+      setFormError('Selecione um Cartão. Todo lançamento deve pertencer a um cartão.');
+      return;
+    }
 
-    // --- RULE 1: Allocation limit from Mother Category ---
-    // If it's an Entrada in a child category, value cannot exceed mother category balance
-    if (formData.Tipo === 'Entrada' && selectedCat.CategoriaMaeID) {
-      const parentBalance = getCategoryBalance(selectedCat.CategoriaMaeID, editingLaunch ? editingLaunch.LancID : null);
-      if (val > parentBalance) {
-        const parentCat = categories.find(c => c.CategoriaID === selectedCat.CategoriaMaeID);
-        setFormError(`Saldo insuficiente na categoria mãe "${parentCat ? parentCat.Nome : 'Mãe'}". Saldo disponível para alocação: ${parentBalance.toLocaleString('pt-PT')} Kz.`);
+    const hasCategoria = formData.CategoriaID && formData.CategoriaID !== '';
+    const selectedCat = hasCategoria ? categories.find(c => c.CategoriaID === formData.CategoriaID) : null;
+    const selectedCard = cards?.find(c => c.id === formData.card_id);
+
+    // Regra: Saída exige categoria
+    if (formData.Tipo === 'Saida' && !hasCategoria) {
+      setFormError('Lançamento de saída exige uma categoria.');
+      return;
+    }
+
+    if (formData.Tipo === 'Entrada' && hasCategoria && selectedCat) {
+      // --- REGRA: Alocação para categoria (Entrada em categoria) ---
+      // Verificar se o cartão tem saldo disponível suficiente
+      const cardCats = categories.filter(c => c.card_id === formData.card_id);
+      const cardCatIds = cardCats.map(c => c.CategoriaID);
+      const cardLaunches = launches.filter(l =>
+        (role === 'admin' || l.CriadoPor === userId) &&
+        (cardCatIds.includes(l.CategoriaID) || l.card_id === formData.card_id)
+      );
+      const cardEntradas = cardLaunches.filter(l => l.Tipo === 'Entrada' && !l.CategoriaID).reduce((s, l) => s + Number(l.Valor), 0);
+      const cardSaidasComCat = cardLaunches.filter(l => l.Tipo === 'Entrada' && l.CategoriaID && l.CategoriaID !== formData.CategoriaID).reduce((s, l) => s + Number(l.Valor), 0);
+      const cardSaidasNormais = cardLaunches.filter(l => l.Tipo === 'Saida').reduce((s, l) => s + Number(l.Valor), 0);
+      const catSaldos = cardCats.map(c => {
+        const ce = cardLaunches.filter(l => l.CategoriaID === c.CategoriaID && l.Tipo === 'Entrada').reduce((s, l) => s + Number(l.Valor), 0);
+        const cs = cardLaunches.filter(l => l.CategoriaID === c.CategoriaID && l.Tipo === 'Saida').reduce((s, l) => s + Number(l.Valor), 0);
+        return ce - cs;
+      }).reduce((s, v) => s + v, 0);
+      const cardDisponivel = cardEntradas - cardSaidasNormais - catSaldos;
+
+      if (val > cardDisponivel) {
+        setFormError(`Saldo insuficiente no cartão "${selectedCard?.name || 'Selecionado'}". Saldo disponível: ${cardDisponivel.toLocaleString('pt-PT')} Kz.`);
         return;
+      }
+
+      // --- REGRA: Allocation limit from Mother Category ---
+      if (selectedCat.CategoriaMaeID) {
+        const parentBalance = getCategoryBalance(selectedCat.CategoriaMaeID, editingLaunch ? editingLaunch.LancID : null);
+        if (val > parentBalance) {
+          const parentCat = categories.find(c => c.CategoriaID === selectedCat.CategoriaMaeID);
+          setFormError(`Saldo insuficiente na categoria mãe "${parentCat ? parentCat.Nome : 'Mãe'}". Saldo disponível: ${parentBalance.toLocaleString('pt-PT')} Kz.`);
+          return;
+        }
       }
     }
 
-    // --- RULE 2: Standard expenditure limit ---
-    // If it's a Saida, it cannot exceed the current category balance, EXCEPT for Debts (subtype = Divida)
-    if (formData.Tipo === 'Saida' && selectedCat.Subtipo !== 'Divida') {
-      const catBalance = getCategoryBalance(formData.CategoriaID, editingLaunch ? editingLaunch.LancID : null);
-      if (val > catBalance) {
-        setFormError(`Não é possível registrar saída maior que o saldo disponível na categoria. Saldo atual: ${catBalance.toLocaleString('pt-PT')} Kz.`);
-        return;
+    if (formData.Tipo === 'Saida' && selectedCat) {
+      // --- REGRA: Standard expenditure limit ---
+      if (selectedCat.Subtipo !== 'Divida') {
+        const catBalance = getCategoryBalance(formData.CategoriaID, editingLaunch ? editingLaunch.LancID : null);
+        if (val > catBalance) {
+          setFormError(`Não é possível registrar saída maior que o saldo disponível na categoria. Saldo atual: ${catBalance.toLocaleString('pt-PT')} Kz.`);
+          return;
+        }
       }
     }
 
     const launchPayload = {
       ...formData,
       Valor: val,
+      card_id: formData.card_id,
+      CategoriaID: hasCategoria ? formData.CategoriaID : null,
       LancID: editingLaunch ? editingLaunch.LancID : 'L_' + Math.random().toString(36).substring(2, 9),
       CriadoPor: editingLaunch ? editingLaunch.CriadoPor : userId,
       EditadoEm: new Date().toISOString().replace('T', ' ').substring(0, 19)
@@ -183,6 +238,25 @@ export default function LancamentosView({
     } else {
       setIsFormOpen(false);
     }
+  };
+
+  const getCardBalance = (cardId) => {
+    const cardCats = categories.filter(c => c.card_id === cardId);
+    const cardCatIds = cardCats.map(c => c.CategoriaID);
+    const cardLaunches = launches.filter(l =>
+      (role === 'admin' || l.CriadoPor === userId) &&
+      (cardCatIds.includes(l.CategoriaID) || l.card_id === cardId)
+    );
+    const entradas = cardLaunches.filter(l => l.Tipo === 'Entrada' && !l.CategoriaID).reduce((s, l) => s + Number(l.Valor), 0);
+    const saidas = cardLaunches.filter(l => l.Tipo === 'Saida').reduce((s, l) => s + Number(l.Valor), 0);
+    const catSaldos = cardCats.map(c => {
+      const ce = cardLaunches.filter(l => l.CategoriaID === c.CategoriaID && l.Tipo === 'Entrada').reduce((s, l) => s + Number(l.Valor), 0);
+      const cs = cardLaunches.filter(l => l.CategoriaID === c.CategoriaID && l.Tipo === 'Saida').reduce((s, l) => s + Number(l.Valor), 0);
+      return ce - cs;
+    }).reduce((s, v) => s + v, 0);
+    const disponivel = entradas - saidas - catSaldos;
+    const contabilistico = disponivel + catSaldos;
+    return { disponivel, contabilistico };
   };
 
   const getCategoryName = (catId) => {
@@ -204,15 +278,15 @@ export default function LancamentosView({
       {/* Header and Controls */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700 }}>Gerenciamento de Lançamentos</h2>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700 }}>Gerenciamento de Carregamento</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Histórico de entradas de saldo, despesas por categoria, dívidas e empréstimos
+            Histórico de entradas de saldo nos cartões
           </p>
         </div>
         {role !== 'ReadOnly' && (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button onClick={handleOpenAdd} className="btn btn-primary" style={{ padding: '10px 18px' }}>
-              <Plus size={18} /> Novo Lançamento
+              <Plus size={18} /> Novo Carregamento
             </button>
           </div>
         )}
@@ -235,21 +309,23 @@ export default function LancamentosView({
             />
           </div>
 
-          {/* Category Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Filter size={16} style={{ color: 'var(--text-secondary)' }} />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="form-select"
-              style={{ padding: '8px 30px 8px 12px', fontSize: '0.85rem', color: '#000', backgroundColor: '#fff' }}
-            >
-              <option value="all">Todas Categorias</option>
-              {categories.map(cat => (
-                <option key={cat.CategoriaID} value={cat.CategoriaID}>{cat.Nome}</option>
-              ))}
-            </select>
-          </div>
+          {/* Card Dropdown */}
+          {cards && cards.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Filter size={16} style={{ color: 'var(--text-secondary)' }} />
+              <select
+                value={selectedCard}
+                onChange={(e) => setSelectedCard(e.target.value)}
+                className="form-select"
+                style={{ padding: '8px 30px 8px 12px', fontSize: '0.85rem', color: '#000', backgroundColor: '#fff' }}
+              >
+                <option value="all">Todos Cartões</option>
+                {cards.map(card => (
+                  <option key={card.id} value={card.id}>{card.icon || '💳'} {card.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Period Dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -315,7 +391,7 @@ export default function LancamentosView({
               <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                 <th style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Data</th>
                 <th style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700 }}>ID</th>
-                <th style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Categoria</th>
+                <th style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Cartão</th>
                 <th style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Tipo</th>
                 <th style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Valor</th>
                 <th style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 700 }}>Descrição</th>
@@ -340,7 +416,7 @@ export default function LancamentosView({
                   <tr key={launch.LancID} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.15s' }}>
                     <td style={{ padding: '12px 16px', fontSize: '0.85rem' }}>{launch.Data}</td>
                     <td style={{ padding: '12px 16px', fontSize: '0.75rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>{launch.LancID}</td>
-                    <td style={{ padding: '12px 16px', fontSize: '0.85rem', fontWeight: 600 }}>{getCategoryName(launch.CategoriaID)}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '0.85rem', fontWeight: 600 }}>{(() => { const card = cards.find(c => c.id === launch.card_id); return card ? `${card.icon || '💳'} ${card.name}` : 'Cartão removido'; })()}</td>
                     <td style={{ padding: '12px 16px', fontSize: '0.85rem' }}>
                       <span style={{
                         padding: '2px 8px',
@@ -426,7 +502,7 @@ export default function LancamentosView({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{launch.Data}</span>
-                    <h4 style={{ fontSize: '1rem', fontWeight: 700, marginTop: '2px' }}>{getCategoryName(launch.CategoriaID)}</h4>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 700, marginTop: '2px' }}>{(() => { const card = cards.find(c => c.id === launch.card_id); return card ? `${card.icon || '💳'} ${card.name}` : 'Cartão removido'; })()}</h4>
                   </div>
                   <span style={{
                     padding: '2px 8px',
@@ -515,14 +591,19 @@ export default function LancamentosView({
             background: 'var(--bg-secondary)',
             width: '100%',
             maxWidth: '480px',
-            padding: '24px',
+            maxHeight: 'min(85vh, 580px)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px'
+            overflow: 'hidden'
           }}>
 
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-              {editingLaunch ? 'Editar Lançamento' : 'Novo Lançamento'}
+            {/* Fixed Header */}
+            <h3 style={{
+              fontSize: '1.25rem', fontWeight: 700,
+              borderBottom: '1px solid var(--border-color)',
+              padding: '20px 24px 12px', margin: 0, flexShrink: 0
+            }}>
+              {editingLaunch ? 'Editar Carregamento' : 'Novo Carregamento'}
             </h3>
 
             {formError && (
@@ -535,14 +616,50 @@ export default function LancamentosView({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                fontSize: '0.85rem'
+                fontSize: '0.85rem',
+                margin: '12px 24px 0', flexShrink: 0
               }}>
                 <AlertCircle size={18} style={{ flexShrink: 0 }} />
                 <span>{formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <form onSubmit={handleSubmit} style={{
+              display: 'flex', flexDirection: 'column',
+              flex: 1, overflow: 'hidden', padding: '0 24px'
+            }}>
+              {/* Scrollable Content */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                {/* Cartão (obrigatório) */}
+                <div className="form-group">
+                  <label className="form-label">Cartão *</label>
+                  <select
+                    name="card_id"
+                    value={formData.card_id}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, card_id: e.target.value, CategoriaID: '' }));
+                      setFormError('');
+                    }}
+                    required
+                    className="form-select"
+                  >
+                    <option value="">— Selecione um cartão —</option>
+                    {cards?.map(card => {
+                      const cardBal = getCardBalance(card.id);
+                      return (
+                        <option key={card.id} value={card.id}>
+                          {card.icon || '💳'} {card.name} — Disp: {cardBal.disponivel.toLocaleString('pt-PT')} Kz | Saldo: {cardBal.contabilistico.toLocaleString('pt-PT')} Kz
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {(!cards || cards.length === 0) && (
+                    <p style={{ fontSize: '0.75rem', color: 'var(--color-warning)', marginTop: '4px' }}>
+                      Nenhum cartão disponível. Crie um na aba Cartões.
+                    </p>
+                  )}
+                </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 {/* Data */}
@@ -567,57 +684,27 @@ export default function LancamentosView({
                     onChange={handleInputChange}
                     className="form-select"
                   >
-                    <option value="Entrada">Entrada (Alocação/Depósito)</option>
+                    <option value="Entrada">Entrada (Carregamento/Alocação)</option>
                     <option value="Saida">Saída (Gasto/Amortização)</option>
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {/* Categoria */}
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Categoria</label>
-                  <select
-                    name="CategoriaID"
-                    value={formData.CategoriaID}
-                    onChange={handleInputChange}
-                    required
-                    className="form-select"
-                  >
-                    {categories.map(cat => {
-                      const balance = getCategoryBalance(cat.CategoriaID);
-                      let label = cat.Nome;
-                      if (cat.CategoriaMaeID) {
-                        const parent = categories.find(c => c.CategoriaID === cat.CategoriaMaeID);
-                        label += ` (filha de ${parent ? parent.Nome : 'Mãe'})`;
-                      } else {
-                        label += ` (Mãe)`;
-                      }
-                      return (
-                        <option key={cat.CategoriaID} value={cat.CategoriaID}>
-                          {label} - Saldo: {balance.toLocaleString('pt-PT')} Kz
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                {/* Valor */}
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Valor (Kz)</label>
-                  <input
-                    type="number"
-                    name="Valor"
-                    placeholder="Ex: 15000"
-                    value={formData.Valor}
-                    onChange={handleInputChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
+              {/* Valor */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Valor (Kz)</label>
+                <input
+                  type="number"
+                  name="Valor"
+                  placeholder="Ex: 15000"
+                  value={formData.Valor}
+                  onChange={handleInputChange}
+                  required
+                  className="form-input"
+                />
               </div>
 
-              {/* Helper explanation for Parent-Child Allocation */}
+              {/* Helper explanation */}
               <div style={{
                 fontSize: '0.75rem',
                 color: 'var(--text-muted)',
@@ -626,7 +713,7 @@ export default function LancamentosView({
                 borderRadius: '6px',
                 border: '1px dashed var(--border-color)'
               }}>
-                ℹ️ <strong>Alocações:</strong> Inserir uma <strong>Entrada</strong> em uma categoria filha desconta automaticamente do saldo disponível na sua categoria mãe correspondente.
+                ℹ️ <strong>Alocações:</strong> Inserir uma <strong>Entrada</strong> em um cartão, automaticamente aumentas o saldo disponível no cartão a ser usado pelas categorias do cartão correspondente.
               </div>
 
               {/* Descrição */}
@@ -643,41 +730,15 @@ export default function LancamentosView({
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {/* Conta */}
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Conta</label>
-                  <select
-                    name="Conta"
-                    value={formData.Conta}
-                    onChange={handleInputChange}
-                    className="form-select"
-                  >
-                    <option value="Banco">Banco</option>
-                    <option value="Cartão de Crédito">Cartão de Crédito</option>
-                    <option value="Carteira">Carteira</option>
-                    <option value="Poupança">Poupança</option>
-                  </select>
-                </div>
 
-                {/* Referência */}
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Referência</label>
-                  <input
-                    type="text"
-                    name="Referencia"
-                    placeholder="Ex: REF-01"
-                    value={formData.Referencia}
-                    onChange={handleInputChange}
-                    className="form-input"
-                  />
-                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '16px' }}>
+              {/* Fixed Footer */}
+              <div style={{
+                display: 'flex', gap: '10px', justifyContent: 'flex-end',
+                padding: '16px 0', borderTop: '1px solid var(--border-color)', flexShrink: 0
+              }}>
                 <button type="button" onClick={() => {
-                  // Se estamos a guardar um item de factura, cancelar volta aos resultados
                   if (savingItemIndex !== null) {
                     setSavingItemIndex(null);
                     setIsFormOpen(false);
@@ -688,7 +749,7 @@ export default function LancamentosView({
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  {savingItemIndex !== null ? 'Guardar Item' : editingLaunch ? 'Salvar Alterações' : 'Adicionar Lançamento'}
+                  {savingItemIndex !== null ? 'Guardar Item' : editingLaunch ? 'Salvar Alterações' : 'Adicionar Carregamento'}
                 </button>
               </div>
 

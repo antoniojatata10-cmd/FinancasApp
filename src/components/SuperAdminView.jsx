@@ -904,10 +904,10 @@ export default function SuperAdminView({
                             style={{
                               maxWidth: '220px', maxHeight: '120px', borderRadius: '8px',
                               border: '1px solid rgba(255,255,255,0.12)', objectFit: 'cover',
-                              cursor: 'zoom-in', transition: 'transform 0.2s'
+                              cursor: 'zoom-in',
                             }}
-                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                            onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                           />
                           <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>Clique para ampliar</div>
                         </div>

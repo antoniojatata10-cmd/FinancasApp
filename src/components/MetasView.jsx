@@ -11,6 +11,10 @@ const fmt = (v) => Number(v || 0).toLocaleString('pt-PT');
 const fmtKz = (v) => fmt(v) + ' Kz';
 const getExtra = () => { try { return JSON.parse(localStorage.getItem('metas_v2') || '{}'); } catch { return {}; } };
 const setExtra = (d) => localStorage.setItem('metas_v2', JSON.stringify(d));
+const getPlaneamento = () => { try { return JSON.parse(localStorage.getItem('metas_planeamento') || '{}'); } catch { return {}; } };
+const setPlaneamento = (d) => localStorage.setItem('metas_planeamento', JSON.stringify(d));
+const getSliderState = () => { try { return JSON.parse(localStorage.getItem('metas_slider') || '{}'); } catch { return {}; } };
+const setSliderState = (d) => localStorage.setItem('metas_slider', JSON.stringify(d));
 const detectCat = (d) => { if (!d) return 'outro'; d = d.toLowerCase(); if (d.includes('casa') || d.includes('aparta')) return 'casa'; if (d.includes('carr') || d.includes('auto')) return 'carro'; if (d.includes('viag') || d.includes('ferias')) return 'viagem'; if (d.includes('emerg') || d.includes('fund')) return 'emergencia'; if (d.includes('educ') || d.includes('curso')) return 'educacao'; if (d.includes('negoc') || d.includes('empres')) return 'negocio'; return 'outro'; };
 const monthsUntil = (t, c, m) => { if (m <= 0) return Infinity; const r = t - c; return r <= 0 ? 0 : Math.ceil(r / m); };
 const fmtDate = (m) => { const d = new Date(); d.setMonth(d.getMonth() + m); return d.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' }); };
@@ -22,8 +26,10 @@ export default function MetasView({ currentUser, session, launches = [], categor
   const [showForm, setShowForm] = useState(false);
   const [extra, setExtraState] = useState(getExtra());
   const [editId, setEditId] = useState(null);
-  const [slider, setSlider] = useState({});
-  const [form, setForm] = useState({ title: '', description: '', category: 'outro', target_amount: '', current_amount: '0', deadline: '', priority: 'media', is_required: true });
+  const [slider, setSlider] = useState(getSliderState());
+  const [userRend, setUserRend] = useState(() => getPlaneamento().rendimento || '');
+  const [userDisp, setUserDisp] = useState(() => getPlaneamento().disponivel || '');
+  const [form, setForm] = useState({ title: '', description: '', category: 'outro', target_amount: '', current_amount: '0', deadline: '', priority: 'media', is_required: true, valorMensal: '' });
   const [abonarId, setAbonarId] = useState(null);
   const [abonarVal, setAbonarVal] = useState('');
 
@@ -38,6 +44,8 @@ export default function MetasView({ currentUser, session, launches = [], categor
 
   useEffect(() => { fetchMetas(); }, [session]);
   useEffect(() => { setExtraState(getExtra()); }, [metas]);
+  useEffect(() => { setPlaneamento({ rendimento: userRend, disponivel: userDisp }); }, [userRend, userDisp]);
+  useEffect(() => { setSliderState(slider); }, [slider]);
 
   const updateExtra = (id, updates) => {
     const next = { ...extra, [id]: { ...(extra[id] || {}), ...updates } };
@@ -46,32 +54,28 @@ export default function MetasView({ currentUser, session, launches = [], categor
   };
 
   const stats = useMemo(() => {
-    const now = new Date();
-    const threeAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-    const recent = launches.filter(l => new Date(l.Data) >= threeAgo);
-    const rec = recent.filter(l => l.Tipo === 'Entrada').reduce((s, l) => s + Number(l.Valor || 0), 0);
-    const des = recent.filter(l => l.Tipo === 'Saida').reduce((s, l) => s + Number(l.Valor || 0), 0);
-    const months = Math.max(1, Math.ceil((now - threeAgo) / (30 * 86400000)));
-    const monthlyRec = rec / months;
-    const monthlyDes = des / months;
-    const saldo = monthlyRec - monthlyDes;
-    const avail = Math.max(0, saldo * 0.6);
+    const rend = Number(userRend || 0);
+    const disp = Number(userDisp || 0);
+    const despesasCalc = Math.max(0, rend - disp);
+    const saldoCalc = rend - despesasCalc;
     const active = metas.filter(m => !m.is_completed && (extra[m.id]?.status || 'ativa') === 'ativa');
-    const totalW = active.reduce((s, g) => s + (PRIO[extra[g.id]?.priority || 'media']?.w || 0.2), 0);
-    const perGoal = active.length > 0 && totalW > 0 ? avail / totalW : 0;
+    const totalComprometido = active.reduce((s, m) => s + Number(extra[m.id]?.valorMensal || 0), 0);
+    const orcamentoExcedido = disp > 0 && totalComprometido > disp;
+    const orcamentoRestante = Math.max(0, disp - totalComprometido);
     const totalSaved = metas.reduce((s, m) => s + Number(m.current_amount || 0), 0);
     const totalTarget = metas.reduce((s, m) => s + Number(m.target_amount || 0), 0);
     const concluded = metas.filter(m => m.is_completed).length;
-    return { monthlyRec, monthlyDes, saldo, avail, perGoal, active, totalSaved, totalTarget, concluded, totalW };
-  }, [launches, metas, extra]);
+    const percRend = rend > 0 ? Math.min(100, (totalComprometido / rend) * 100) : 0;
+    return { rend, disp, despesasCalc, saldoCalc, active, totalComprometido, orcamentoExcedido, orcamentoRestante, totalSaved, totalTarget, concluded, percRend };
+  }, [metas, extra, userRend, userDisp]);
 
   const alerts = useMemo(() => {
     const r = [];
     const now = new Date();
     metas.forEach(m => {
       if (m.is_completed) { r.push({ id: m.id, type: 'done', msg: `✅ "${m.title}" concluída!` }); return; }
-      const prio = extra[m.id]?.priority || 'media';
-      const mc = stats.perGoal || 50000;
+      const mc = Number(extra[m.id]?.valorMensal || 0);
+      if (mc <= 0) return;
       const rem = m.target_amount - m.current_amount;
       if (m.deadline) {
         const dl = new Date(m.deadline);
@@ -85,6 +89,9 @@ export default function MetasView({ currentUser, session, launches = [], categor
         }
       }
     });
+    if (stats.disp > 0 && stats.orcamentoExcedido) {
+      r.push({ id: 'orcamento', type: 'error', msg: `⛔ As metas ultrapassam o orçamento mensal em ${fmtKz(stats.totalComprometido - stats.disp)}.` });
+    }
     return r;
   }, [metas, extra, stats]);
 
@@ -94,12 +101,12 @@ export default function MetasView({ currentUser, session, launches = [], categor
     try {
       if (editId) {
         await supabase.from('goals').update({ title: form.title, description: form.description || form.category, target_amount: Number(form.target_amount), deadline: form.deadline || null }).eq('id', editId);
-        updateExtra(editId, { priority: form.priority, isRequired: form.is_required });
+        updateExtra(editId, { priority: form.priority, isRequired: form.is_required, valorMensal: Number(form.valorMensal) || 0 });
       } else {
         const { data } = await supabase.from('goals').insert({ user_id: session.user.id, title: form.title, description: form.description || form.category, target_amount: Number(form.target_amount), current_amount: Number(form.current_amount) || 0, deadline: form.deadline || null, is_completed: false }).select().single();
-        if (data) updateExtra(data.id, { priority: form.priority, isRequired: form.is_required, status: 'ativa' });
+        if (data) updateExtra(data.id, { priority: form.priority, isRequired: form.is_required, status: 'ativa', valorMensal: Number(form.valorMensal) || 0 });
       }
-      setForm({ title: '', description: '', category: 'outro', target_amount: '', current_amount: '0', deadline: '', priority: 'media', is_required: true });
+      setForm({ title: '', description: '', category: 'outro', target_amount: '', current_amount: '0', deadline: '', priority: 'media', is_required: true, valorMensal: '' });
       setShowForm(false);
       setEditId(null);
       fetchMetas();
@@ -128,7 +135,7 @@ export default function MetasView({ currentUser, session, launches = [], categor
 
   const handleToggle = (id) => { const cur = extra[id]?.status || 'ativa'; updateExtra(id, { status: cur === 'ativa' ? 'pausada' : 'ativa' }); };
 
-  const startEdit = (m) => { setForm({ title: m.title, description: m.description || '', category: detectCat(m.description), target_amount: String(m.target_amount), current_amount: String(m.current_amount), deadline: m.deadline || '', priority: extra[m.id]?.priority || 'media', is_required: extra[m.id]?.isRequired !== false }); setEditId(m.id); setShowForm(true); setTab('criar'); };
+  const startEdit = (m) => { setForm({ title: m.title, description: m.description || '', category: detectCat(m.description), target_amount: String(m.target_amount), current_amount: String(m.current_amount), deadline: m.deadline || '', priority: extra[m.id]?.priority || 'media', is_required: extra[m.id]?.isRequired !== false, valorMensal: String(extra[m.id]?.valorMensal || '') }); setEditId(m.id); setShowForm(true); setTab('criar'); };
 
   if (loading) return <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>A carregar metas...</div>;
 
@@ -160,6 +167,42 @@ export default function MetasView({ currentUser, session, launches = [], categor
         ))}
       </div>
 
+      {/* Planeamento Financeiro */}
+      <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
+        <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}><DollarSign size={16} style={{ color: 'var(--color-accent)' }} /> Planeamento Financeiro</h4>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Rendimento Mensal</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input type="number" value={userRend} onChange={e => setUserRend(e.target.value)} min="0" placeholder="0" style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>Kz</span>
+            </div>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Valor Mensal Disponível</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input type="number" value={userDisp} onChange={e => setUserDisp(e.target.value)} min="0" placeholder="0" style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>Kz</span>
+            </div>
+          </div>
+        </div>
+        {stats.active.length > 0 && Number(userDisp || 0) > 0 && (
+          <div style={{ marginTop: '10px', padding: '8px', borderRadius: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)', background: stats.orcamentoExcedido ? 'rgba(239,68,68,0.06)' : 'rgba(34,197,94,0.06)', border: `1px solid ${stats.orcamentoExcedido ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)'}` }}>
+            {stats.orcamentoExcedido
+              ? <span style={{ color: '#ef4444' }}>⚠️ Metas comprometem <strong>{fmtKz(stats.totalComprometido)}/mês</strong> · excede o orçamento em <strong>{fmtKz(stats.totalComprometido - stats.disp)}</strong></span>
+              : <span>📊 Total comprometido: <strong>{fmtKz(stats.totalComprometido)}/mês</strong> de {fmtKz(stats.disp)} disponíveis · restam <strong>{fmtKz(stats.orcamentoRestante)}</strong></span>}
+          </div>
+        )}
+        {Number(userRend || 0) > 0 && stats.totalComprometido > 0 && (
+          <div style={{ marginTop: '8px', padding: '6px 8px', borderRadius: '8px', fontSize: '0.72rem', color: 'var(--text-muted)', border: '1px dashed var(--border-color)' }}>
+            O valor comprometido representa <strong>{stats.percRend.toFixed(0)}%</strong> do rendimento mensal
+            {stats.percRend < 100 && Number(userDisp || 0) > 0
+              ? ` · restam ${fmtKz(Number(userRend || 0) - stats.totalComprometido)} livres`
+              : ''}
+          </div>
+        )}
+      </div>
+
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         {[{ id: 'visao', l: 'Visão Geral' }, { id: 'criar', l: 'Criar Meta' }, { id: 'simulador', l: 'Simulador' }, { id: 'alertas', l: `Alertas (${alerts.length})` }].map(t => (
@@ -170,15 +213,15 @@ export default function MetasView({ currentUser, session, launches = [], categor
       {/* Visão Geral */}
       {tab === 'visao' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Financial */}
+          {/* Financial - based on user input */}
           <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
             <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}><BarChart2 size={16} style={{ color: 'var(--color-accent)' }} /> Análise Financeira</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '8px' }}>
               {[
-                { l: 'Receitas/mês', v: fmtKz(stats.monthlyRec), c: '#22c55e' },
-                { l: 'Despesas/mês', v: fmtKz(stats.monthlyDes), c: '#f59e0b' },
-                { l: 'Saldo Médio', v: fmtKz(stats.saldo), c: stats.saldo >= 0 ? '#22c55e' : '#ef4444' },
-                { l: 'Disponível', v: fmtKz(stats.avail), c: 'var(--color-accent)' }
+                { l: 'Receitas/mês', v: fmtKz(stats.rend), c: '#22c55e' },
+                { l: 'Despesas/mês', v: fmtKz(stats.despesasCalc), c: '#f59e0b' },
+                { l: 'Saldo Médio', v: fmtKz(stats.saldoCalc), c: stats.saldoCalc >= 0 ? '#22c55e' : '#ef4444' },
+                { l: 'Disponível', v: fmtKz(stats.disp), c: 'var(--color-accent)' }
               ].map((m, i) => (
                 <div key={i} style={{ textAlign: 'center', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
                   <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{m.l}</div>
@@ -186,10 +229,14 @@ export default function MetasView({ currentUser, session, launches = [], categor
                 </div>
               ))}
             </div>
-            <div style={{ marginTop: '10px', padding: '8px', background: 'rgba(99,102,241,0.05)', borderRadius: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-              <Brain size={12} style={{ color: 'var(--color-accent)', marginRight: '4px', verticalAlign: 'middle' }} />
-              Recomendado: <strong style={{ color: 'var(--color-accent)' }}>{fmtKz(stats.perGoal)}/mês</strong> por meta ({stats.active.length} activa{stats.active.length !== 1 ? 's' : ''})
-            </div>
+            {stats.active.length > 0 && (
+              <div style={{ marginTop: '10px', padding: '8px', background: 'rgba(99,102,241,0.05)', borderRadius: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                <Brain size={12} style={{ color: 'var(--color-accent)', marginRight: '4px', verticalAlign: 'middle' }} />
+                {stats.orcamentoExcedido
+                  ? `Metas comprometem ${fmtKz(stats.totalComprometido)}/mês — ultrapassa o disponível`
+                  : `${stats.active.length} meta${stats.active.length !== 1 ? 's' : ''} activa${stats.active.length !== 1 ? 's' : ''} · ${fmtKz(stats.totalComprometido)}/mês comprometidos`}
+              </div>
+            )}
           </div>
 
           {/* Goals */}
@@ -209,7 +256,8 @@ export default function MetasView({ currentUser, session, launches = [], categor
                 const st = m.is_completed ? 'concluida' : (extra[m.id]?.status || 'ativa');
                 const pct = m.target_amount > 0 ? Math.min(100, (m.current_amount / m.target_amount) * 100) : 0;
                 const rem = m.target_amount - m.current_amount;
-                const mn = stats.perGoal > 0 ? monthsUntil(m.target_amount, m.current_amount, stats.perGoal) : Infinity;
+                const vm = Number(extra[m.id]?.valorMensal || 0);
+                const mn = vm > 0 ? monthsUntil(m.target_amount, m.current_amount, vm) : Infinity;
                 return (
                   <div key={m.id} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', opacity: st === 'pausada' ? 0.6 : 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -239,6 +287,7 @@ export default function MetasView({ currentUser, session, launches = [], categor
                         <div style={{ height: '100%', width: `${pct}%`, background: m.is_completed ? '#22c55e' : ic.c, borderRadius: '6px', transition: 'width 0.4s' }} />
                       </div>
                     </div>
+                    {vm > 0 && !m.is_completed && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><DollarSign size={10} /> {fmtKz(vm)}/mês</div>}
                     {m.deadline && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={10} /> Prazo: {new Date(m.deadline + 'T00:00:00').toLocaleDateString('pt-PT')}</div>}
                     {!m.is_completed && mn < Infinity && mn > 0 && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Conclusão: {fmtDate(mn)} ({mn} meses)</div>}
                     {!m.is_completed && st === 'ativa' && (
@@ -280,6 +329,13 @@ export default function MetasView({ currentUser, session, launches = [], categor
             <div><label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Prioridade</label><select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.85rem' }}>{PRIO_LIST.map(p => <option key={p.v} value={p.v}>{p.l}</option>)}</select></div>
             <div><label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Descrição</label><input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Opcional" style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.85rem' }} /></div>
           </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Valor Mensal para esta Meta (Kz)</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input type="number" value={form.valorMensal} onChange={e => setForm(p => ({ ...p, valorMensal: e.target.value }))} min="0" placeholder="Ex: 50000" style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.85rem' }}>Kz</span>
+            </div>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <input type="checkbox" checked={form.is_required} onChange={e => setForm(p => ({ ...p, is_required: e.target.checked }))} style={{ accentColor: 'var(--color-accent)' }} />
             <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}><Shield size={12} style={{ verticalAlign: 'middle' }} /> Obrigatória</span>
@@ -303,7 +359,8 @@ export default function MetasView({ currentUser, session, launches = [], categor
             stats.active.map(m => {
               const cat = detectCat(m.description);
               const ic = ICONS[cat] || ICONS.outro;
-              const val = slider[m.id] || stats.perGoal || 50000;
+              const vm = Number(extra[m.id]?.valorMensal || 50000);
+              const val = slider[m.id] || vm;
               const mn = monthsUntil(m.target_amount, m.current_amount, val);
               const pct = m.target_amount > 0 ? Math.min(100, (m.current_amount / m.target_amount) * 100) : 0;
               return (

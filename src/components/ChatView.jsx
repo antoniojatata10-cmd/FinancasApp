@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   MessageSquare, Send, Image, FileText, Check, CheckCheck,
   Archive, CheckCircle2, User, Search, Loader2, ArrowLeft,
-  Circle, X, Paperclip
+  Circle, X, Paperclip, Trash2
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../supabaseClient';
 
@@ -270,6 +270,18 @@ export default function ChatView({ currentUser }) {
 
   useEffect(() => { scrollToBottom(); }, [localMessages, messages]);
 
+  const handleDeleteMessage = async (msgId, isLocal) => {
+    if (!window.confirm('Tem certeza que deseja eliminar esta mensagem?')) return;
+    if (isLocal) {
+      const updated = localMessages.filter(m => m.id !== msgId);
+      setLocalMessages(updated);
+      saveLocalMessages(updated);
+    } else {
+      await supabase.from('chat_messages').delete().eq('id', msgId);
+      setMessages(prev => prev.filter(m => m.id !== msgId));
+    }
+  };
+
   const handleToggleArchive = async () => {
     if (!activeConversation) return;
     const { error } = await supabase.from('chat_messages')
@@ -303,7 +315,14 @@ export default function ChatView({ currentUser }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: '12px', color: 'var(--text-muted)' }}>
         <Loader2 size={28} style={{ animation: 'spin 1s linear infinite' }} />
         <span style={{ fontSize: '0.85rem' }}>A verificar ligação ao chat...</span>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+          .chat-admin-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--border-color); max-height: 200px; }
+          .chat-container { flex-direction: column !important; }
+          .chat-message { max-width: 85% !important; }
+        }
+      `}</style>
       </div>
     );
   }
@@ -356,28 +375,41 @@ export default function ChatView({ currentUser }) {
             localMessages.map(m => {
               const isOwn = isAdmin ? m.is_admin : !m.is_admin;
               return (
-                <div key={m.id} style={{ alignSelf: isOwn ? 'flex-end' : 'flex-start', maxWidth: '72%' }}>
-                  {!isOwn && (
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '3px', marginLeft: '4px' }}>
-                      {m.is_admin ? '👑 Administrador' : (m.sender_name || 'Utilizador')}
-                    </div>
-                  )}
-                  <div style={{
-                    padding: '10px 14px',
-                    borderRadius: isOwn ? '16px 16px 2px 16px' : '16px 16px 16px 2px',
-                    background: isOwn ? 'var(--color-accent)' : 'rgba(255,255,255,0.07)',
-                    border: isOwn ? 'none' : '1px solid var(--border-color)',
-                    color: '#fff',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
-                  }}>
-                    <span style={{ fontSize: '0.88rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{m.content}</span>
-                    <div style={{ alignSelf: 'flex-end', fontSize: '0.62rem', color: 'rgba(255,255,255,0.5)' }}>
-                      {new Date(m.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                  <div key={m.id} style={{ alignSelf: isOwn ? 'flex-end' : 'flex-start', maxWidth: '72%', position: 'relative', group: 'true' }}>
+                    {!isOwn && (
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '3px', marginLeft: '4px' }}>
+                        {m.is_admin ? '👑 Administrador' : (m.sender_name || 'Utilizador')}
+                      </div>
+                    )}
+                    <div style={{
+                      padding: '10px 14px',
+                      borderRadius: isOwn ? '16px 16px 2px 16px' : '16px 16px 16px 2px',
+                      background: isOwn ? 'var(--color-accent)' : 'rgba(255,255,255,0.07)',
+                      border: isOwn ? 'none' : '1px solid var(--border-color)',
+                      color: '#fff',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                      position: 'relative'
+                    }}>
+                      <button onClick={() => handleDeleteMessage(m.id, true)}
+                        style={{
+                          position: 'absolute', top: '4px', right: '4px',
+                          background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '4px',
+                          padding: '2px', cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+                          opacity: 0.5, transition: 'opacity 0.15s', lineHeight: 0
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+                        title="Eliminar mensagem">
+                        <Trash2 size={11} />
+                      </button>
+                      <span style={{ fontSize: '0.88rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{m.content}</span>
+                      <div style={{ alignSelf: 'flex-end', fontSize: '0.62rem', color: 'rgba(255,255,255,0.5)' }}>
+                        {new Date(m.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   </div>
-                </div>
               );
             })
           )}
@@ -409,11 +441,11 @@ export default function ChatView({ currentUser }) {
   // SUPABASE ONLINE MODE
   // ══════════════════════════════════════════════════════════════════════════
   return (
-    <div style={{ display: 'flex', height: '100%', minHeight: '400px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+    <div className="chat-container" style={{ display: 'flex', height: '100%', minHeight: '400px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
 
       {/* Conversations sidebar (Only shown for Admin) */}
       {isAdmin && (
-        <div style={{ width: '280px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.1)', flexShrink: 0 }}>
+        <div className="chat-admin-sidebar" style={{ width: '280px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.1)', flexShrink: 0 }}>
           <div style={{ padding: '14px', borderBottom: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 800 }}>💬 Conversas</h3>
             <div style={{ position: 'relative' }}>
@@ -530,8 +562,21 @@ export default function ChatView({ currentUser }) {
                     borderRadius: isOwn ? '16px 16px 2px 16px' : '16px 16px 16px 2px',
                     background: isOwn ? 'var(--color-accent)' : 'rgba(255,255,255,0.06)',
                     border: isOwn ? 'none' : '1px solid var(--border-color)',
-                    color: '#fff', display: 'flex', flexDirection: 'column', gap: '4px'
+                    color: '#fff', display: 'flex', flexDirection: 'column', gap: '4px',
+                    position: 'relative'
                   }}>
+                    <button onClick={() => handleDeleteMessage(m.id, false)}
+                      style={{
+                        position: 'absolute', top: '4px', right: '4px',
+                        background: 'rgba(0,0,0,0.3)', border: 'none', borderRadius: '4px',
+                        padding: '2px', cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+                        opacity: 0.5, transition: 'opacity 0.15s', lineHeight: 0
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+                      title="Eliminar mensagem">
+                      <Trash2 size={11} />
+                    </button>
                     {m.message_attachments?.map(att => (
                       <div key={att.id} style={{ marginBottom: '6px' }}>
                         {att.file_type === 'image' ? (

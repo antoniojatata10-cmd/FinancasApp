@@ -24,6 +24,8 @@ import EmpresaView from './components/EmpresaView';
 import ChatView from './components/ChatView';
 import MetasView from './components/MetasView';
 import DividasView from './components/DividasView';
+import CartoesView from './components/CartoesView';
+import DashboardCardView from './components/DashboardCardView';
 
 // Supabase client
 import { supabase } from './supabaseClient';
@@ -202,10 +204,12 @@ export default function App() {
   // Data State
   const [launches, setLaunches] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [cards, setCards] = useState([]);
 
   // Global App State
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedCardId, setSelectedCardId] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [theme, setTheme] = useState('dark');
@@ -373,6 +377,11 @@ export default function App() {
 
   const loadDataFromSupabase = async (userId, role) => {
     try {
+      // Cards
+      const cardsQuery = supabase.from('cards').select('*').eq('user_id', userId);
+      const { data: cardData } = await cardsQuery;
+      if (cardData) setCards(cardData);
+
       // Categories
       const categoriesQuery = role === 'admin' ? supabase.from('categories').select('*') : supabase.from('categories').select('*').eq('user_id', userId);
       const { data: catData } = await categoriesQuery;
@@ -386,7 +395,8 @@ export default function App() {
           Subtipo: c.subtype,
           Alvo: c.target_amount,
           LimiteMensal: c.monthly_limit || 0,
-          Ativa: true
+          Ativa: true,
+          card_id: c.card_id || null
         })));
       }
 
@@ -404,7 +414,8 @@ export default function App() {
           Descricao: t.description,
           Conta: t.account,
           Status: t.status,
-          CriadoPor: t.user_id // using user_id instead of email to avoid complex joins
+          CriadoPor: t.user_id,
+          card_id: t.card_id || null
         })));
       }
     } catch (err) {
@@ -421,6 +432,12 @@ export default function App() {
         loadDataFromSupabase(session.user.id, currentUser?.Role);
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, payload => {
+        loadDataFromSupabase(session.user.id, currentUser?.Role);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, payload => {
+        loadDataFromSupabase(session.user.id, currentUser?.Role);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transfers' }, payload => {
         loadDataFromSupabase(session.user.id, currentUser?.Role);
       })
       .subscribe();
@@ -470,16 +487,17 @@ export default function App() {
   };
 
   // Reset to dashboard if user switches tab, leaves site, or returns (resumes)
-  /*useEffect(() => {
+  useEffect(() => {
     const handleResume = () => {
       if (session) {
         setActiveTab('dashboard');
+        setSelectedCardId(null);
+        setMenuOpen(false);
       }
     };
+    if (document.visibilityState === 'visible') handleResume();
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        handleResume();
-      }
+      if (document.visibilityState === 'visible') handleResume();
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleResume);
@@ -488,11 +506,17 @@ export default function App() {
       window.removeEventListener('focus', handleResume);
     };
   }, [session]);
-  */
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setToastMessage({ type: 'success', text: 'Sessão encerrada com segurança.' });
+    setCurrentUser(null);
+    setSession(null);
+    setLaunches([]);
+    setCategories([]);
+    setCards([]);
+    setSelectedCardId(null);
+    setActiveTab('dashboard');
+    setAuthMode('landing');
   };
 
   // Category Balance logic
@@ -537,7 +561,8 @@ export default function App() {
       description: newLaunch.Descricao,
       category_id: newLaunch.CategoriaID,
       account: newLaunch.Conta,
-      status: newLaunch.Status
+      status: newLaunch.Status,
+      card_id: newLaunch.card_id || null
     }]);
 
     if (error) setToastMessage({ type: 'warning', text: 'Erro ao salvar: ' + error.message });
@@ -596,7 +621,8 @@ export default function App() {
       subtype: newCat.Subtipo,
       parent_id: newCat.CategoriaMaeID ? newCat.CategoriaMaeID : null,
       target_amount: newCat.Alvo || 0,
-      monthly_limit: newCat.LimiteMensal || 0
+      monthly_limit: newCat.LimiteMensal || 0,
+      card_id: newCat.card_id || null
     }]);
 
     if (error) {
@@ -671,6 +697,65 @@ export default function App() {
 
   const handleAutoBudget = async (salaryAmount) => {
     alert("Funcionalidade de orçamento automático migrada para a cloud. Em construção.");
+  };
+
+  // Card CRUD
+  const handleAddCard = async (newCard) => {
+    const { error } = await supabase.from('cards').insert([{
+      user_id: session.user.id,
+      name: newCard.name,
+      number: newCard.number || '',
+      icon: newCard.icon || '💳',
+      description: newCard.description || '',
+      color: newCard.color || '#6366f1',
+      style: newCard.style || 'modern',
+      model: newCard.model || 'classico',
+      intensity: newCard.intensity != null ? newCard.intensity : 50
+    }]);
+    if (error) setToastMessage({ type: 'warning', text: 'Erro ao criar cartão: ' + error.message });
+    else setToastMessage({ type: 'success', text: 'Cartão criado!' });
+    await loadDataFromSupabase(session.user.id, currentUser?.Role);
+  };
+
+  const handleEditCard = async (updated) => {
+    const { error } = await supabase.from('cards').update({
+      name: updated.name,
+      number: updated.number,
+      icon: updated.icon,
+      description: updated.description,
+      color: updated.color,
+      style: updated.style,
+      model: updated.model,
+      intensity: updated.intensity != null ? updated.intensity : 50
+    }).eq('id', updated.id).eq('user_id', session?.user?.id);
+    if (error) setToastMessage({ type: 'warning', text: 'Erro ao editar cartão: ' + error.message });
+    else setToastMessage({ type: 'success', text: 'Cartão atualizado!' });
+    await loadDataFromSupabase(session.user.id, currentUser?.Role);
+  };
+
+  const handleDeleteCard = async (id) => {
+    const { error } = await supabase.from('cards').delete().eq('id', id).eq('user_id', session?.user?.id);
+    if (error) setToastMessage({ type: 'warning', text: 'Erro ao eliminar cartão: ' + error.message });
+    else {
+      setToastMessage({ type: 'success', text: 'Cartão eliminado!' });
+      if (selectedCardId === id) setSelectedCardId(null);
+    }
+    await loadDataFromSupabase(session.user.id, currentUser?.Role);
+  };
+
+  const handleTransfer = async ({ from_card_id, to_card_id, amount, description }) => {
+    const { error } = await supabase.from('transfers').insert([{
+      user_id: session.user.id,
+      from_card_id,
+      to_card_id,
+      amount,
+      description: description || ''
+    }]);
+    if (error) setToastMessage({ type: 'warning', text: 'Erro ao transferir: ' + error.message });
+    else {
+      setToastMessage({ type: 'success', text: 'Transferência realizada!' });
+      await loadDataFromSupabase(session.user.id, currentUser?.Role);
+    }
   };
 
   // UI Setup
@@ -767,17 +852,41 @@ export default function App() {
 
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} currentUser={currentUser} onAddLaunchClick={() => setActiveTab('lancamentos')} onGoToChat={() => setActiveTab('chat')} onForceAdmin={handleForceAdmin} />;
+        if (selectedCardId) {
+          const selectedCard = cards.find(c => c.id === selectedCardId);
+          return <DashboardCardView
+            card={selectedCard}
+            categories={categories}
+            launches={launches}
+            role={currentUser?.Role}
+            userId={session?.user?.id}
+            onBack={() => { setSelectedCardId(null); setActiveTab('cartoes'); }}
+            onAddCategory={handleAddCategory}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
+            onAddLaunch={handleAddLaunch}
+            onEditLaunch={handleEditLaunch}
+            onDeleteLaunch={handleDeleteLaunch}
+            getCategoryBalance={getCategoryBalance}
+            onTransfer={handleTransfer}
+            cards={cards}
+            onEditCard={handleEditCard}
+            onDeleteCard={handleDeleteCard}
+          />;
+        }
+        return <DashboardView launches={launches} categories={categories} cards={cards} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} currentUser={currentUser} setCurrentUser={setCurrentUser} onAddLaunchClick={() => setActiveTab('lancamentos')} onGoToChat={() => setActiveTab('chat')} onForceAdmin={handleForceAdmin} onSelectCard={(cardId) => { setSelectedCardId(cardId); setActiveTab('dashboard'); }} />;
+      case 'cartoes':
+        return <CartoesView cards={cards} launches={launches} categories={categories} role={currentUser?.Role} userId={session?.user?.id}
+          onAddCard={handleAddCard} onEditCard={handleEditCard} onDeleteCard={handleDeleteCard}
+          onSelectCard={(cardId) => { setSelectedCardId(cardId); setActiveTab('dashboard'); }} />;
       case 'lancamentos':
-        return <LancamentosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch} onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
+        return <LancamentosView launches={launches} categories={categories} cards={cards} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} onAddLaunch={handleAddLaunch} onEditLaunch={handleEditLaunch} onDeleteLaunch={handleDeleteLaunch} getCategoryBalance={getCategoryBalance} />;
       case 'categorias':
-        return <CategoriasView categories={categories} launches={launches} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id}
-          onAddCategory={handleAddCategory}
-          onEditCategory={handleEditCategory}
-          onDeleteCategory={handleDeleteCategory}
-          onAutoBudget={handleAutoBudget} />;
+        return <CartoesView cards={cards} launches={launches} categories={categories} role={currentUser?.Role} userId={session?.user?.id}
+          onAddCard={handleAddCard} onEditCard={handleEditCard} onDeleteCard={handleDeleteCard}
+          onSelectCard={(cardId) => { setSelectedCardId(cardId); setActiveTab('dashboard'); }} />;
       case 'relatorios':
-        return <RelatoriosView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} />;
+        return <RelatoriosView launches={launches} categories={categories} cards={cards} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} />;
       case 'coach':
         return <CoachView launches={launches} categories={categories} role={currentUser?.Role} userEmail={currentUser?.Email} userId={session?.user?.id} getCategoryBalance={getCategoryBalance} />;
       case 'academia':
@@ -808,8 +917,8 @@ export default function App() {
 
   const mainNavItems = [
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-    { id: 'lancamentos', icon: <Receipt size={18} />, label: 'Lançamentos' },
-    { id: 'categorias', icon: <Tags size={18} />, label: 'Categorias' },
+    { id: 'cartoes', icon: <CreditCard size={18} />, label: 'Cartões' },
+    { id: 'lancamentos', icon: <Receipt size={18} />, label: 'Carregar Cartão' },
     { id: 'relatorios', icon: <FileBarChart size={18} />, label: 'Relatórios' },
     { id: 'coach', icon: <Sparkles size={18} />, label: 'Coach IA' },
     { id: 'chat', icon: <MessageCircle size={18} />, label: 'Suporte SMS' },
@@ -952,10 +1061,10 @@ export default function App() {
       {menuOpen && (
         <>
           <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(0,0,0,0.4)' }} />
-          <div className="glass-panel animate-fade-in" style={{ position: 'fixed', top: '56px', right: '12px', zIndex: 95, padding: '8px', borderRadius: '14px', minWidth: '210px', boxShadow: '0 12px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+          <div className="glass-panel animate-fade-in" style={{ position: 'fixed', top: '64px', right: '12px', zIndex: 95, padding: '8px', borderRadius: '14px', minWidth: '210px', boxShadow: '0 12px 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: 'calc(100vh - 88px)', overflowY: 'auto' }}>
             <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, padding: '4px 12px 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Principal</div>
             {mainNavItems.map(item => (
-              <button key={item.id} onClick={() => { setActiveTab(item.id); setMenuOpen(false); }} style={{ background: activeTab === item.id ? 'rgba(99,102,241,0.12)' : 'transparent', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: activeTab === item.id ? 'var(--color-accent)' : 'var(--text-secondary)', fontWeight: activeTab === item.id ? 700 : 500, fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left' }}>
+              <button key={item.id} onClick={() => { if (item.id === 'dashboard') setSelectedCardId(null); setActiveTab(item.id); setMenuOpen(false); }} style={{ background: activeTab === item.id ? 'rgba(99,102,241,0.12)' : 'transparent', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: activeTab === item.id ? 'var(--color-accent)' : 'var(--text-secondary)', fontWeight: activeTab === item.id ? 700 : 500, fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left' }}>
                 <span style={{ color: activeTab === item.id ? 'var(--color-accent)' : 'var(--text-muted)' }}>{item.icon}</span>{item.label}
               </button>
             ))}
@@ -964,7 +1073,7 @@ export default function App() {
             {extraNavItems.map(item => {
               const locked = isPremiumLocked(item.id);
               return (
-              <button key={item.id} onClick={() => { setActiveTab(item.id); setMenuOpen(false); }} style={{ background: activeTab === item.id ? (item.gold ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)') : 'transparent', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: activeTab === item.id ? (item.gold ? '#f59e0b' : 'var(--color-accent)') : 'var(--text-secondary)', fontWeight: activeTab === item.id ? 700 : 500, fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left', opacity: locked ? 0.7 : 1 }}>
+              <button key={item.id} onClick={() => { if (item.id === 'dashboard') setSelectedCardId(null); setActiveTab(item.id); setMenuOpen(false); }} style={{ background: activeTab === item.id ? (item.gold ? 'rgba(245,158,11,0.12)' : 'rgba(99,102,241,0.12)') : 'transparent', border: 'none', cursor: 'pointer', padding: '10px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', color: activeTab === item.id ? (item.gold ? '#f59e0b' : 'var(--color-accent)') : 'var(--text-secondary)', fontWeight: activeTab === item.id ? 700 : 500, fontSize: '0.88rem', transition: 'all 0.15s', width: '100%', textAlign: 'left', opacity: locked ? 0.7 : 1 }}>
                 <span style={{ color: activeTab === item.id ? (item.gold ? '#f59e0b' : 'var(--color-accent)') : 'var(--text-muted)' }}>{item.icon}</span>{item.label}
                 {locked && <Lock size={13} style={{ marginLeft: 'auto', color: '#f59e0b', flexShrink: 0 }} />}
               </button>

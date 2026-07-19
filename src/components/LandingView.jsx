@@ -136,8 +136,8 @@ export default function LandingView({ onShowLogin, onShowRegister }) {
               cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
               transition: 'all 0.2s'
             }}
-            onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
           >
             Entrar
           </button>
@@ -269,12 +269,10 @@ export default function LandingView({ onShowLogin, onShowRegister }) {
                 onMouseEnter={e => {
                   e.currentTarget.style.background = `rgba(255,255,255,0.04)`;
                   e.currentTarget.style.borderColor = `${f.color}40`;
-                  e.currentTarget.style.transform = 'translateY(-4px)';
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
                   e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
                 <div style={{

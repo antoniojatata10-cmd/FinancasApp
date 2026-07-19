@@ -507,8 +507,8 @@ export default function CoachView({ launches, categories, role, userEmail, userI
                 background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)',
                 color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s'
               }}
-                onMouseEnter={e => { e.target.style.background = 'rgba(99,102,241,0.15)'; e.target.style.color = 'var(--color-accent)'; }}
-                onMouseLeave={e => { e.target.style.background = 'rgba(99,102,241,0.06)'; e.target.style.color = 'var(--text-secondary)'; }}>
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.15)'; e.currentTarget.style.color = 'var(--color-accent)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.06)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}>
                 💬 {p}
               </button>
             ))}
@@ -1101,8 +1101,8 @@ function AcademiaFinanceira({ score }) {
                   transition: 'all 0.2s'
                 }}
                 onClick={() => !locked && setActiveLicao(licao.id)}
-                onMouseEnter={e => { if (!locked) e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
+                onMouseEnter={e => { if (!locked) e.currentTarget.style.borderColor = licao.cor + '40'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = done ? `${licao.cor}50` : 'var(--border-color)'; }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{ width: '48px', height: '48px', borderRadius: '12px', flexShrink: 0, background: done ? `${licao.cor}20` : 'rgba(255,255,255,0.05)', border: `1px solid ${done ? licao.cor + '50' : 'var(--border-color)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
