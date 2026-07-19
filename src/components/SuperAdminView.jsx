@@ -355,18 +355,25 @@ export default function SuperAdminView({
   };
 
   const handleSaveBank = async () => {
-    try {
-      // Save each key-value pair to admin_settings
-      const updates = Object.entries(bankForm).map(([key, value]) =>
+    const results = await Promise.all(
+      Object.entries(bankForm).map(([key, value]) =>
         supabase.from('admin_settings').upsert({ key, value }, { onConflict: 'key' })
-      );
-      await Promise.all(updates);
-      setBankInfo(bankForm);
-      setEditingBank(false);
-      onToast({ type: 'success', text: 'Coordenadas bancárias guardadas no Supabase com sucesso!' });
-    } catch (err) {
-      onToast({ type: 'warning', text: 'Erro ao guardar: ' + (err.message || 'Tente novamente.') });
+      )
+    );
+    const firstError = results.find(r => r.error)?.error;
+    if (firstError) {
+      onToast({ type: 'warning', text: 'Erro ao guardar: ' + (firstError.message || 'Tente novamente.') });
+      return;
     }
+    onToast({ type: 'success', text: 'Coordenadas bancárias guardadas no Supabase com sucesso!' });
+    // Re-read from Supabase to confirm persistence
+    const { data: refreshed } = await supabase.from('admin_settings').select('key, value');
+    if (refreshed) {
+      const cfg = {};
+      refreshed.forEach(row => { cfg[row.key] = row.value; });
+      setBankInfo(cfg);
+    }
+    setEditingBank(false);
   };
 
   // Approve payment via SQL function

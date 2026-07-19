@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft, Plus, Edit2, Trash2, TrendingUp, TrendingDown,
-  Wallet, AlertCircle, ArrowLeftRight, Tags, Receipt, CreditCard,
+  Wallet, AlertCircle, Tags, Receipt, CreditCard,
   Save, X, List, LayoutGrid
 } from 'lucide-react';
 
@@ -27,11 +27,9 @@ export default function DashboardCardView({
   card, categories, launches, role, userId,
   onBack, onAddCategory, onEditCategory, onDeleteCategory,
   onAddLaunch, onEditLaunch, onDeleteLaunch, getCategoryBalance,
-  onTransfer, cards, onEditCard, onDeleteCard
+  cards, onEditCard, onDeleteCard
 }) {
-  const [activeSection, setActiveSection] = useState('overview'); // overview | categorias | lancamentos | transferir | carregamentos
-  const [showTransferForm, setShowTransferForm] = useState(false);
-  const [transferData, setTransferData] = useState({ to_card_id: '', amount: '', description: '' });
+  const [activeSection, setActiveSection] = useState('overview'); // overview | categorias | lancamentos | carregamentos
   const [showCatForm, setShowCatForm] = useState(false);
   const [catFormData, setCatFormData] = useState({
     Nome: '', Tipo: 'Despesa', Subtipo: 'Nenhum', CategoriaMaeID: '', Alvo: 0, LimiteMensal: 0
@@ -113,22 +111,6 @@ export default function DashboardCardView({
   const maxMonthlyVal = Math.max(...monthlyChartData.map(d => Math.max(d.entradas, d.saidas)), 10000);
 
   // Handlers
-  const handleTransfer = () => {
-    const amt = Number(transferData.amount);
-    if (!transferData.to_card_id) { alert('Selecione o cartão de destino'); return; }
-    if (amt <= 0) { alert('Valor deve ser maior que 0'); return; }
-    if (amt > saldoDisponivel) { alert('Valor superior ao saldo disponível'); return; }
-    if (transferData.to_card_id === card.id) { alert('Não pode transferir para o mesmo cartão'); return; }
-    onTransfer({
-      from_card_id: card.id,
-      to_card_id: transferData.to_card_id,
-      amount: amt,
-      description: transferData.description
-    });
-    setShowTransferForm(false);
-    setTransferData({ to_card_id: '', amount: '', description: '' });
-  };
-
   const handleAddCat = (e) => {
     e.preventDefault();
     if (!catFormData.Nome.trim()) { alert('Nome é obrigatório'); return; }
@@ -232,7 +214,6 @@ export default function DashboardCardView({
     { id: 'overview', label: 'Visão Geral', icon: <Wallet size={16} /> },
     { id: 'categorias', label: 'Categorias', icon: <Tags size={16} /> },
     { id: 'lancamentos', label: 'Lançamentos', icon: <Receipt size={16} /> },
-    { id: 'transferir', label: 'Transferir', icon: <ArrowLeftRight size={16} /> },
     { id: 'carregamentos', label: 'Carregamentos', icon: <CreditCard size={16} /> },
   ];
 
@@ -782,41 +763,6 @@ export default function DashboardCardView({
               </div>
             );
           })()}
-        </div>
-      )}
-
-      {/* TRANSFERIR */}
-      {activeSection === 'transferir' && (
-        <div className="glass-panel" style={{ padding: '20px', maxWidth: '480px' }}>
-          <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px' }}>Transferir entre Cartões</h4>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            Saldo disponível: <strong>{saldoDisponivel.toLocaleString('pt-PT')} Kz</strong>
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '4px', display: 'block' }}>Cartão de Destino</label>
-              <select value={transferData.to_card_id} onChange={e => setTransferData({ ...transferData, to_card_id: e.target.value })}
-                className="form-select" style={{ width: '100%' }}>
-                <option value="">Selecione...</option>
-                {cards.filter(c => c.id !== card.id).map(c => (
-                  <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '4px', display: 'block' }}>Valor (Kz)</label>
-              <input type="number" value={transferData.amount} onChange={e => setTransferData({ ...transferData, amount: e.target.value })}
-                className="form-input" placeholder="0" min="0" style={{ width: '100%' }} />
-            </div>
-            <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '4px', display: 'block' }}>Descrição</label>
-              <input type="text" value={transferData.description} onChange={e => setTransferData({ ...transferData, description: e.target.value })}
-                className="form-input" placeholder="Opcional" style={{ width: '100%' }} />
-            </div>
-            <button onClick={handleTransfer} className="btn btn-primary" style={{ padding: '12px', marginTop: '8px' }}>
-              <ArrowLeftRight size={16} style={{ marginRight: '6px' }} /> Transferir
-            </button>
-          </div>
         </div>
       )}
 

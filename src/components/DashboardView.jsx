@@ -16,7 +16,17 @@ export default function DashboardView({ launches, categories, cards, role, userE
 
   const filteredLaunches = launches.filter(l =>
     role === 'admin' || l.CriadoPor === userId
-  );
+  ).filter(l => {
+    if (l.card_id && !cards?.some(c => c.id === l.card_id)) return false;
+    if (l.CategoriaID) {
+      const cat = categories?.find(c => c.CategoriaID === l.CategoriaID);
+      if (cat) {
+        if (!cat.card_id) return false;
+        if (!cards?.some(c => c.id === cat.card_id)) return false;
+      }
+    }
+    return true;
+  });
 
   // ── Calculations (preserved exactly) ──
   const totalEntradas = filteredLaunches.filter(l => l.Tipo === 'Entrada' && !l.CategoriaID).reduce((sum, l) => sum + Number(l.Valor), 0);
@@ -163,7 +173,20 @@ export default function DashboardView({ launches, categories, cards, role, userE
   // ── Recent launches (last 4) ──
   const recentLaunches = [...filteredLaunches]
     .sort((a, b) => new Date(b.Data) - new Date(a.Data))
-    .slice(0, 4);
+    .slice(0, 4)
+    .filter(l => {
+      // Hide launches whose referenced card no longer exists
+      if (l.card_id && !cards?.some(c => c.id === l.card_id)) return false;
+      // Hide categorized launches whose category's card no longer exists
+      if (l.CategoriaID) {
+        const cat = categories?.find(c => c.CategoriaID === l.CategoriaID);
+        if (cat) {
+          if (!cat.card_id) return false;
+          if (!cards?.some(c => c.id === cat.card_id)) return false;
+        }
+      }
+      return true;
+    });
 
   // ── Card balance calculations for summary ──
   const getCardBalance = (cardId) => {

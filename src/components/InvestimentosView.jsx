@@ -921,7 +921,7 @@ export default function InvestimentosView() {
           {/* Monthly table */}
           <div style={CARD}>
             <h4 style={{ fontWeight: 700, marginBottom: '10px' }}>Detalhe Mensal</h4>
-            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <div className="responsive-table" style={{ maxHeight: '300px' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border-color)' }}>

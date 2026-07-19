@@ -298,7 +298,7 @@ CREATE POLICY "settings_admin" ON public.settings FOR ALL USING (public.is_admin
 
 -- POLICIES: admin_settings
 CREATE POLICY "admin_settings_read_all" ON public.admin_settings FOR SELECT USING (auth.uid() IS NOT NULL);
-CREATE POLICY "admin_settings_write"    ON public.admin_settings FOR ALL USING (public.is_admin());
+CREATE POLICY "admin_settings_write"    ON public.admin_settings FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- POLICIES: payments
 CREATE POLICY "payments_own"   ON public.payments FOR ALL USING (auth.uid() = user_id);

@@ -437,9 +437,6 @@ export default function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, payload => {
         loadDataFromSupabase(session.user.id, currentUser?.Role);
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'transfers' }, payload => {
-        loadDataFromSupabase(session.user.id, currentUser?.Role);
-      })
       .subscribe();
 
     return () => {
@@ -743,21 +740,6 @@ export default function App() {
     await loadDataFromSupabase(session.user.id, currentUser?.Role);
   };
 
-  const handleTransfer = async ({ from_card_id, to_card_id, amount, description }) => {
-    const { error } = await supabase.from('transfers').insert([{
-      user_id: session.user.id,
-      from_card_id,
-      to_card_id,
-      amount,
-      description: description || ''
-    }]);
-    if (error) setToastMessage({ type: 'warning', text: 'Erro ao transferir: ' + error.message });
-    else {
-      setToastMessage({ type: 'success', text: 'Transferência realizada!' });
-      await loadDataFromSupabase(session.user.id, currentUser?.Role);
-    }
-  };
-
   // UI Setup
   if (loading) {
     return (
@@ -868,7 +850,6 @@ export default function App() {
             onEditLaunch={handleEditLaunch}
             onDeleteLaunch={handleDeleteLaunch}
             getCategoryBalance={getCategoryBalance}
-            onTransfer={handleTransfer}
             cards={cards}
             onEditCard={handleEditCard}
             onDeleteCard={handleDeleteCard}
@@ -955,33 +936,31 @@ export default function App() {
         </div>
       )}
 
-      <header className="glass-panel" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ background: 'linear-gradient(135deg, var(--color-accent) 0%, #a5b4fc 100%)', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1rem' }}>F</div>
-          <h1 style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>Finança ao Ponto</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '10px', padding: '2px 7px', fontSize: '0.6rem', color: 'var(--color-success)', fontWeight: 700 }}>
+      <header className="glass-panel" style={{ padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ background: 'linear-gradient(135deg, var(--color-accent) 0%, #a5b4fc 100%)', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1rem', flexShrink: 0 }}>F</div>
+          <h1 className="hide-phone" style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>Finança ao Ponto</h1>
+          <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '3px', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '10px', padding: '2px 7px', fontSize: '0.6rem', color: 'var(--color-success)', fontWeight: 700 }}>
             <Cloud size={9} /> Supabase
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {!isSuperAdmin && (
-            <div onClick={() => setActiveTab('subscricoes')} style={{ padding: '4px 8px', borderRadius: '16px', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer', backgroundColor: isProUser ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: isProUser ? 'var(--color-accent)' : 'var(--text-muted)', border: `1px solid ${isProUser ? 'rgba(99,102,241,0.3)' : 'var(--border-color)'}`, display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <div className="hide-mobile" onClick={() => setActiveTab('subscricoes')} style={{ padding: '4px 8px', borderRadius: '16px', fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer', backgroundColor: isProUser ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: isProUser ? 'var(--color-accent)' : 'var(--text-muted)', border: `1px solid ${isProUser ? 'rgba(99,102,241,0.3)' : 'var(--border-color)'}`, display: 'flex', alignItems: 'center', gap: '3px' }}>
               {isProUser ? <Star size={10} /> : <Lock size={10} />}
               {currentUser?.Plano || 'Gratuito'}
             </div>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: 700, color: roleBadgeColor }}>
+          <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: 700, color: roleBadgeColor }}>
             {currentUser?.Role === 'admin' && <Crown size={12} style={{ color: '#f59e0b' }} />}
             {currentUser?.Nome?.split(' ')[0] || currentUser?.Email?.split('@')[0]}
           </div>
 
-          {/* No debug admin button */}
-
           {/* Notification Bell */}
           <button
             onClick={() => { setShowNotifications(v => !v); if (!showNotifications) markAllNotificationsRead(); }}
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}
             title="Notificações"
           >
             {unreadCount > 0 ? <BellRing size={13} style={{ color: '#f59e0b' }} /> : <Bell size={13} />}
@@ -995,10 +974,10 @@ export default function App() {
             )}
           </button>
 
-          <button onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button className="hide-mobile" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', padding: '6px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
           </button>
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: menuOpen ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${menuOpen ? 'rgba(99,102,241,0.3)' : 'var(--border-color)'}`, color: menuOpen ? 'var(--color-accent)' : 'var(--text-primary)', padding: '6px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: menuOpen ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${menuOpen ? 'rgba(99,102,241,0.3)' : 'var(--border-color)'}`, color: menuOpen ? 'var(--color-accent)' : 'var(--text-primary)', padding: '6px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', flexShrink: 0 }}>
             {menuOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
         </div>
@@ -1090,6 +1069,35 @@ export default function App() {
       <main className="content-area" style={{ paddingBottom: '24px' }}>
         {renderTabContent()}
       </main>
+
+      {/* Bottom Navigation for Mobile */}
+      {(
+        <nav className="bottom-nav">
+          {mainNavItems.concat(extraNavItems).filter((item, index, self) =>
+            self.findIndex(i => i.id === item.id) === index
+          ).map(item => {
+            const locked = isPremiumLocked(item.id);
+            const isActive = activeTab === item.id;
+            return (
+              <button key={item.id}
+                onClick={() => { if (item.id === 'dashboard') setSelectedCardId(null); setActiveTab(item.id); setMenuOpen(false); }}
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+                  padding: '4px 6px', borderRadius: '8px', flex: 1, maxWidth: '64px',
+                  color: isActive ? 'var(--color-accent)' : 'var(--text-muted)',
+                  opacity: locked ? 0.5 : 1,
+                  transition: 'color 0.15s'
+                }}
+                title={item.label}
+              >
+                <span style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)', transition: 'transform 0.15s' }}>{item.icon}</span>
+                <span className="bottom-nav-text" style={{ fontSize: '0.55rem', fontWeight: isActive ? 700 : 500, lineHeight: 1.1 }}>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }
